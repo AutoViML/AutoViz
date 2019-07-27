@@ -52,7 +52,7 @@ Automatically Visualize any dataset, any size with a single line of code
         ####  it will simply save them.                                          #####
         ##############################################################################
  <h1><a class="h" name="DOWNLOAD-INSTALLATION" href="#DOWNLOAD-INSTALLATION"><span></span></a><a class="h" name="download-installation" href="#download-installation"><span></span></a>DOWNLOAD / INSTALLATION</h1><ol><li>
-        Requirements: Please make sure that you have the following dependencies with the exact versions as below:
+    <b>Requirements</b>: Please make sure that you have the following dependencies with the exact versions as below:<br>
         pandas 0.24 or 0.23
         matplotlib 3.0.2 or 3.0.3
         seaborn 0.9
