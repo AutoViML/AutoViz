@@ -30,7 +30,10 @@ warnings.filterwarnings(action='ignore', category=DataConversionWarning)
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
-from matplotlib import io
+# from matplotlib import io
+import io
+# ipython inline magic shouldn't be needed because all plots are
+# being displayed with plt.show() calls
 get_ipython().magic('matplotlib inline')
 import seaborn as sns
 sns.set(style="whitegrid", color_codes=True)
@@ -49,7 +52,8 @@ import xlrd
 import statsmodels
 from io import BytesIO
 import base64
-from functools import reduce 
+from functools import reduce
+import traceback
 #####################################################
 class AutoViz_Class():
     """
@@ -163,6 +167,7 @@ class AutoViz_Class():
         """
         if X is None:
             ### If there is nothing to add, leave it as it is.
+            print("Nothing to add Plot not being added")
             pass
         else:
             eval('self.'+plotname+'["plots"].append(X)')
@@ -249,7 +254,8 @@ class AutoViz_Class():
                 svg_data = draw_pair_scatters(dft,continuous_vars,problem_type,verbose,chart_format,
                                                 depVar,classes,lowess)
                 self.add_plots('pair_scatter',svg_data)
-            except:
+            except Exception as e:
+                print(e)
                 print('Could not draw Pair Scatter Plots')
             try:
                 svg_data = draw_distplot(dft, bool_vars+cats+continuous_vars,verbose,chart_format,problem_type)
@@ -292,7 +298,10 @@ class AutoViz_Class():
                     svg_data = draw_scatters(dft,
                                     continuous_vars,verbose,chart_format,problem_type,depVar,classes,lowess)
                     self.add_plots('scatter_plot',svg_data)
-                except:
+                except Exception as e:
+                    print("Exception Drawing Scatter Plots")
+                    print(e)
+                    traceback.print_exc()
                     print('Could not draw Scatter Plots')
                 try:
                     svg_data = draw_pair_scatters(dft,continuous_vars,problem_type,verbose,chart_format,
@@ -356,7 +365,10 @@ class AutoViz_Class():
                     svg_data = draw_scatters(dft,continuous_vars,
                                              verbose,chart_format,problem_type,depVar, classes,lowess)
                     self.add_plots('scatter_plot',svg_data)
-                except:
+                except Exception as e:
+                    print(e)
+                    traceback.print_exc()
+                    print("Exception Drawing Scatter Plots")
                     print('Could not draw Scatter Plots')
                 try:
                     svg_data = draw_pair_scatters(dft,continuous_vars,
@@ -1867,7 +1879,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
         else:
             continuous_vars = continuous_vars[:max_cols_analyzed]
             print('%d numeric variables in data exceeds limit, taking top %d variables' %(len(
-                                            conitnuous_vars, max_cols_analyzed)))
+                                            continuous_vars, max_cols_analyzed)))
     elif len(continuous_vars) < 1:
         print('No continuous variables in this data set. No visualization can be performed')
         ### Return data frame as is #####
