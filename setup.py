@@ -11,6 +11,7 @@ setuptools.setup(
     description="Automatically Visualize any dataset, any size with a single line of code",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    license='Apache License 2.0',
     url="https://github.com/AutoViML/AutoViz",
     packages=setuptools.find_packages(exclude=("tests",)),
     install_requires=[
@@ -23,7 +24,6 @@ setuptools.setup(
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: Apache License 2.0",
         "Operating System :: OS Independent",
     ],
 )

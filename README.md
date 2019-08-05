@@ -58,6 +58,16 @@ _Prerequsites_:
 
 To clone the AutoViz, create a new environment, and install required dependencies:
 
+To install from PyPi:
+
+```bash
+conda create -n <your_env_name> python=3.7 anaconda
+conda activate <your_env_name> # ON WINDOWS: `source activate <your_env_name>` 
+pip install autoviz
+```
+
+To install from source:
+
 ```bash
 cd <AutoViz_Dest>
 git clone git@github.com:AutoViML/AutoViz.git 
