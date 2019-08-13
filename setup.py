@@ -20,7 +20,8 @@ setuptools.setup(
         "xgboost",
         "pandas",
         "matplotlib",
-        "seaborn"
+        "seaborn",
+        "scikit-learn"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
