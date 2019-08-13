@@ -56,7 +56,7 @@ Automatically Visualize any dataset, any size with a single line of code
 _Prerequsites_:
 * [Anaconda](https://docs.anaconda.com/anaconda/install/)
 
-To clone the AutoViz, create a new environment, and install required dependencies:
+To clone the AutoViz, it's better to create a new environment, and install the required dependencies:
 
 To install from PyPi:
 
@@ -69,7 +69,7 @@ pip install autoviz
 To install from source:
 
 ```bash
-cd <AutoViz_Dest>
+cd <AutoViz_Destination>
 git clone git@github.com:AutoViML/AutoViz.git 
 # or download and unzip https://github.com/AutoViML/AutoViz/archive/master.zip
 conda create -n <your_env_name> python=3.7 anaconda
