@@ -1,0 +1,7 @@
+ipython
+jupyter
+xgboost
+pandas
+matplotlib
+seaborn
+
