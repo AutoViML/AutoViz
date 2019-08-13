@@ -13,6 +13,12 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 #################################################################################################
+##############################################################################
+###########             AutoViz Class                                   ######
+###########             by Ram Seshadri                                 ######
+###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
+###########            V0.0.3 8/13/19 Version                           ######
+##############################################################################
 import pandas as pd
 import numpy as np
 #### The warnings from Sklearn are so annoying that I have to shut it off ####
@@ -77,7 +83,7 @@ class AutoViz_Class():
         ###########             AutoViz Class                                   ######
         ###########             by Ram Seshadri                                 ######
         ###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
-        ###########            V3.0 6/15/19 Version                             ######
+        ###########            V0.0.3 8/13/19 Version                           ######
         ##############################################################################
         ##### AUTOVIZ PERFORMS AUTOMATIC VISUALIZATION OF ANY DATA SET WITH ONE CLICK.
         #####    Give it any input file (CSV, txt or json) and AV will visualize it.##
@@ -457,54 +463,54 @@ def analyze_problem_type(train, targ,verbose=0) :
     if train[targ].dtype != 'int64' and train[targ].dtype != float :
         if len(train[targ].unique()) == 2:
             if verbose == 1:
-                print('"\n ################### Binary-Class VISUALIZATION Started ##################### " ')
+                print('''\n################### Binary-Class VISUALIZATION Started #####################''')
             model_class = 'Binary_Classification'
         elif len(train[targ].unique()) > 1 and len(train[targ].unique()) <= 15:
                 model_class = 'Multi_Classification'
                 if verbose == 1:
-                    print('"\n ################### Multi-Class VISUALIZATION Started ######################''')
+                    print('''\n################### Multi-Class VISUALIZATION Started ######################''')
     elif train[targ].dtype == 'int64' or train[targ].dtype == float :
         if len(train[targ].unique()) == 2:
             if verbose == 1:
-                print('"\n ################### Binary-Class VISUALIZATION Started ##################### " ')
+                print('''\n################### Binary-Class VISUALIZATION Started #####################''')
             model_class = 'Binary_Classification'
         elif len(train[targ].unique()) > 1 and len(train[targ].unique()) <= 15:
                 model_class = 'Multi_Classification'
                 if verbose == 1:
-                    print('"\n ################### Multi-Class VISUALIZATION Started ######################''')
+                    print('''\n################### Multi-Class VISUALIZATION Started ######################''')
         else:
             model_class = 'Regression'
             if verbose == 1:
-                print('"\n ################### Regression VISUALIZATION Started ######################''')
+                print('''\n################### Regression VISUALIZATION Started ######################''')
     elif train[targ].dtype == object:
             if len(train[targ].unique()) > 1 and len(train[targ].unique()) <= 2:
                 model_class = 'Binary_Classification'
                 if verbose == 1:
-                    print('"\n ################### Binary-Class VISUALIZATION Started ##################### " ')
+                    print('''\n################### Binary-Class VISUALIZATION Started #####################''')
             else:
                 model_class = 'Multi_Classification'
                 if verbose == 1:
-                    print('"\n ################### Multi-Class VISUALIZATION Started ######################''')
+                    print('''\n################### Multi-Class VISUALIZATION Started ######################''')
     elif train[targ].dtype == bool:
                 model_class = 'Binary_Classification'
                 if verbose == 1:
-                    print('"\n ################### Binary-Class VISUALIZATION Started ######################''')
+                    print('''\n################### Binary-Class VISUALIZATION Started ######################''')
     elif train[targ].dtype == 'int64':
         if len(train[targ].unique()) == 2:
             if verbose == 1:
-                print('"\n ################### Binary-Class VISUALIZATION Started ##################### " ')
+                print('''\n################### Binary-Class VISUALIZATION Started #####################''')
             model_class = 'Binary_Classification'
         elif len(train[targ].unique()) > 1 and len(train[targ].unique()) <= 25:
                 model_class = 'Multi_Classification'
                 if verbose == 1:
-                    print('"\n ################### Multi-Class VISUALIZATION Started ######################''')
+                    print('''\n################### Multi-Class VISUALIZATION Started ######################''')
         else:
             model_class = 'Regression'
             if verbose == 1:
-                print('"\n ################### Regression VISUALIZATION Started ######################''')
+                print('''\n################### Regression VISUALIZATION Started ######################''')
     else :
         if verbose == 1:
-            print('\n ###################### REGRESSION VISUALIZATION Started #####################')
+            print('''\n###################### REGRESSION VISUALIZATION Started #####################''')
         model_class = 'Regression'
     return model_class
 
@@ -530,7 +536,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
     categorylimit = 10
     imgdata_list = []
     width_size = 15
-    height_size = 4
+    height_size = 6
     if problem_type == 'Regression' or depVar==None or depVar=='' or depVar==[]:
         image_count = 0
         ###### This is meant for Regression problems where the DepVar is of Continuous Type
@@ -546,7 +552,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
                 plt.subplot(rows,cols,k)
                 ax1 = plt.gca()
                 dft.groupby(cats[i])[depVar].mean().sort_values(ascending=False)[:displaylimit].plot(kind='bar',
-                    title='Average %s vs. %s (Descending) ' %(depVar, cats[i]),ax=ax1,
+                    title='Average %s by. %s (Descending) ' %(depVar, cats[i]),ax=ax1,
                     colormap=random.choice(colormaps))
                 for p in ax1.patches:
                     ax1.annotate(str(round(p.get_height(),2)),(round(p.get_x()*1.01,2),round(p.get_height()*1.01,2)))
@@ -555,7 +561,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
                 plt.subplot(rows,cols,k)
                 ax1 = plt.gca()
                 dft.groupby(cats[i])[depVar].mean().sort_values(ascending=False).plot(kind='bar',
-                    title='Average %s vs. %s (Descending) ' % (depVar, cats [i]), ax=ax1,
+                    title='Average %s by %s (Descending) ' % (depVar, cats [i]), ax=ax1,
                     colormap=random.choice(colormaps))
                 for p in ax1.patches:
                     ax1.annotate(str(round(p.get_height(),2)),(round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
@@ -911,11 +917,11 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
         order= dft[cats[k]].unique().tolist()
         nocats = len(order)
         if nocats >= 100:
-            chunksize=100
+            chunksize = 25
             cols = 1
         else:
             if nocats >= 25:
-                chunksize = 20
+                chunksize = 15
                 cols = 2
             else:
                 chunksize = cat_limit
@@ -1144,8 +1150,8 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
     cols = 2
     imgdata_list = list()
     width_size = 15
-    height_size = 5
-    gap = 0.3
+    height_size = 6
+    gap = 0.1
     if dep==None or dep=='' or problem_type == 'Regression':
         image_count = 0
         transparent = 0.7
@@ -1786,7 +1792,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
     discrete_string_vars = var_df['nlp_vars']+var_df['discrete_string_vars'] 
     cols_delete = var_df['cols_delete']             
     bool_vars = var_df['string_bool_vars'] + var_df['num_bool_vars']
-    categorical_vars = var_df['cat_vars'] + var_df['factor_vars']
+    categorical_vars = var_df['cat_vars'] + var_df['factor_vars'] + var_df['int_vars'] + bool_vars
     continuous_vars = var_df['continuous_vars']
     date_vars = var_df['date_vars']
     int_vars = var_df['int_vars']
@@ -1796,6 +1802,8 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
     else:
         print('    %d variables removed since they were ID or low-information variables' 
                                 %len(IDcols+cols_delete+discrete_string_vars))
+        if verbose >= 1:
+            print('    List of variables removed: %s' %(IDcols+cols_delete+discrete_string_vars))
     #############    Sample data if too big and find problem type   #############################
     if dfte.shape[0]>= max_rows_analyzed:
         print('Since Number of Rows in data %d exceeds maximum, randomly sampling %d rows for EDA...' %(len(dfte),max_rows_analyzed))
@@ -1865,7 +1873,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
             discrete_string_vars = var_df['nlp_vars']+var_df['discrete_string_vars'] 
             cols_delete = var_df['cols_delete']             
             bool_vars = var_df['string_bool_vars'] + var_df['num_bool_vars']
-            categorical_vars = var_df['cat_vars'] + var_df['factor_vars']
+            categorical_vars = var_df['cat_vars'] + var_df['factor_vars'] + var_df['int_vars'] + bool_vars
             continuous_vars = var_df['continuous_vars']
             date_vars = var_df['date_vars']
             int_vars = var_df['int_vars']
@@ -1875,11 +1883,15 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
             else:
                 print('    %d variables removed since they were ID or low-information variables' 
                                         %len(IDcols+cols_delete+discrete_string_vars))
+            if verbose >= 1:
+                print('    List of variables removed: %s' %(IDcols+cols_delete+discrete_string_vars))
             dft = dft[preds+[depVar]]
         else:
             continuous_vars = continuous_vars[:max_cols_analyzed]
             print('%d numeric variables in data exceeds limit, taking top %d variables' %(len(
                                             continuous_vars, max_cols_analyzed)))
+            if verbose >= 1:
+                print('    List of variables selected: %s' %(continuous_vars[:max_cols_analyzed]))
     elif len(continuous_vars) < 1:
         print('No continuous variables in this data set. No visualization can be performed')
         ### Return data frame as is #####
@@ -1912,10 +1924,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
         ppt.pprint('   %s' % depVar)
     elif verbose==1 and len(cols_list) > max_cols_analyzed:
         print('   Total columns > %d, too numerous to list.' %max_cols_analyzed)
-    ###################   Time to drop the columns to be deleted #############
-    #if cols_delete != []:
-    #    dft.drop(cols_delete, axis=1, inplace=True)
-    #print('Time to run Print_Classify_Variables (in seconds) = %0.3f' %(time.time()-start_time))
+    ###################   Time to return variables to be displayed as charts #############
     return dft,depVar,IDcols,bool_vars,categorical_vars,continuous_vars,discrete_string_vars,date_vars,classes,problem_type
 ####################################################################
 def marthas_columns(data,verbose=0):
