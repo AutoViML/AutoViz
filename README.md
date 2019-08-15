@@ -56,10 +56,20 @@ Automatically Visualize any dataset, any size with a single line of code
 _Prerequsites_:
 * [Anaconda](https://docs.anaconda.com/anaconda/install/)
 
-To clone the AutoViz, create a new environment, and install required dependencies:
+To clone the AutoViz, it's better to create a new environment, and install the required dependencies:
+
+To install from PyPi:
 
 ```bash
-cd <AutoViz_Dest>
+conda create -n <your_env_name> python=3.7 anaconda
+conda activate <your_env_name> # ON WINDOWS: `source activate <your_env_name>` 
+pip install autoviz
+```
+
+To install from source:
+
+```bash
+cd <AutoViz_Destination>
 git clone git@github.com:AutoViML/AutoViz.git 
 # or download and unzip https://github.com/AutoViML/AutoViz/archive/master.zip
 conda create -n <your_env_name> python=3.7 anaconda
@@ -69,4 +79,4 @@ pip install -r requirements.txt
 ```
 
 <h1><a class="h" name="RUN-AUTOViZ" href="#RUN-AUTOViZ"><span></span></a><a class="h" name="run-autoviz" href="#run-autoviz">
-<span></span></a>RUN AutoViz</h1><ol start="2"><li><p>In the AutoViz directory, open a Jupyter Notebook and use this line to import the .py file: <p><code> import AutoViz_Class as AV</p><p>AVC = AV.AutoViz_Class()</code></p></li><li><p>Load a data set (any CSV or text file) into a Pandas dataframe or give the name of the path and filename you want to visualize. If you don't have a filename, you can simply assign the filename variable below to '' (empty string):</p></li></ol><ol start="4"><li><p>Finally, call AutoViz using the filename (or dataframe) along with the separator (if any in file) and the name of the target variable in file or data frame. That's all. AutoViz will do the rest. You will see charts and plots on your screen.</p></li></ol><p> <code>  filename = '' </p><p> sep = ','</p><p>dft = AVC.AutoViz(filename, sep, target, df, header=0, verbose=0,lowess=False,chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30) </p></code><h1><a class="h" name="DISCLAIMER" href="#DISCLAIMER"><span></span></a><a class="h" name="disclaimer" href="#disclaimer"><span></span></a>DISCLAIMER</h1><p>“This is not an official Google product”.</p><h1><a class="h" name="LICENSE" href="#LICENSE"><span></span></a><a class="h" name="license" href="#license"><span></span></a>LICENSE</h1><p>Licensed under the Apache License, Version 2.0 (the &ldquo;License&rdquo;).</p></div></div></div><!-- default customFooter --><footer class="Site-footer"><div class="Footer"><span class="Footer-poweredBy">Powered by <a href="https://gerrit.googlesource.com/gitiles/">Gitiles</a>| <a href="https://policies.google.com/privacy">Privacy</a></span><div class="Footer-links"></div></div></footer></body></html>
+<span></span></a>RUN AutoViz</h1><ol start="2"><li><p>In the AutoViz directory, open a Jupyter Notebook and use this line to import the .py file: <p><code> from autoviz import AutoViz_Class as AV</p><p>AVC = AV.AutoViz_Class()</code></p></li><li><p>Load a data set (any CSV or text file) into a Pandas dataframe or give the name of the path and filename you want to visualize. If you don't have a filename, you can simply assign the filename variable below to '' (empty string):</p></li></ol><ol start="4"><li><p>Finally, call AutoViz using the filename (or dataframe) along with the separator (if any in file) and the name of the target variable in file or data frame. That's all. AutoViz will do the rest. You will see charts and plots on your screen.</p></li></ol><p> <code>  filename = '' </p><p> sep = ','</p><p>dft = AVC.AutoViz(filename, sep, target, df, header=0, verbose=0,lowess=False,chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30) </p></code><h1><a class="h" name="DISCLAIMER" href="#DISCLAIMER"><span></span></a><a class="h" name="disclaimer" href="#disclaimer"><span></span></a>DISCLAIMER</h1><p>“This is not an official Google product”.</p><h1><a class="h" name="LICENSE" href="#LICENSE"><span></span></a><a class="h" name="license" href="#license"><span></span></a>LICENSE</h1><p>Licensed under the Apache License, Version 2.0 (the &ldquo;License&rdquo;).</p></div></div></div><!-- default customFooter --><footer class="Site-footer"><div class="Footer"><span class="Footer-poweredBy">Powered by <a href="https://gerrit.googlesource.com/gitiles/">Gitiles</a>| <a href="https://policies.google.com/privacy">Privacy</a></span><div class="Footer-links"></div></div></footer></body></html>

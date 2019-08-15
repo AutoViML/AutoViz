@@ -13,6 +13,12 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 #################################################################################################
+##############################################################################
+###########             AutoViz Class                                   ######
+###########             by Ram Seshadri                                 ######
+###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
+###########            V0.0.3 8/13/19 Version                           ######
+##############################################################################
 import pandas as pd
 import numpy as np
 #### The warnings from Sklearn are so annoying that I have to shut it off ####
@@ -77,7 +83,7 @@ class AutoViz_Class():
         ###########             AutoViz Class                                   ######
         ###########             by Ram Seshadri                                 ######
         ###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
-        ###########            V3.0 6/15/19 Version                             ######
+        ###########            V0.0.3 8/13/19 Version                           ######
         ##############################################################################
         ##### AUTOVIZ PERFORMS AUTOMATIC VISUALIZATION OF ANY DATA SET WITH ONE CLICK.
         #####    Give it any input file (CSV, txt or json) and AV will visualize it.##
