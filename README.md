@@ -21,7 +21,7 @@ Automatically Visualize any dataset, any size with a single line of code
         ###########             AutoViz Class                                   ######
         ###########             by Ram Seshadri                                 ######
         ###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
-        ###########            V3.0 6/15/19 Version                             ######
+        ###########            Version 0.0.3       date: 8/15/19                ######
         ##############################################################################
         ##### AUTOVIZ PERFORMS AUTOMATIC VISUALIZATION OF ANY DATA SET WITH ONE CLICK.
         #####    Give it any input file (CSV, txt or json) and AV will visualize it.##
