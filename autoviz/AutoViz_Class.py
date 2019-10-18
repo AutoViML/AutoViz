@@ -1795,7 +1795,11 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
     categorical_vars = var_df['cat_vars'] + var_df['factor_vars'] + var_df['int_vars'] + bool_vars
     continuous_vars = var_df['continuous_vars']
     date_vars = var_df['date_vars']
-    int_vars = var_df['int_vars']
+    if len(var_df['continuous_vars'])==0 and len(var_df['int_vars'])>0: 
+        continuous_vars = var_df['int_vars']
+        int_vars = []
+    else:
+        int_vars = var_df['int_vars']
     preds = [x for x in orig_preds if x not in IDcols+cols_delete+discrete_string_vars]
     if len(IDcols+cols_delete+discrete_string_vars) == 0:
         print('    No variables removed since no ID or low-information variables found in data set')
