@@ -2249,7 +2249,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
     import logging
     logging.basicConfig()
 
-    package_name = ' xgbost'
+    package_name = ' xgboost'
     err_msg = "is not installed, to use this function, you must install " + package_name + "."
     package_stat = importlib.util.find_spec(package_name)
 
