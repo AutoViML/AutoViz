@@ -17,7 +17,6 @@ setuptools.setup(
     install_requires=[
         "ipython",
         "jupyter",
-        "xgboost",
         "pandas",
         "matplotlib",
         "seaborn",
