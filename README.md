@@ -82,3 +82,11 @@ pip install -r requirements.txt
 <span></span></a>RUN AutoViz</h1><ol start="2"><li><p>In the AutoViz directory, open a Jupyter Notebook and use this line to import the .py file: <p><code> from autoviz.AutoViz_Class import AutoViz_Class</code><br><code>AV = AutoViz_Class()</code>
 </code></p></li><li><p>Load a data set (any CSV or text file) into a Pandas dataframe or give the name of the path and filename you want to visualize. If you don't have a filename, you can simply assign the filename variable below to '' (empty string):</p></li></ol><ol start="4"><li><p>Finally, call AutoViz using the filename (or dataframe) along with the separator (if any in file) and the name of the target variable in file or data frame. That's all. AutoViz will do the rest. You will see charts and plots on your screen.</p></li></ol><p> <code>  filename = ''</code> </p><p><code> sep = ','</code></p>
 <p><code>dft = AV.AutoViz(filename, sep, target, df, header=0, verbose=0, lowess=False, chart_format='svg', max_rows_analyzed=150000, max_cols_analyzed=30) </p></code><h1><a class="h" name="DISCLAIMER" href="#DISCLAIMER"><span></span></a><a class="h" name="disclaimer" href="#disclaimer"><span></span></a>DISCLAIMER</h1><p>“This is not an official Google product”.</p><h1><a class="h" name="LICENSE" href="#LICENSE"><span></span></a><a class="h" name="license" href="#license"><span></span></a>LICENSE</h1><p>Licensed under the Apache License, Version 2.0 (the &ldquo;License&rdquo;).</p></div></div></div><!-- default customFooter --><footer class="Site-footer"><div class="Footer"><span class="Footer-poweredBy">Powered by <a href="https://gerrit.googlesource.com/gitiles/">Gitiles</a>| <a href="https://policies.google.com/privacy">Privacy</a></span><div class="Footer-links"></div></div></footer></body></html>
+
+
+
+### Sample Tutorials
+Plot your dataset in a single line of code by [DataKnight](twitter.com/emeka_boris)
+
+
+https://youtu.be/gtzouIxebd8
