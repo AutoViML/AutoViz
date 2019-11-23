@@ -13,12 +13,6 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 #################################################################################################
-##############################################################################
-###########             AutoViz Class                                   ######
-###########             by Ram Seshadri                                 ######
-###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
-###########            V0.0.3 8/13/19 Version                           ######
-##############################################################################
 import pandas as pd
 import numpy as np
 #### The warnings from Sklearn are so annoying that I have to shut it off ####
@@ -83,7 +77,7 @@ class AutoViz_Class():
         ###########             AutoViz Class                                   ######
         ###########             by Ram Seshadri                                 ######
         ###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
-        ###########            V0.0.3 8/13/19 Version                           ######
+        ###########            Version V0.0.6 11/23/19                          ######
         ##############################################################################
         ##### AUTOVIZ PERFORMS AUTOMATIC VISUALIZATION OF ANY DATA SET WITH ONE CLICK.
         #####    Give it any input file (CSV, txt or json) and AV will visualize it.##
@@ -1428,6 +1422,7 @@ def draw_date_vars(df,dep,datevars, num_vars,verbose, chart_format, modeltype='R
     imgdata_list = list()
     image_count = 0
     N = len(num_vars)
+    df = df.set_index(pd.to_datetime(df.pop(datevars[0])))
     if N < 2:
         var1 = num_vars[0]
         width_size = 5
@@ -2228,9 +2223,6 @@ def left_subtract(l1,l2):
 
 from sklearn.model_selection import KFold
 from sklearn.model_selection import GridSearchCV
-import xgboost as xgb
-from xgboost.sklearn import XGBClassifier
-from xgboost.sklearn import XGBRegressor
 from sklearn.multioutput import MultiOutputClassifier
 import copy
 from sklearn.multiclass import OneVsRestClassifier
@@ -2243,7 +2235,6 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
     Since it is XGB, you dont have to restrict the input to just numeric vars.
     You can send in all kinds of vars and it will take care of transforming it. Sweet!
     """
-
     #First check if xgboost is installed, if not installed, prompt the user to install it.
     import importlib.util
     import logging
@@ -2257,6 +2248,9 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
         logging.error(package_name + " " + err_msg)
 
     else:
+        import xgboost as xgb
+        from xgboost.sklearn import XGBClassifier
+        from xgboost.sklearn import XGBRegressor
 
         subsample =  0.5
         col_sub_sample = 0.5
