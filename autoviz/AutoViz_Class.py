@@ -80,7 +80,7 @@ class AutoViz_Class():
         ###########             AutoViz Class                                   ######
         ###########             by Ram Seshadri                                 ######
         ###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
-        ###########            Version V0.0.62 12/19/19                          ######
+        ###########            Version V0.0.63 12/19/19                          ######
         ##############################################################################
         ##### AUTOVIZ PERFORMS AUTOMATIC VISUALIZATION OF ANY DATA SET WITH ONE CLICK.
         #####    Give it any input file (CSV, txt or json) and AV will visualize it.##
@@ -2324,7 +2324,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
 ###############################################
 #################################################################################
 if __name__ == "__main__":
-    version_number = '0.0.62'
+    version_number = '0.0.63'
     print("""Running AutoViz_Class version: %s. Call using:
         from autoviz.AutoViz_Class import AutoViz_Class
         AV = AutoViz_Class()
@@ -2333,7 +2333,7 @@ if __name__ == "__main__":
         """ %version_number)
     print("To remove previous versions, perform 'pip uninstall autoviz'")
 else:
-    version_number = '0.0.62'
+    version_number = '0.0.63'
     print("""Imported AutoViz_Class version: %s. Call using: 
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
@@ -2342,6 +2342,3 @@ else:
             """ %version_number)
     print("To remove previous versions, perform 'pip uninstall autoviz'")
 ###########################################################################################
-else:
-    print("""
-                            """)
