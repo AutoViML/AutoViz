@@ -54,6 +54,9 @@ from io import BytesIO
 import base64
 from functools import reduce
 import traceback
+import xgboost as xgb
+from xgboost.sklearn import XGBClassifier
+from xgboost.sklearn import XGBRegressor
 #####################################################
 class AutoViz_Class():
     """
@@ -77,7 +80,7 @@ class AutoViz_Class():
         ###########             AutoViz Class                                   ######
         ###########             by Ram Seshadri                                 ######
         ###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
-        ###########            Version V0.0.6 11/23/19                          ######
+        ###########            Version V0.0.62 12/19/19                          ######
         ##############################################################################
         ##### AUTOVIZ PERFORMS AUTOMATIC VISUALIZATION OF ANY DATA SET WITH ONE CLICK.
         #####    Give it any input file (CSV, txt or json) and AV will visualize it.##
@@ -188,27 +191,6 @@ class AutoViz_Class():
                             lowess=False,chart_format='svg',max_rows_analyzed=150000,
                                 max_cols_analyzed=30):
         """
-        ##############################################################################
-        #############       This is not an Officially Supported Google Product! ######
-        ##############################################################################
-        #Copyright 2019 Google LLC                                              ######
-        #                                                                       ######
-        #Licensed under the Apache License, Version 2.0 (the "License");        ######
-        #you may not use this file except in compliance with the License.       ######
-        #You may obtain a copy of the License at                                ######
-        #                                                                       ######
-        #    https://www.apache.org/licenses/LICENSE-2.0                        ######
-        #                                                                       ######
-        #Unless required by applicable law or agreed to in writing, software    ######
-        #distributed under the License is distributed on an "AS IS" BASIS,      ######
-        #WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#####
-        #See the License for the specific language governing permissions and    ######
-        #limitations under the License.                                         ######
-        ##############################################################################
-        ###########             AutoViz Class                                   ######
-        ###########             by Ram Seshadri                                 ######
-        ###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
-        ###########            V3.0 6/15/19 Version                             ######
         ##############################################################################
         ##### AUTOVIZ PERFORMS AUTOMATIC VISUALIZATION OF ANY DATA SET WITH ONE CLICK.
         #####    Give it any input file (CSV, txt or json) and AV will visualize it.##
@@ -2235,132 +2217,131 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
     Since it is XGB, you dont have to restrict the input to just numeric vars.
     You can send in all kinds of vars and it will take care of transforming it. Sweet!
     """
-    #First check if xgboost is installed, if not installed, prompt the user to install it.
-    import importlib.util
-    import logging
-    logging.basicConfig()
-
-    package_name = ' xgboost'
-    err_msg = "is not installed, to use this function, you must install " + package_name + "."
-    package_stat = importlib.util.find_spec(package_name)
-
-    if package_stat is None:
-        logging.error(package_name + " " + err_msg)
-
+    subsample =  0.5
+    col_sub_sample = 0.5
+    train = copy.deepcopy(train)
+    start_time = time.time()
+    test_size = 0.2
+    seed = 1
+    n_splits = 5
+    kf = KFold(n_splits=n_splits,random_state= 33)
+    rem_vars = left_subtract(preds,numvars)
+    if len(numvars) > 0:
+        final_list = remove_variables_using_fast_correlation(train,numvars,corr_limit,verbose)
     else:
-        import xgboost as xgb
-        from xgboost.sklearn import XGBClassifier
-        from xgboost.sklearn import XGBRegressor
-
-        subsample =  0.5
-        col_sub_sample = 0.5
-        train = copy.deepcopy(train)
-        start_time = time.time()
-        test_size = 0.2
-        seed = 1
-        n_splits = 5
-        kf = KFold(n_splits=n_splits,random_state= 33)
-        rem_vars = left_subtract(preds,numvars)
-        if len(numvars) > 0:
-            final_list = remove_variables_using_fast_correlation(train,numvars,corr_limit,verbose)
+        final_list = numvars[:]
+    print('    Adding %s categorical variables to reduced numeric variables  of %d' %(
+                            len(rem_vars),len(final_list)))
+    preds = final_list+rem_vars
+    ########    Drop Missing value rows since XGB for some reason  #########
+    ########    can't handle missing values in early stopping rounds #######
+    train.dropna(axis=0,subset=preds+[target],inplace=True)
+    ########   Dont move this train and y definition anywhere else ########
+    y = train[target]
+    ######################################################################
+    important_features = []
+    if modeltype == 'Regression':
+        model_xgb = XGBRegressor(objective='reg:linear', n_estimators=100,subsample=subsample,
+                                colsample_bytree=col_sub_sample,reg_alpha=0.5, reg_lambda=0.5, 
+                                seed=1,n_jobs=-1,random_state=1)
+        eval_metric = 'rmse'
+    else:
+        #### This is for Classifiers only
+        classes = np.unique(train[target].values)
+        if len(classes) == 2:
+            model_xgb = XGBClassifier(base_score=0.5, booster='gbtree', subsample=subsample,
+                colsample_bytree=col_sub_sample,gamma=1, learning_rate=0.1, max_delta_step=0,
+                max_depth=5, min_child_weight=1, missing=-999, n_estimators=100,
+                n_jobs=-1, nthread=None, objective='binary:logistic',
+                random_state=1, reg_alpha=0.5, reg_lambda=0.5, scale_pos_weight=1,
+                seed=1, silent=True)
+            eval_metric = 'logloss'
         else:
-            final_list = numvars[:]
-        print('    Adding %s categorical variables to reduced numeric variables  of %d' %(
-                                len(rem_vars),len(final_list)))
-        preds = final_list+rem_vars
-        ########    Drop Missing value rows since XGB for some reason  #########
-        ########    can't handle missing values in early stopping rounds #######
-        train.dropna(axis=0,subset=preds+[target],inplace=True)
-        ########   Dont move this train and y definition anywhere else ########
-        y = train[target]
-        ######################################################################
-        important_features = []
-        if modeltype == 'Regression':
-            model_xgb = XGBRegressor(objective='reg:linear', n_estimators=100,subsample=subsample,
-                                    colsample_bytree=col_sub_sample,reg_alpha=0.5, reg_lambda=0.5, 
-                                    seed=1,n_jobs=-1,random_state=1)
-            eval_metric = 'rmse'
-        else:
-            #### This is for Classifiers only
-            classes = np.unique(train[target].values)
-            if len(classes) == 2:
-                model_xgb = XGBClassifier(base_score=0.5, booster='gbtree', subsample=subsample,
-                    colsample_bytree=col_sub_sample,gamma=1, learning_rate=0.1, max_delta_step=0,
-                    max_depth=5, min_child_weight=1, missing=-999, n_estimators=100,
-                    n_jobs=-1, nthread=None, objective='binary:logistic',
-                    random_state=1, reg_alpha=0.5, reg_lambda=0.5, scale_pos_weight=1,
-                    seed=1, silent=True)
-                eval_metric = 'logloss'
+            model_xgb = XGBClassifier(base_score=0.5, booster='gbtree', subsample=subsample,
+                        colsample_bytree=col_sub_sample, gamma=1, learning_rate=0.1, max_delta_step=0,
+                max_depth=5, min_child_weight=1, missing=-999, n_estimators=100,
+                n_jobs=-1, nthread=None, objective='multi:softmax',
+                random_state=1, reg_alpha=0.5, reg_lambda=0.5, scale_pos_weight=1,
+                seed=1, silent=True)
+            eval_metric = 'mlogloss'
+    ####   This is where you start to Iterate on Finding Important Features ################
+    train_p = train[preds]
+    if train_p.shape[1] < 10:
+        iter_limit = 2
+    else:
+        iter_limit = int(train_p.shape[1]/5+0.5)
+    print('Selected No. of variables = %d ' %(train_p.shape[1],))
+    print('Finding Important Features...')
+    for i in range(0,train_p.shape[1],iter_limit):
+        if verbose == 1:
+            print('        in %d variables' %(train_p.shape[1]-i))
+        if train_p.shape[1]-i < iter_limit:
+            X = train_p.iloc[:,i:]
+            if modeltype == 'Regression':
+                train_part = int((1-test_size)*X.shape[0])
+                X_train, X_cv, y_train, y_cv = X[:train_part],X[train_part:],y[:train_part],y[train_part:]
             else:
-                model_xgb = XGBClassifier(base_score=0.5, booster='gbtree', subsample=subsample,
-                            colsample_bytree=col_sub_sample, gamma=1, learning_rate=0.1, max_delta_step=0,
-                    max_depth=5, min_child_weight=1, missing=-999, n_estimators=100,
-                    n_jobs=-1, nthread=None, objective='multi:softmax',
-                    random_state=1, reg_alpha=0.5, reg_lambda=0.5, scale_pos_weight=1,
-                    seed=1, silent=True)
-                eval_metric = 'mlogloss'
-        ####   This is where you start to Iterate on Finding Important Features ################
-        train_p = train[preds]
-        if train_p.shape[1] < 10:
-            iter_limit = 2
+                X_train, X_cv, y_train, y_cv = train_test_split(X, y, 
+                                                            test_size=test_size, random_state=seed)
+            try:
+                model_xgb.fit(X_train,y_train,early_stopping_rounds=5,eval_set=[(X_cv,y_cv)],
+                                    eval_metric=eval_metric,verbose=False)
+            except:
+                print('XGB is Erroring. Check if there are missing values in your data and try again...')
+                return [], []
+            try:
+                [important_features.append(x) for x in list(pd.concat([pd.Series(model_xgb.feature_importances_
+                        ),pd.Series(list(X_train.columns.values))],axis=1).rename(columns={0:'importance',1:'column'
+                    }).sort_values(by='importance',ascending=False)[:25]['column'])]
+            except:
+                print('Model training error in find top feature...')
+                important_features = copy.deepcopy(preds)
+                return important_features, [], []
         else:
-            iter_limit = int(train_p.shape[1]/5+0.5)
-        print('Selected No. of variables = %d ' %(train_p.shape[1],))
-        print('Finding Important Features...')
-        for i in range(0,train_p.shape[1],iter_limit):
-            if verbose == 1:
-                print('        in %d variables' %(train_p.shape[1]-i))
-            if train_p.shape[1]-i < iter_limit:
-                X = train_p.iloc[:,i:]
-                if modeltype == 'Regression':
-                    train_part = int((1-test_size)*X.shape[0])
-                    X_train, X_cv, y_train, y_cv = X[:train_part],X[train_part:],y[:train_part],y[train_part:]
-                else:
-                    X_train, X_cv, y_train, y_cv = train_test_split(X, y, 
-                                                                test_size=test_size, random_state=seed)
-                try:
-                    model_xgb.fit(X_train,y_train,early_stopping_rounds=5,eval_set=[(X_cv,y_cv)],
-                                        eval_metric=eval_metric,verbose=False)
-                except:
-                    print('XGB is Erroring. Check if there are missing values in your data and try again...')
-                    return [], []
-                try:
-                    [important_features.append(x) for x in list(pd.concat([pd.Series(model_xgb.feature_importances_
-                            ),pd.Series(list(X_train.columns.values))],axis=1).rename(columns={0:'importance',1:'column'
-                        }).sort_values(by='importance',ascending=False)[:25]['column'])]
-                except:
-                    print('Model training error in find top feature...')
-                    important_features = copy.deepcopy(preds)
-                    return important_features, [], []
+            X = train_p[list(train_p.columns.values)[i:train_p.shape[1]]]
+            #### Split here into train and test #####            
+            if modeltype == 'Regression':
+                train_part = int((1-test_size)*X.shape[0])
+                X_train, X_cv, y_train, y_cv = X[:train_part],X[train_part:],y[:train_part],y[train_part:]
             else:
-                X = train_p[list(train_p.columns.values)[i:train_p.shape[1]]]
-                #### Split here into train and test #####            
-                if modeltype == 'Regression':
-                    train_part = int((1-test_size)*X.shape[0])
-                    X_train, X_cv, y_train, y_cv = X[:train_part],X[train_part:],y[:train_part],y[train_part:]
-                else:
-                    X_train, X_cv, y_train, y_cv = train_test_split(X, y, 
-                                                                test_size=test_size, random_state=seed)
-                model_xgb.fit(X_train,y_train,early_stopping_rounds=5,
-                            eval_set=[(X_cv,y_cv)],eval_metric=eval_metric,verbose=False)
-                try:
-                    [important_features.append(x) for x in list(pd.concat([pd.Series(model_xgb.feature_importances_
-                            ),pd.Series(list(X_train.columns.values))],axis=1).rename(columns={0:'importance',1:'column'
-                        }).sort_values(by='importance',ascending=False)[:25]['column'])]
-                    important_features = list(OrderedDict.fromkeys(important_features))
-                except:
-                    print('Multi Label possibly no feature importances.')
-                    important_features = copy.deepcopy(preds)
-        important_features = list(OrderedDict.fromkeys(important_features))
-        print('    Found %d important features' %len(important_features))
-        #print('    Time taken (in seconds) = %0.0f' %(time.time()-start_time))
-        numvars = [x for x in numvars if x in important_features]
-        return important_features, numvars
+                X_train, X_cv, y_train, y_cv = train_test_split(X, y, 
+                                                            test_size=test_size, random_state=seed)
+            model_xgb.fit(X_train,y_train,early_stopping_rounds=5,
+                        eval_set=[(X_cv,y_cv)],eval_metric=eval_metric,verbose=False)
+            try:
+                [important_features.append(x) for x in list(pd.concat([pd.Series(model_xgb.feature_importances_
+                        ),pd.Series(list(X_train.columns.values))],axis=1).rename(columns={0:'importance',1:'column'
+                    }).sort_values(by='importance',ascending=False)[:25]['column'])]
+                important_features = list(OrderedDict.fromkeys(important_features))
+            except:
+                print('Multi Label possibly no feature importances.')
+                important_features = copy.deepcopy(preds)
+    important_features = list(OrderedDict.fromkeys(important_features))
+    print('    Found %d important features' %len(important_features))
+    #print('    Time taken (in seconds) = %0.0f' %(time.time()-start_time))
+    numvars = [x for x in numvars if x in important_features]
+    return important_features, numvars
 ###############################################
 #################################################################################
 if __name__ == "__main__":
-    print("""AutoViz_Class is imported. Call AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
-                            lowess=False,chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30)""")
+    version_number = '0.0.62'
+    print("""Running AutoViz_Class version: %s. Call using:
+        from autoviz.AutoViz_Class import AutoViz_Class
+        AV = AutoViz_Class()
+        AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
+                            lowess=False,chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30)
+        """ %version_number)
+    print("To remove previous versions, perform 'pip uninstall autoviz'")
 else:
-    print("""Imported AutoViz_Class. Call by using AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
-                            lowess=False,chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30)""")
+    version_number = '0.0.62'
+    print("""Imported AutoViz_Class version: %s. Call using: 
+    from autoviz.AutoViz_Class import AutoViz_Class
+    AV = AutoViz_Class()
+    AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
+                            lowess=False,chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30)
+            """ %version_number)
+    print("To remove previous versions, perform 'pip uninstall autoviz'")
+###########################################################################################
+else:
+    print("""
+                            """)
