@@ -80,7 +80,7 @@ class AutoViz_Class():
         ###########             AutoViz Class                                   ######
         ###########             by Ram Seshadri                                 ######
         ###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
-        ###########            Version V0.0.63 12/19/19                          ######
+        ###########            Version V0.0.64 12/19/19                          ######
         ##############################################################################
         ##### AUTOVIZ PERFORMS AUTOMATIC VISUALIZATION OF ANY DATA SET WITH ONE CLICK.
         #####    Give it any input file (CSV, txt or json) and AV will visualize it.##
@@ -727,7 +727,7 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
             if lowess:
                 sns.regplot(x=dft[num], y = dft[dep], lowess=lowess, color=color_val, ax=plt.gca())
             else:
-                sns.scatterplot(x=dft[dep], y=dft[num], ax=plt.gca(), palette='dark',color=color_val)
+                sns.scatterplot(x=dft[num], y=dft[dep], ax=plt.gca(), palette='dark',color=color_val)
             plt.xlabel(num)
             plt.ylabel(dep)
         fig.suptitle('Scatter Plot of each Continuous Variable against Target Variable', fontsize=20,y=1.08)
@@ -2324,7 +2324,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
 ###############################################
 #################################################################################
 if __name__ == "__main__":
-    version_number = '0.0.63'
+    version_number = '0.0.64'
     print("""Running AutoViz_Class version: %s. Call using:
         from autoviz.AutoViz_Class import AutoViz_Class
         AV = AutoViz_Class()
@@ -2333,7 +2333,7 @@ if __name__ == "__main__":
         """ %version_number)
     print("To remove previous versions, perform 'pip uninstall autoviz'")
 else:
-    version_number = '0.0.63'
+    version_number = '0.0.64'
     print("""Imported AutoViz_Class version: %s. Call using: 
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
