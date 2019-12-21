@@ -1255,23 +1255,27 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
             for target_var, color2, class_label in zip(target_vars,colors,classes):
                 plt.subplot(rows, cols, k+1)
                 ax1 = plt.gca()
-                try:
-                    if legend_flag <= label_limit:
-                        sns.distplot(dft.loc[dft[dep]==target_var][each_conti],
-                            hist=False, kde=True,
-                        #dft.ix[dft[dep]==target_var][each_conti].hist(
-                            bins=binsize, ax= ax1,
-                            label=class_label, color=color2)
-                        ax1.set_title('Distribution of %s' %each_conti)
-                        legend_flag += 1
-                    else:
-                        sns.distplot(dft.loc[dft[dep]==target_var][each_conti],bins=binsize, ax= ax1,
-                        label=class_label, hist=False, kde=True,
-                        color=color2)
-                        legend_flag += 1
-                        ax1.set_title('Normed Histogram of %s' %each_conti)
-                except:
-                    pass
+                if dft[each_conti].dtype==object:
+                    dft[each_conti].value_counts().plot(kind='bar',ax=ax1,
+                                        label=class_label)
+                else:
+                    try:
+                        if legend_flag <= label_limit:
+                            sns.distplot(dft.loc[dft[dep]==target_var][each_conti],
+                                hist=False, kde=True,
+                            #dft.ix[dft[dep]==target_var][each_conti].hist(
+                                bins=binsize, ax= ax1,
+                                label=class_label, color=color2)
+                            ax1.set_title('Distribution of %s' %each_conti)
+                            legend_flag += 1
+                        else:
+                            sns.distplot(dft.loc[dft[dep]==target_var][each_conti],bins=binsize, ax= ax1,
+                            label=class_label, hist=False, kde=True,
+                            color=color2)
+                            legend_flag += 1
+                            ax1.set_title('Normed Histogram of %s' %each_conti)
+                    except:
+                        pass
             ax1.legend(loc='best')
         fig.tight_layout();
         if verbose == 1:
@@ -1883,7 +1887,11 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
             dft = dft[preds+[depVar]]
         else:
             dft = dft[preds]
-    #############   N
+    ###################   Time to reduce cat vars which have more than 30 categories #############
+    discrete_string_vars += np.array(categorical_vars)[dft[categorical_vars].nunique()>30].tolist()
+    categorical_vars = left_subtract(categorical_vars,np.array(
+        categorical_vars)[dft[categorical_vars].nunique()>30].tolist())
+    #############   Next you can print them if verbose is set to print #########
     ppt = pprint.PrettyPrinter(indent=4)
     if verbose==1 and len(cols_list) <= max_cols_analyzed:
         marthas_columns(dft,verbose)
@@ -1905,7 +1913,6 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
         ppt.pprint('   %s' % depVar)
     elif verbose==1 and len(cols_list) > max_cols_analyzed:
         print('   Total columns > %d, too numerous to list.' %max_cols_analyzed)
-    ###################   Time to return variables to be displayed as charts #############
     return dft,depVar,IDcols,bool_vars,categorical_vars,continuous_vars,discrete_string_vars,date_vars,classes,problem_type
 ####################################################################
 def marthas_columns(data,verbose=0):
@@ -2324,7 +2331,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
 ###############################################
 #################################################################################
 if __name__ == "__main__":
-    version_number = '0.0.64'
+    version_number = '0.0.65'
     print("""Running AutoViz_Class version: %s. Call using:
         from autoviz.AutoViz_Class import AutoViz_Class
         AV = AutoViz_Class()
@@ -2333,7 +2340,7 @@ if __name__ == "__main__":
         """ %version_number)
     print("To remove previous versions, perform 'pip uninstall autoviz'")
 else:
-    version_number = '0.0.64'
+    version_number = '0.0.65'
     print("""Imported AutoViz_Class version: %s. Call using: 
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
