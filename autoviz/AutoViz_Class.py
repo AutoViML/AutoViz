@@ -524,7 +524,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
         fig.suptitle('Bar Plots of each Continuous Var by %s' %depVar, fontsize=20,y=1.08)
         k = 1
         for i,color in zip(range(len(cats)), colors) :
-            if len(dft[cats[i]].unique() )>= categorylimit:
+            if len(dft[cats[i]].unique()) >= categorylimit:
                 plt.subplot(rows,cols,k)
                 ax1 = plt.gca()
                 dft.groupby(cats[i])[depVar].mean().sort_values(ascending=False)[:displaylimit].plot(kind='bar',
@@ -536,7 +536,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
             else:
                 plt.subplot(rows,cols,k)
                 ax1 = plt.gca()
-                dft.groupby(cats[i])[depVar].mean().sort_values(ascending=False).plot(kind='bar',
+                dft.groupby(cats[i])[depVar].mean().sort_values(ascending=False)[:displaylimit].plot(kind='bar',
                     title='Average %s by %s (Descending) ' % (depVar, cats [i]), ax=ax1,
                     colormap=random.choice(colormaps))
                 for p in ax1.patches:
@@ -575,7 +575,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
                 ##### Otherwise, if you use the plural version "subplots" it has a different meaning!
                 plt.subplot(rows,cols,counter)
                 ax1 = plt.gca()
-                dft[[eachpred,depVar]].groupby(depVar).mean().plot(kind='bar', ax=ax1, colors=color3)
+                dft[[eachpred,depVar]].groupby(depVar).mean()[:chunksize].plot(kind='bar', ax=ax1, colors=color3)
                 for p in ax1.patches:
                     ax1.annotate(str(round(p.get_height(),2)), (round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
                 ax1.set_title('Average of %s by %s' %(eachpred,depVar))
@@ -1005,7 +1005,7 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
                     plt.subplot(rows,cols,kadd)
                     ax1 = plt.gca()
                     dft.groupby(cats[k])[each_conti].mean().sort_values(
-                        ascending=False).plot(kind='bar',ax=ax1,
+                        ascending=False)[:chunksize].plot(kind='bar',ax=ax1,
                                                        color=color3)
                     ax1.set_title('Average %s by %s (Descending)' %(each_conti,cats[k]))
                     kadd += 1
@@ -1015,7 +1015,7 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
                     plt.subplot(rows,cols,kadd)
                     ax1 = plt.gca()
                     dft.groupby([dep, cats[k]])[each_conti].mean().sort_values(
-                        ascending=False).unstack().plot(kind='bar',ax=ax1,
+                        ascending=False)[:chunksize].unstack().plot(kind='bar',ax=ax1,
                                                        colormap=random.choice(colormaps))
                     ax1.set_title('Average %s by %s (Descending)' %(each_conti,cats[k]))
                     kadd += 1
@@ -1125,9 +1125,9 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
     cols = 2
     imgdata_list = list()
-    width_size = 15
+    width_size = 15  #### this is to control the width of chart as well as number of categories to display
     height_size = 6
-    gap = 0.1
+    gap = 0.2 #### This controls the space between rows  ######
     if dep==None or dep=='' or problem_type == 'Regression':
         image_count = 0
         transparent = 0.7
@@ -1223,9 +1223,9 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
             else:
                 plt.subplot(rows, cols, k+1)
                 ax1 = plt.gca()
-                dft[conti_iter].value_counts().plot(kind='bar',ax=ax1,label='%s' %conti_iter)
-                ax1.set_title('%s Distribution' %conti_iter, loc='center',y=1.18)
-        fig.tight_layout();
+                dft[conti_iter].value_counts()[:width_size].plot(kind='bar',ax=ax1,label='%s' %conti_iter)
+                ax1.set_title('Distribution of %s (top %d categories only)' %(conti_iter,width_size))
+        #fig.tight_layout();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, image_count, chart_format))
             image_count += 1
@@ -1256,8 +1256,9 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
                 plt.subplot(rows, cols, k+1)
                 ax1 = plt.gca()
                 if dft[each_conti].dtype==object:
-                    dft[each_conti].value_counts().plot(kind='bar',ax=ax1,
+                    dft[each_conti].value_counts()[:width_size].plot(kind='bar',ax=ax1,
                                         label=class_label)
+                    ax1.set_title('Distribution of %s (top %d categories only)' %(each_conti,width_size))
                 else:
                     try:
                         if legend_flag <= label_limit:
@@ -1888,9 +1889,9 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
         else:
             dft = dft[preds]
     ###################   Time to reduce cat vars which have more than 30 categories #############
-    discrete_string_vars += np.array(categorical_vars)[dft[categorical_vars].nunique()>30].tolist()
-    categorical_vars = left_subtract(categorical_vars,np.array(
-        categorical_vars)[dft[categorical_vars].nunique()>30].tolist())
+    #discrete_string_vars += np.array(categorical_vars)[dft[categorical_vars].nunique()>30].tolist()
+    #categorical_vars = left_subtract(categorical_vars,np.array(
+    #    categorical_vars)[dft[categorical_vars].nunique()>30].tolist())
     #############   Next you can print them if verbose is set to print #########
     ppt = pprint.PrettyPrinter(indent=4)
     if verbose==1 and len(cols_list) <= max_cols_analyzed:
@@ -1948,7 +1949,7 @@ def classify_columns(df_preds, verbose=0):
     """
     print('Classifying variables in data set...')
     #### Cat_Limit defines the max number of categories a column can have to be called a categorical colum 
-    cat_limit = 15
+    cat_limit = 50
     def add(a,b):
         return a+b
     train = df_preds[:]
@@ -2208,8 +2209,43 @@ def left_subtract(l1,l2):
         if i not in l2:
             lst.append(i)
     return lst
+#######
+def convert_train_test_cat_col_to_numeric(start_train, start_test, col):
+    """
+    ####  This is the easiest way to label encode object variables in both train and test
+    #### This takes care of some categories that are present in train and not in test
+    ###     and vice versa
+    """
+    start_train = copy.deepcopy(start_train)
+    start_test = copy.deepcopy(start_test)
+    if start_train[col].isnull().sum() > 0:
+        start_train[col] = start_train[col].fillna("NA")
+    train_categs = list(pd.unique(start_train[col].values))
+    if not isinstance(start_test,str) :
+        test_categs = list(pd.unique(start_test[col].values))
+        categs_all = train_categs+test_categs
+        dict_all =  return_factorized_dict(categs_all)
+    else:
+        dict_all = return_factorized_dict(train_categs)
+    start_train[col] = start_train[col].map(dict_all)
+    if not isinstance(start_test,str) :
+        if start_test[col].isnull().sum() > 0:
+            start_test[col] = start_test[col].fillna("NA")
+        start_test[col] = start_test[col].map(dict_all)
+    return start_train, start_test
+###############################################################################
+def return_factorized_dict(ls):
+    """
+    ######  Factorize any list of values in a data frame using this neat function
+    if your data has any NaN's it automatically marks it as -1 and returns that for NaN's
+    Returns a dictionary mapping previous values with new values.
+    """
+    factos = pd.unique(pd.factorize(ls)[0])
+    categs = pd.unique(pd.factorize(ls)[1])
+    if -1 in factos:
+        categs = np.insert(categs,np.where(factos==-1)[0][0],np.nan)
+    return dict(zip(categs,factos))
 ################      Find top features using XGB     ###################
-
 from sklearn.model_selection import KFold
 from sklearn.model_selection import GridSearchCV
 from sklearn.multioutput import MultiOutputClassifier
@@ -2279,6 +2315,17 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
         iter_limit = int(train_p.shape[1]/5+0.5)
     print('Selected No. of variables = %d ' %(train_p.shape[1],))
     print('Finding Important Features...')
+    catvars = copy.deepcopy(rem_vars)
+    #### First Convert Categatorical Vars to numeric before selecting top features #############
+    for col_cat in catvars:
+        if train_p[col_cat].dtype == object:
+            ####  This is the easiest way to label encode object variables in both train and test
+            #### This takes care of some categories that are present in train and not in test
+            ###     and vice versa
+            train_p, _ = convert_train_test_cat_col_to_numeric(train_p, '', col_cat)
+        elif str(train_p[col_cat].dtype) == 'category': 
+            train_p[col_cat] = train_p[col_cat].astype(int)
+    #################   N O W we are ready for iterating to find best features #######
     for i in range(0,train_p.shape[1],iter_limit):
         if verbose == 1:
             print('        in %d variables' %(train_p.shape[1]-i))
@@ -2331,7 +2378,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
 ###############################################
 #################################################################################
 if __name__ == "__main__":
-    version_number = '0.0.65'
+    version_number = '0.0.66'
     print("""Running AutoViz_Class version: %s. Call using:
         from autoviz.AutoViz_Class import AutoViz_Class
         AV = AutoViz_Class()
@@ -2340,7 +2387,7 @@ if __name__ == "__main__":
         """ %version_number)
     print("To remove previous versions, perform 'pip uninstall autoviz'")
 else:
-    version_number = '0.0.65'
+    version_number = '0.0.66'
     print("""Imported AutoViz_Class version: %s. Call using: 
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
