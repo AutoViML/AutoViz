@@ -80,7 +80,7 @@ class AutoViz_Class():
         ###########             AutoViz Class                                   ######
         ###########             by Ram Seshadri                                 ######
         ###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
-        ###########            Version V0.0.64 12/19/19                          ######
+        ###########            Version V0.0.67 12/27/19                          ######
         ##############################################################################
         ##### AUTOVIZ PERFORMS AUTOMATIC VISUALIZATION OF ANY DATA SET WITH ONE CLICK.
         #####    Give it any input file (CSV, txt or json) and AV will visualize it.##
@@ -929,7 +929,7 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
                 if dft[cats[k]].dtype == object:
                     labels = dft.groupby(cats[k])[each_conti].mean().sort_values(
                         ascending=False)[:chunksize].index.str[:stringlimit].tolist()
-                    ax1.set_xticklabels(labels)
+                    ax1.set_xticklabels(labels, rotation = 45, ha="right")
                 kadd += 1
                 if verbose == 2:
                     imgdata_list.append(save_image_data(fig, image_count, chart_format))
@@ -943,7 +943,7 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
                     if dft[cats[k]].dtype == object:
                         labels = dft.groupby(cats [k])[each_conti].mean().sort_values(
                             ascending=True)[:chunksize].index.str[:stringlimit].tolist()
-                        ax1.set_xticklabels(labels)
+                        ax1.set_xticklabels(labels, rotation = 45, ha="right")
                     ax1.set_title('Average %s by %s (Ascending)' %(each_conti,cats[k]))
                     kadd += 1
             fig.tight_layout();
@@ -971,7 +971,7 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
                     if dft[cats[k]].dtype == object:
                         labels = dft.groupby(cats[k])[each_conti].mean().sort_values(
                             ascending= True)[:chunksize].index.str[:stringlimit].tolist()
-                        ax1.set_xticklabels(labels)
+                        ax1.set_xticklabels(labels, rotation = 45, ha="right")
                     ax1.set_title('Average %s by %s (Descending)' %(each_conti,cats[k]))
                     kadd += 1
                 else:
@@ -984,7 +984,7 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
                     if dft[cats[k]].dtype == object:
                         labels = dft.groupby(cats[k])[each_conti].mean().sort_values(
                             ascending= True)[:chunksize].index.str[:stringlimit].tolist()
-                        ax1.set_xticklabels(labels)
+                        ax1.set_xticklabels(labels, rotation = 45, ha="right")
                     ax1.set_title('Mean %s by %s (Ascending)' %(each_conti,cats[k]))
                     kadd += 1
             fig.tight_layout();
@@ -1126,8 +1126,8 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
     cols = 2
     imgdata_list = list()
     width_size = 15  #### this is to control the width of chart as well as number of categories to display
-    height_size = 6
-    gap = 0.2 #### This controls the space between rows  ######
+    height_size = 5
+    gap = 0.4 #### This controls the space between rows  ######
     if dep==None or dep=='' or problem_type == 'Regression':
         image_count = 0
         transparent = 0.7
@@ -1223,7 +1223,10 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
             else:
                 plt.subplot(rows, cols, k+1)
                 ax1 = plt.gca()
+                kwds = {"rotation": 45, "ha":"right"}
+                labels = dft[conti_iter].value_counts()[:width_size].index.tolist()
                 dft[conti_iter].value_counts()[:width_size].plot(kind='bar',ax=ax1,label='%s' %conti_iter)
+                ax1.set_xticklabels(labels,**kwds);
                 ax1.set_title('Distribution of %s (top %d categories only)' %(conti_iter,width_size))
         #fig.tight_layout();
         if verbose == 2:
@@ -1256,8 +1259,11 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
                 plt.subplot(rows, cols, k+1)
                 ax1 = plt.gca()
                 if dft[each_conti].dtype==object:
+                    kwds = {"rotation": 45, "ha":"right"}
+                    labels = dft[each_conti].value_counts()[:width_size].index.tolist()
                     dft[each_conti].value_counts()[:width_size].plot(kind='bar',ax=ax1,
                                         label=class_label)
+                    ax1.set_xticklabels(labels,**kwds);
                     ax1.set_title('Distribution of %s (top %d categories only)' %(each_conti,width_size))
                 else:
                     try:
@@ -1307,7 +1313,7 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
             for p in ax2.patches:
                 ax2.annotate(str(round(p.get_height(),2)), (round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
             ax2.set_xticks(dft[dep].unique().tolist())
-            ax2.set_xticklabels(classes)
+            ax2.set_xticklabels(classes, rotation = 45, ha="right")
             ax2.set_title('Freq Distribution of Target Variable = %s' %dep,  fontsize=10,y=1.05)
         else:
             ############################################################################
@@ -2378,7 +2384,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
 ###############################################
 #################################################################################
 if __name__ == "__main__":
-    version_number = '0.0.66'
+    version_number = '0.0.67'
     print("""Running AutoViz_Class version: %s. Call using:
         from autoviz.AutoViz_Class import AutoViz_Class
         AV = AutoViz_Class()
@@ -2387,7 +2393,7 @@ if __name__ == "__main__":
         """ %version_number)
     print("To remove previous versions, perform 'pip uninstall autoviz'")
 else:
-    version_number = '0.0.66'
+    version_number = '0.0.67'
     print("""Imported AutoViz_Class version: %s. Call using: 
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
