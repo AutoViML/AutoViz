@@ -137,7 +137,7 @@ class AutoViz_Class():
         'name': 'violin',
         'heading': 'Violin Plots of all Continuous Variable',
         'plots': [],
-        'subheading':[],#"\n".join(subheading)
+        'subheading':[],#"\n".join(subheading)https://github.com/DanRothDataScience/AutoViz.git
         'desc': [] #"\n".join(desc)
         }  ##### This is for description and images for violin plots ###
         self.heat_map = {
@@ -986,6 +986,7 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
                             ascending= True)[:chunksize].index.str[:stringlimit].tolist()
                         ax1.set_xticklabels(labels, rotation = 45, ha="right")
                     ax1.set_title('Mean %s by %s (Ascending)' %(each_conti,cats[k]))
+                    plt.xticks(rotation=0)
                     kadd += 1
             fig.tight_layout();
             if verbose == 2:
@@ -1103,6 +1104,8 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         fig = plt.figure(figsize=(min(20,N*width_size),min(20,N*height_size)))
         corr = dft_target.corr()
         sns.heatmap(corr, annot=True)
+        plt.xticks(rotation=0)
+        plt.yticks(rotation=0)
         if timeseries_flag:
             plt.title('Time Series Data: Heatmap of Differenced Continuous vars including target = %s' %dep)
         else:
@@ -1127,7 +1130,7 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
     imgdata_list = list()
     width_size = 15  #### this is to control the width of chart as well as number of categories to display
     height_size = 5
-    gap = 0.4 #### This controls the space between rows  ######
+    gap = 0.6 #### This controls the space between rows  ######
     if dep==None or dep=='' or problem_type == 'Regression':
         image_count = 0
         transparent = 0.7
@@ -1225,6 +1228,8 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
                 ax1 = plt.gca()
                 kwds = {"rotation": 45, "ha":"right"}
                 labels = dft[conti_iter].value_counts()[:width_size].index.tolist()
+                labels = [re.sub(r"\bt\b", "True", label) for label in labels]
+                labels = [re.sub(r"\bf\b", "False", label) for label in labels]
                 dft[conti_iter].value_counts()[:width_size].plot(kind='bar',ax=ax1,label='%s' %conti_iter)
                 ax1.set_xticklabels(labels,**kwds);
                 ax1.set_title('Distribution of %s (top %d categories only)' %(conti_iter,width_size))
