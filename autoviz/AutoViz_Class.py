@@ -1735,7 +1735,10 @@ def find_remove_duplicates(values):
             output.append(value)
             seen.add(value)
     return output
-
+################################
+left_subtract = list_difference
+# def left_subtract(l1,l2):
+#     return [i for i in l1 if not i in l2]
 ##################
 def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
                         depVar='',dfte=None, header=0,verbose=0):
@@ -2200,8 +2203,7 @@ def find_corr_vars(correlation_dataframe,corr_limit = 0.70):
     rem_col_list = left_subtract(list(correlation_dataframe),list(OrderedDict.fromkeys(flat_corr_pair_list)))
     return corr_pair_count_dict, rem_col_list, corr_list, correlated_pair_dict
 #################################################################################
-def left_subtract(l1,l2):
-    return [i for i in l1 if not i in l2]
+
 #######
 def convert_train_test_cat_col_to_numeric(start_train, start_test, col):
     """
