@@ -42,8 +42,9 @@ import pdb
 import pprint
 import matplotlib
 matplotlib.style.use('seaborn')
-from itertools import cycle, combinations
+from itertools import cycle, combinations, chain
 from collections import defaultdict
+import operator
 import copy
 import time
 import sys
@@ -1513,10 +1514,7 @@ def draw_date_vars(df,dep,datevars, num_vars,verbose, chart_format, modeltype='R
 #Subtract RIGHT_LIST from LEFT_LIST to produce a new list
 ### This program is USED VERY HEAVILY so be careful about changing it
 def list_difference(l1,l2):
-    lst = []
-    for i in l1:
-        if i not in l2:
-            lst.append(i)
+    lst = [i for i in l1 if not i in l2]
     return lst
 
 ######## Find ANY word in columns to identify ANY TYPE OF columns
@@ -1533,7 +1531,7 @@ def search_for_word_in_list(columns_list, search_for_list):
             if len(result)>0:
                 if word.endswith(src) and not word in lst:
                     lst.append(word)
-            elif (word == 'id' or word == 'ID') and not word in lst:
+            elif word.lower() == 'id' and not word in lst:
                 lst.append(word)
             else:
                 continue
@@ -1551,20 +1549,15 @@ def search_for_word_in_list(columns_list, search_for_list):
 def analyze_ID_columns(dfin,columns_list):
     columns_list = columns_list[:]
     dfin = dfin[:]
-    IDcols_final = []
+    len_dfin = len(dfin)
     IDcols = search_for_word_in_list(columns_list,
         ['ID','Identifier','NUMBER','No','Id','Num','num','_no','.no','Number','number','_id','.id'])
-    if IDcols == []:
-        for eachcol in columns_list:
-            if len(dfin) == len(dfin[eachcol].unique()) and dfin[eachcol].dtype != float:
-                IDcols_final.append(eachcol)
-    else:
-        for each_col in IDcols:
-            if len(dfin) == len(dfin[each_col].unique()) and dfin[each_col].dtype != float:
-                IDcols_final.append(each_col)
-    if IDcols_final == [] and IDcols != []:
-        IDcols_final = IDcols
-    return IDcols_final
+    IDcols_final = [
+            each_col
+            for each_col in (IDcols if IDcols else columns_list)
+            if len_dfin == len(dfin[each_col].unique()) and dfin[each_col].dtype != float
+            ]
+    return IDcols if not IDcols_final and IDcols else IDcols_final
 
 # THESE FUNCTIONS ASSUME A DIRTY DATASET" IN A PANDAS DATAFRAME AS Inum_j}lotsUT
 # AND CONVERT THEM INTO A DATASET FIT FOR ANALYSIS IN THE END
@@ -1713,8 +1706,9 @@ def analyze_columns_in_dataset(dfx,IDcolse,verbose):
     date_vars = search_for_word_in_list(dfx.columns.tolist(),['Date','DATE','date','TIME','time',
                                                    'Time','Year','Yr','year','yr','timestamp',
                                                    'TimeStamp','TIMESTAMP','Timestamp','Time Stamp'])
-    date_vars = [x for x in date_vars if x not in cats+bool_vars ]
-    if date_vars == []:
+    cats_bool_vars = cats + bool_vars
+    date_vars = [x for x in date_vars if not x in cats_bool_vars ]
+    if not date_vars:
         for col in continuous_vars:
             if dfx[col].dtype==int:
                 if dfx[col].min() > 1900 or dfx[col].max() < 2100:
@@ -1737,7 +1731,7 @@ def find_remove_duplicates(values):
     output = []
     seen = set()
     for value in values:
-        if value not in seen:
+        if not value in seen:
             output.append(value)
             seen.add(value)
     return output
@@ -1772,7 +1766,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
     except:
         print('None of the decoders work...')
         return
-    orig_preds = [x for x in list(dfte) if x not in [depVar]]
+    orig_preds = [x for x in list(dfte) if not x in [depVar]]
     #################    CLASSIFY  COLUMNS   HERE    ######################
     var_df = classify_columns(dfte[orig_preds], verbose)
     #####       Classify Columns   ################
@@ -1788,14 +1782,15 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
         int_vars = []
     else:
         int_vars = var_df['int_vars']
-    preds = [x for x in orig_preds if x not in IDcols+cols_delete+discrete_string_vars]
-    if len(IDcols+cols_delete+discrete_string_vars) == 0:
+    IDcols_cols_delete_discrete_string_vars = IDcols+cols_delete+discrete_string_vars
+    preds = [x for x in orig_preds if not x in IDcols_cols_delete_discrete_string_vars]
+    if len(IDcols_cols_delete_discrete_string_vars) == 0:
         print('    No variables removed since no ID or low-information variables found in data set')
     else:
         print('    %d variables removed since they were ID or low-information variables' 
-                                %len(IDcols+cols_delete+discrete_string_vars))
+                                %len(IDcols_cols_delete_discrete_string_vars))
         if verbose >= 1:
-            print('    List of variables removed: %s' %(IDcols+cols_delete+discrete_string_vars))
+            print('    List of variables removed: %s' %(IDcols_cols_delete_discrete_string_vars))
     #############    Sample data if too big and find problem type   #############################
     if dfte.shape[0]>= max_rows_analyzed:
         print('Since Number of Rows in data %d exceeds maximum, randomly sampling %d rows for EDA...' %(len(dfte),max_rows_analyzed))
@@ -1869,14 +1864,14 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
             continuous_vars = var_df['continuous_vars']
             date_vars = var_df['date_vars']
             int_vars = var_df['int_vars']
-            preds = [x for x in important_features if x not in IDcols+cols_delete+discrete_string_vars]
-            if len(IDcols+cols_delete+discrete_string_vars) == 0:
+            preds = [x for x in important_features if not x in IDcols_cols_delete_discrete_string_vars]
+            if len(IDcols_cols_delete_discrete_string_vars) == 0:
                 print('    No variables removed since no ID or low-information variables found in data')
             else:
                 print('    %d variables removed since they were ID or low-information variables' 
-                                        %len(IDcols+cols_delete+discrete_string_vars))
+                                        %len(IDcols_cols_delete_discrete_string_vars))
             if verbose >= 1:
-                print('    List of variables removed: %s' %(IDcols+cols_delete+discrete_string_vars))
+                print('    List of variables removed: %s' %(IDcols_cols_delete_discrete_string_vars))
             dft = dft[preds+[depVar]]
         else:
             continuous_vars = continuous_vars[:max_cols_analyzed]
@@ -1956,8 +1951,8 @@ def classify_columns(df_preds, verbose=0):
     print('Classifying variables in data set...')
     #### Cat_Limit defines the max number of categories a column can have to be called a categorical colum 
     cat_limit = 50
-    def add(a,b):
-        return a+b
+    # def add(a,b):
+    #     return a+b
     train = df_preds[:]
     sum_all_cols = dict()
     orig_cols_total = train.shape[1]
@@ -2023,7 +2018,7 @@ def classify_columns(df_preds, verbose=0):
     var_df['int'] = 0
     var_df['date_time'] = 0
     ### if a particular column is date-time type, now set it as a date time variable ##
-    var_df['date_time'] = var_df.apply(lambda x: 1 if x['type_of_column'] in ['<M8[ns]','datetime64[ns]']  and x[
+    var_df['date_time'] = var_df.apply(lambda x: 1 if x['type_of_column'] in ['<M8[ns]','datetime64[ns]'] and x[
         'index'] not in string_bool_vars+num_bool_vars+discrete_string_vars+nlp_vars else 0,
                                         axis=1)
     ### this is where we save them as date time variables ###
@@ -2097,7 +2092,7 @@ def classify_columns(df_preds, verbose=0):
         print("    Number of Date Time Columns = ", len(date_vars))
         print("    Number of ID Columns = ", len(id_vars))
         print("    Number of Columns to Delete = ", len(cols_delete))
-    len_sum_all_cols = reduce(add,[len(v) for v in sum_all_cols.values()])
+    len_sum_all_cols = reduce(operator.add,map(lambda v: len(v), sum_all_cols.values()))
     if len_sum_all_cols == orig_cols_total:
         print('    %d Predictors classified...' %orig_cols_total)
         print('        This does not include the Target column(s)')
@@ -2181,27 +2176,23 @@ def count_freq_in_list(lst):
     This counts the frequency of items in a list but MAINTAINS the order of appearance of items.
     This order is very important when you are doing certain functions. Hence this function!
     """
-    temp=np.unique(lst)
-    result = []
-    for i in temp:
-        result.append((i,lst.count(i)))
-    return result
+    return [(i,lst.count(i)) for i in np.unique(lst)]
 
 def find_corr_vars(correlation_dataframe,corr_limit = 0.70):
     """
     This returns a dictionary of counts of each variable and how many vars it is correlated to in the dataframe
     """
     flatten = lambda l: [item for sublist in l for item in sublist]
-    flatten_items = lambda dic: [x for x in dic.items()]
+    flatten_items = lambda dic: list(dic.items())
     a = correlation_dataframe.values
     col_index = correlation_dataframe.columns.tolist()
     index_triupper = list(zip(np.triu_indices_from(a,k=1)[0],np.triu_indices_from(a,k=1)[1]))
     high_corr_index_list = [x for x in np.argwhere(abs(a[np.triu_indices(len(a), k = 1)])>=corr_limit)]
     low_corr_index_list =  [x for x in np.argwhere(abs(a[np.triu_indices(len(a), k = 1)])<corr_limit)]
-    tuple_list = [y for y in [index_triupper[x[0]] for x in high_corr_index_list]]
-    correlated_pair = [(col_index[tuple[0]],col_index[tuple[1]]) for tuple in tuple_list]
+    tuple_list = [index_triupper[x[0]] for x in high_corr_index_list]
+    correlated_pair = [(col_index[tuple_value[0]],col_index[tuple_value[1]]) for tuple_value in tuple_list]
     correlated_pair_dict = dict(correlated_pair)
-    flat_corr_pair_list = [item for sublist in correlated_pair for item in sublist]
+    flat_corr_pair_list = list(chain.from_iterable(correlated_pair))
     #### You can make it a dictionary or a tuple of lists. We have chosen the latter here to keep order intact.
     #corr_pair_count_dict = Counter(flat_corr_pair_list)
     corr_pair_count_dict = count_freq_in_list(flat_corr_pair_list)
@@ -2210,11 +2201,7 @@ def find_corr_vars(correlation_dataframe,corr_limit = 0.70):
     return corr_pair_count_dict, rem_col_list, corr_list, correlated_pair_dict
 #################################################################################
 def left_subtract(l1,l2):
-    lst = []
-    for i in l1:
-        if i not in l2:
-            lst.append(i)
-    return lst
+    return [i for i in l1 if not i in l2]
 #######
 def convert_train_test_cat_col_to_numeric(start_train, start_test, col):
     """
@@ -2350,9 +2337,13 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
                 print('XGB is Erroring. Check if there are missing values in your data and try again...')
                 return [], []
             try:
-                [important_features.append(x) for x in list(pd.concat([pd.Series(model_xgb.feature_importances_
-                        ),pd.Series(list(X_train.columns.values))],axis=1).rename(columns={0:'importance',1:'column'
-                    }).sort_values(by='importance',ascending=False)[:25]['column'])]
+                important_features.extend([x for x in list(
+                    pd.concat(
+                        [
+                            pd.Series(model_xgb.feature_importances_),
+                            pd.Series(list(X_train.columns.values))
+                            ],axis=1
+                        ).rename(columns={0:'importance',1:'column'}).sort_values(by='importance',ascending=False)[:25]['column'])])
             except:
                 print('Model training error in find top feature...')
                 important_features = copy.deepcopy(preds)
@@ -2369,9 +2360,9 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
             model_xgb.fit(X_train,y_train,early_stopping_rounds=5,
                         eval_set=[(X_cv,y_cv)],eval_metric=eval_metric,verbose=False)
             try:
-                [important_features.append(x) for x in list(pd.concat([pd.Series(model_xgb.feature_importances_
+                important_features.extend([x for x in list(pd.concat([pd.Series(model_xgb.feature_importances_
                         ),pd.Series(list(X_train.columns.values))],axis=1).rename(columns={0:'importance',1:'column'
-                    }).sort_values(by='importance',ascending=False)[:25]['column'])]
+                    }).sort_values(by='importance',ascending=False)[:25]['column'])])
                 important_features = list(OrderedDict.fromkeys(important_features))
             except:
                 print('Multi Label possibly no feature importances.')
