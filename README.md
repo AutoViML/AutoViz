@@ -1,5 +1,6 @@
 # AutoViz
 Automatically Visualize any dataset, any size with a single line of code
+Read this Medium article to know how to use <a href="https://towardsdatascience.com/autoviz-a-new-tool-for-automated-visualization-ec9c1744a6ad?source=friends_link&sk=c9e9503ec424b191c6096d7e3f515d10">AutoViz</a>...
 
         ##############################################################################
         #############       This is not an Officially Supported Google Product! ######
