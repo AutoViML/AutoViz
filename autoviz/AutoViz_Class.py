@@ -80,7 +80,7 @@ class AutoViz_Class():
         ###########             AutoViz Class                                   ######
         ###########             by Ram Seshadri                                 ######
         ###########      AUTOMATICALLY VISUALIZE ANY DATA SET                   ######
-        ###########            Version V0.0.67 12/27/19                          ######
+        ###########            Version V0.0.68 1/10/20                          ######
         ##############################################################################
         ##### AUTOVIZ PERFORMS AUTOMATIC VISUALIZATION OF ANY DATA SET WITH ONE CLICK.
         #####    Give it any input file (CSV, txt or json) and AV will visualize it.##
@@ -1120,6 +1120,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
 ##### Must do this only for Continuous Variables
 def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes=None):
     #### Since we are making changes to dft and classes, we will be making copies of it here
+    conti = list(set(conti))
     dft = dft[:]
     classes = copy.deepcopy(classes)
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
@@ -1251,33 +1252,40 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
             classes = [str(x) for x in classes]
         label_limit = len(target_vars)
         legend_flag = 1
-        for k, color2 in zip(range(noplots),colors):
-            each_conti = conti[k]
+        for each_conti,k in zip(conti,range(len(conti))):
             if dft[each_conti].isnull().sum() > 0:
                 dft[each_conti].fillna(0, inplace=True)
-            for target_var, color2, class_label in zip(target_vars,colors,classes):
-                plt.subplot(rows, cols, k+1)
-                ax1 = plt.gca()
-                if dft[each_conti].dtype==object:
-                    kwds = {"rotation": 45, "ha":"right"}
-                    labels = dft[each_conti].value_counts()[:width_size].index.tolist()
-                    dft[each_conti].value_counts()[:width_size].plot(kind='bar',ax=ax1,
-                                        label=class_label)
-                    ax1.set_xticklabels(labels,**kwds);
-                    ax1.set_title('Distribution of %s (top %d categories only)' %(each_conti,width_size))
-                else:
+            plt.subplot(rows, cols, k+1)
+            ax1 = plt.gca()
+            if dft[each_conti].dtype==object:
+                kwds = {"rotation": 45, "ha":"right"}
+                labels = dft[each_conti].value_counts()[:width_size].index.tolist()
+                conti_df = dft[[dep,each_conti]].groupby([dep,each_conti]).size().nlargest(width_size).reset_index(name='Values')
+                pivot_df = conti_df.pivot(index=each_conti, columns=dep, values='Values')
+                row_ticks = dft[dep].unique().tolist()
+                color_list = []
+                for i in range(len(row_ticks)):
+                    color_list.append(next(colors))
+                #print('color list = %s' %color_list)
+                pivot_df.loc[:,row_ticks].plot.bar(stacked=True, color=color_list, ax=ax1)
+                #dft[each_conti].value_counts()[:width_size].plot(kind='bar',ax=ax1,
+                #                    label=class_label)
+                #ax1.set_xticklabels(labels,**kwds);
+                ax1.set_title('Distribution of %s (top %d categories only)' %(each_conti,width_size))
+            else:
+                for target_var, color2, class_label in zip(target_vars,colors,classes):
                     try:
                         if legend_flag <= label_limit:
                             sns.distplot(dft.loc[dft[dep]==target_var][each_conti],
                                 hist=False, kde=True,
                             #dft.ix[dft[dep]==target_var][each_conti].hist(
                                 bins=binsize, ax= ax1,
-                                label=class_label, color=color2)
+                                label=target_var, color=color2)
                             ax1.set_title('Distribution of %s' %each_conti)
                             legend_flag += 1
                         else:
                             sns.distplot(dft.loc[dft[dep]==target_var][each_conti],bins=binsize, ax= ax1,
-                            label=class_label, hist=False, kde=True,
+                            label=target_var, hist=False, kde=True,
                             color=color2)
                             legend_flag += 1
                             ax1.set_title('Normed Histogram of %s' %each_conti)
@@ -1293,8 +1301,6 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
         fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=20, y=1.08)
         ###### Now draw the distribution of the target variable in Classification only ####
         if problem_type.endswith('Classification'):
-            if dft[dep].dtype == object:
-                dft[dep] = dft[dep].factorize()[0]
             col = 2
             row = 1
             fig, (ax1,ax2) = plt.subplots(row, col)
@@ -1305,6 +1311,8 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
             #fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
             ###### Precentage Distribution is first #################
             dft[dep].value_counts(1).plot(ax=ax1,kind='bar')
+            if dft[dep].dtype == object:
+                dft[dep] = dft[dep].factorize()[0]
             for p in ax1.patches:
                 ax1.annotate(str(round(p.get_height(),2)), (round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
             ax1.set_title('Percentage Distribution of Target = %s' %dep, fontsize=10, y=1.05)
@@ -2384,7 +2392,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
 ###############################################
 #################################################################################
 if __name__ == "__main__":
-    version_number = '0.0.67'
+    version_number = '0.0.68'
     print("""Running AutoViz_Class version: %s. Call using:
         from autoviz.AutoViz_Class import AutoViz_Class
         AV = AutoViz_Class()
@@ -2393,7 +2401,7 @@ if __name__ == "__main__":
         """ %version_number)
     print("To remove previous versions, perform 'pip uninstall autoviz'")
 else:
-    version_number = '0.0.67'
+    version_number = '0.0.68'
     print("""Imported AutoViz_Class version: %s. Call using: 
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
