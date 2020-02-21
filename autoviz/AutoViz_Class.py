@@ -2391,22 +2391,13 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
     return important_features, numvars
 ###############################################
 #################################################################################
-if __name__ == "__main__":
-    version_number = '0.0.68'
-    print("""Running AutoViz_Class version: %s. Call using:
-        from autoviz.AutoViz_Class import AutoViz_Class
-        AV = AutoViz_Class()
-        AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
-                            lowess=False,chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30)
-        """ %version_number)
-    print("To remove previous versions, perform 'pip uninstall autoviz'")
-else:
-    version_number = '0.0.68'
-    print("""Imported AutoViz_Class version: %s. Call using: 
+module_type = 'Running'if  __name__ == "__main__" else 'Imported'
+version_number = '0.0.68'
+print("""Imported AutoViz_Class version: %s. Call using: 
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
     AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
                             lowess=False,chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30)
             """ %version_number)
-    print("To remove previous versions, perform 'pip uninstall autoviz'")
+print("To remove previous versions, perform 'pip uninstall autoviz'")
 ###########################################################################################
