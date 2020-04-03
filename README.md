@@ -118,7 +118,7 @@ If not, this will give an error.
 
 ## Contributing
 
-See [the contributing file](contributing.md)!
+See [the contributing file](CONTRIBUTING.md)!
 
 PRs accepted.
 
