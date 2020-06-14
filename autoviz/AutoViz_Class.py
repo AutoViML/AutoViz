@@ -1785,13 +1785,13 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
     var_df = classify_columns(dfte[orig_preds], verbose)
     #####       Classify Columns   ################
     IDcols = var_df['id_vars']
-    discrete_string_vars = var_df['nlp_vars']+var_df['discrete_string_vars'] 
-    cols_delete = var_df['cols_delete']             
+    discrete_string_vars = var_df['nlp_vars']+var_df['discrete_string_vars']
+    cols_delete = var_df['cols_delete']
     bool_vars = var_df['string_bool_vars'] + var_df['num_bool_vars']
     categorical_vars = var_df['cat_vars'] + var_df['factor_vars'] + var_df['int_vars'] + bool_vars
     continuous_vars = var_df['continuous_vars']
     date_vars = var_df['date_vars']
-    if len(var_df['continuous_vars'])==0 and len(var_df['int_vars'])>0: 
+    if len(var_df['continuous_vars'])==0 and len(var_df['int_vars'])>0:
         continuous_vars = var_df['int_vars']
         int_vars = []
     else:
@@ -1800,7 +1800,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
     if len(IDcols+cols_delete+discrete_string_vars) == 0:
         print('    No variables removed since no ID or low-information variables found in data set')
     else:
-        print('    %d variables removed since they were ID or low-information variables' 
+        print('    %d variables removed since they were ID or low-information variables'
                                 %len(IDcols+cols_delete+discrete_string_vars))
         if verbose >= 1:
             print('    List of variables removed: %s' %(IDcols+cols_delete+discrete_string_vars))
@@ -1870,8 +1870,8 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
             #### Time to  classify the important columns again ###
             var_df = classify_columns(dft[important_features], verbose)
             IDcols = var_df['id_vars']
-            discrete_string_vars = var_df['nlp_vars']+var_df['discrete_string_vars'] 
-            cols_delete = var_df['cols_delete']             
+            discrete_string_vars = var_df['nlp_vars']+var_df['discrete_string_vars']
+            cols_delete = var_df['cols_delete']
             bool_vars = var_df['string_bool_vars'] + var_df['num_bool_vars']
             categorical_vars = var_df['cat_vars'] + var_df['factor_vars'] + var_df['int_vars'] + bool_vars
             continuous_vars = var_df['continuous_vars']
@@ -1881,7 +1881,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
             if len(IDcols+cols_delete+discrete_string_vars) == 0:
                 print('    No variables removed since no ID or low-information variables found in data')
             else:
-                print('    %d variables removed since they were ID or low-information variables' 
+                print('    %d variables removed since they were ID or low-information variables'
                                         %len(IDcols+cols_delete+discrete_string_vars))
             if verbose >= 1:
                 print('    List of variables removed: %s' %(IDcols+cols_delete+discrete_string_vars))
@@ -1962,7 +1962,7 @@ def classify_columns(df_preds, verbose=0):
     # cat_vars,factor_vars, bool_vars,discrete_string_vars,nlp_vars,date_vars,id_vars,cols_delete
     """
     print('Classifying variables in data set...')
-    #### Cat_Limit defines the max number of categories a column can have to be called a categorical colum 
+    #### Cat_Limit defines the max number of categories a column can have to be called a categorical colum
     cat_limit = 50
     def add(a,b):
         return a+b
@@ -2153,14 +2153,14 @@ def remove_variables_using_fast_correlation(df,numvars,corr_limit = 0.70,verbose
     final_dict = Counter(flatten(flatten_items(correlated_pair_dict2)))
     #### Make sure that these lists are sorted and compared. Otherwise, you will get False compares.
     if temp_corr_list2.sort() == temp_uncorr_list.sort():
-        ### if what you sent in, you got back the same, then you now need to pick just one: 
+        ### if what you sent in, you got back the same, then you now need to pick just one:
         ###   either keys or values of this correlated_pair_dictionary. Which one to pick?
         ###   Here we select the one which has the least overall correlation to rem_col_list
         ####  The reason we choose overall mean rather than absolute mean is the same reason in finance
         ####   A portfolio that has lower overall mean is better than  a portfolio with higher correlation
         corr_keys_mean = df[rem_col_list+flatten_keys(correlated_pair_dict2)].corr().mean().mean()
         corr_values_mean = df[rem_col_list+flatten_values(correlated_pair_dict2)].corr().mean().mean()
-        if corr_keys_mean <= corr_values_mean: 
+        if corr_keys_mean <= corr_values_mean:
             final_uncorr_list = flatten_keys(correlated_pair_dict2)
         else:
             final_uncorr_list = flatten_values(correlated_pair_dict2)
@@ -2299,7 +2299,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
     important_features = []
     if modeltype == 'Regression':
         model_xgb = XGBRegressor(objective='reg:linear', n_estimators=100,subsample=subsample,
-                                colsample_bytree=col_sub_sample,reg_alpha=0.5, reg_lambda=0.5, 
+                                colsample_bytree=col_sub_sample,reg_alpha=0.5, reg_lambda=0.5,
                                 seed=1,n_jobs=-1,random_state=1)
         eval_metric = 'rmse'
     else:
@@ -2337,7 +2337,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
             #### This takes care of some categories that are present in train and not in test
             ###     and vice versa
             train_p, _ = convert_train_test_cat_col_to_numeric(train_p, '', col_cat)
-        elif str(train_p[col_cat].dtype) == 'category': 
+        elif str(train_p[col_cat].dtype) == 'category':
             train_p[col_cat] = train_p[col_cat].astype(int)
     #################   N O W we are ready for iterating to find best features #######
     for i in range(0,train_p.shape[1],iter_limit):
@@ -2349,7 +2349,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
                 train_part = int((1-test_size)*X.shape[0])
                 X_train, X_cv, y_train, y_cv = X[:train_part],X[train_part:],y[:train_part],y[train_part:]
             else:
-                X_train, X_cv, y_train, y_cv = train_test_split(X, y, 
+                X_train, X_cv, y_train, y_cv = train_test_split(X, y,
                                                             test_size=test_size, random_state=seed)
             try:
                 model_xgb.fit(X_train,y_train,early_stopping_rounds=5,eval_set=[(X_cv,y_cv)],
@@ -2367,12 +2367,12 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
                 return important_features, [], []
         else:
             X = train_p[list(train_p.columns.values)[i:train_p.shape[1]]]
-            #### Split here into train and test #####            
+            #### Split here into train and test #####
             if modeltype == 'Regression':
                 train_part = int((1-test_size)*X.shape[0])
                 X_train, X_cv, y_train, y_cv = X[:train_part],X[train_part:],y[:train_part],y[train_part:]
             else:
-                X_train, X_cv, y_train, y_cv = train_test_split(X, y, 
+                X_train, X_cv, y_train, y_cv = train_test_split(X, y,
                                                             test_size=test_size, random_state=seed)
             model_xgb.fit(X_train,y_train,early_stopping_rounds=5,
                         eval_set=[(X_cv,y_cv)],eval_metric=eval_metric,verbose=False)
@@ -2392,8 +2392,8 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
 ###############################################
 #################################################################################
 module_type = 'Running'if  __name__ == "__main__" else 'Imported'
-version_number = '0.0.68'
-print("""Imported AutoViz_Class version: %s. Call using: 
+version_number = '0.0.69'
+print("""Imported AutoViz_Class version: %s. Call using:
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
     AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
