@@ -26,7 +26,7 @@ Give any input file (CSV, txt or json) and AutoViz will visualize it.
 
 ## Install
 
-**Prerequsites**
+**Prerequisites**
 
 - [Anaconda](https://docs.anaconda.com/anaconda/install/)
 
@@ -64,10 +64,10 @@ from autoviz.AutoViz_Class import AutoViz_Class
 AV = AutoViz_Class()
 ```
 
-Load a dataset (any CSV or text file) into a Pandas dataframe or give the name of the path and filename you want to visualize.
+Load a dataset (any CSV or text file) into a Pandas DataFrame or give the name of the path and filename you want to visualize.
 If you don't have a filename, you can simply assign the filename argument `""` (empty string).
 
-Call AutoViz using the filename (or dataframe) along with the separator and the name of the target variable in the input.
+Call AutoViz using the filename (or DataFrame) along with the separator and the name of the target variable in the input.
 AutoViz will do the rest. You will see charts and plots on your screen.
 
 ```py
@@ -88,7 +88,7 @@ dft = AV.AutoViz(
 ```
 
 This is the main calling program in AV.
-It will call all the load, display and save programs that are currently outside AV.
+It will call all the load, display, and save programs that are currently outside AV.
 This program will draw scatter and other plots for the input dataset and then call the correct variable name with the `add_plots` function and send in the chart created by that plotting program, for example, scatter.
 You have to make sure that `add_plots` function has the exact name of the variable defined in the Class AV.
 If not, this will give an error.
@@ -96,8 +96,8 @@ If not, this will give an error.
 **Notes:**
 
 * AutoViz will visualize any sized file using a statistically valid sample.
-* `COMMA` is assumed as default separator in file. But you can change it.
-* Assumes first row as header in file but you can change it.
+* `COMMA` is assumed as default separator in the file. But you can change it.
+* Assumes the first row as the header in the file but you can change it.
 
 ## API
 
@@ -107,7 +107,7 @@ If not, this will give an error.
 - `max_cols_analyzed` - limits the number of continuous vars that can be analyzed
 - `verbose`
   - if 0, does not print any messages and goes into silent mode. This is the default.
-  - if 1, print messages on the terminal and also display charts on terminal.
+  - if 1, print messages on the terminal and also display charts on the terminal.
   - if 2, print messages but will not display charts, it will simply save them.
 
 ## Maintainers
@@ -128,4 +128,3 @@ Apache License, Version 2.0
 
 ## DISCLAIMER
 This project is not an official Google project. It is not supported by Google and Google specifically disclaims all warranties as to its quality, merchantability, or fitness for a particular purpose.
-
