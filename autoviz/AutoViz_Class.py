@@ -57,6 +57,7 @@ import traceback
 import xgboost as xgb
 from xgboost.sklearn import XGBClassifier
 from xgboost.sklearn import XGBRegressor
+from sklearn.model_selection import train_test_split
 #####################################################
 class AutoViz_Class():
     """
@@ -1810,6 +1811,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
         dft = dfte.sample(max_rows_analyzed, random_state=0)
     else:
         dft = copy.deepcopy(dfte)
+    ###### This is where you find what type the dependent variable is ########
     if type(depVar) == str:
         if depVar == '':
             cols_list = list(dft)
@@ -2392,7 +2394,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
 ###############################################
 #################################################################################
 module_type = 'Running'if  __name__ == "__main__" else 'Imported'
-version_number = '0.0.69'
+version_number = '0.0.70'
 print("""Imported AutoViz_Class version: %s. Call using:
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
