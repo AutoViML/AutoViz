@@ -222,6 +222,7 @@ class AutoViz_Class():
         ####  it will simply save them.                                          #####
         ##############################################################################
         """
+        corr_limit = 0.7  ### This is needed to remove variables correlated above this limit
         max_num_cols_analyzed = min(25,int(max_cols_analyzed*0.6))
         start_time = time.time()
         try:
@@ -1754,6 +1755,7 @@ def find_remove_duplicates(values):
 ##################
 def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
                         depVar='',dfte=None, header=0,verbose=0):
+    corr_limit = 0.7  ### This limit represents correlation above this, vars will be removed
     start_time=time.time()
     if filename == '':
         dft = dfte[:]
@@ -1863,8 +1865,8 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
         if problem_type.endswith('Classification') or problem_type == 'Regression':
             print('%d numeric variables in data exceeds limit, taking top %d variables' %(len(
                                             continuous_vars), max_cols_analyzed))
-            important_features,num_vars = find_top_features_xgb(dft,preds,continuous_vars,
-                                                         depVar,problem_type,verbose)
+            important_features,num_vars, _ = find_top_features_xgb(dft,preds,continuous_vars,
+                                                         depVar,problem_type,corr_limit,verbose)
             if len(important_features) >= max_cols_analyzed:
                 ### Limit the number of features to max columns analyzed ########
                 important_features = important_features[:max_cols_analyzed]
@@ -2121,71 +2123,96 @@ def classify_columns(df_preds, verbose=0):
 #################################################################################
 from collections import Counter
 import time
+from sklearn.feature_selection import chi2, mutual_info_regression, mutual_info_classif
+from sklearn.feature_selection import SelectKBest
+################################################################################
+from collections import defaultdict
 from collections import OrderedDict
-def remove_variables_using_fast_correlation(df,numvars,corr_limit = 0.70,verbose=0):
+import time
+def return_dictionary_list(lst_of_tuples):
+    """ Returns a dictionary of lists if you send in a list of Tuples"""
+    orDict = defaultdict(list)
+    # iterating over list of tuples
+    for key, val in lst_of_tuples:
+        orDict[key].append(val)
+    return orDict
+##################################################################################
+def remove_variables_using_fast_correlation(df, numvars, modeltype, target,
+                                corr_limit = 0.70,verbose=0):
     """
-    Removes variables that are highly correlated using a pair-wise
-    high-correlation knockout method. It is highly efficient and hence can work on thousands
-    of variables in less than a minute, even on a laptop. Only send in a list of numeric
-    variables, otherwise, it will blow-up!
-    Correlation = 0.70 This is the highest correlation that any two variables can have.
-    Above this, and one of them gets knocked out: this is decided in the shootout stage
-    after the initial round of cutoffs for pair-wise correlations...It returns a list of
-    clean variables that are uncorrelated (atleast in a pair-wise sense).
+    #### THIS METHOD IS KNOWN AS SULO METHOD in HONOR OF my mother SULOCHANA SESHADRI #######
+    This highly efficient method removes variables that are highly correlated using a series of
+    pair-wise correlation knockout rounds. It is extremely fast and hence can work on thousands
+    of variables in less than a minute, even on a laptop. You need to send in a list of numeric
+    variables and that's all! The method defines high Correlation as anything over 0.70 (absolute)
+    but this can be changed. If two variables have absolute correlation higher than this, they
+    will be marked, and using a process of elimination, one of them will get knocked out:
+    To decide order of variables to keep, we use mutuail information score to select. MIS returns
+    a ranked list of these correlated variables: when we select one, we knock out others
+    that it is correlated to. Then we select next var. This way we knock out correlated variables.
+    Finally we are left with uncorrelated variables that are also highly important (mutual score).
+    ##############  YOU MUST INCLUDE THE ABOVE MESSAGE IF YOU COPY THIS CODE IN YOUR LIBRARY #####
     """
-    flatten = lambda l: [item for sublist in l for item in sublist]
-    flatten_items = lambda dic: [x for x in dic.items()]
-    flatten_keys = lambda dic: [x for x in dic.keys()]
-    flatten_values = lambda dic: [x for x in dic.values()]
-    start_time = time.time()
-    print('Number of numeric variables = %d' %len(numvars))
-    corr_pair_count_dict, rem_col_list, temp_corr_list,correlated_pair_dict  = find_corr_vars(df[numvars].corr())
-    temp_dict = Counter(flatten(flatten_items(correlated_pair_dict)))
-    temp_corr_list = []
-    for name, count in temp_dict.items():
-        if count >= 2:
-            temp_corr_list.append(name)
-    temp_uncorr_list = []
-    for name, count in temp_dict.items():
-        if count == 1:
-            temp_uncorr_list.append(name)
-    ### Do another correlation test to remove those that are correlated to each other ####
-    corr_pair_count_dict2, rem_col_list2 , temp_corr_list2, correlated_pair_dict2 = find_corr_vars(
-                            df[rem_col_list+temp_uncorr_list].corr(),corr_limit)
-    final_dict = Counter(flatten(flatten_items(correlated_pair_dict2)))
-    #### Make sure that these lists are sorted and compared. Otherwise, you will get False compares.
-    if temp_corr_list2.sort() == temp_uncorr_list.sort():
-        ### if what you sent in, you got back the same, then you now need to pick just one:
-        ###   either keys or values of this correlated_pair_dictionary. Which one to pick?
-        ###   Here we select the one which has the least overall correlation to rem_col_list
-        ####  The reason we choose overall mean rather than absolute mean is the same reason in finance
-        ####   A portfolio that has lower overall mean is better than  a portfolio with higher correlation
-        corr_keys_mean = df[rem_col_list+flatten_keys(correlated_pair_dict2)].corr().mean().mean()
-        corr_values_mean = df[rem_col_list+flatten_values(correlated_pair_dict2)].corr().mean().mean()
-        if corr_keys_mean <= corr_values_mean:
-            final_uncorr_list = flatten_keys(correlated_pair_dict2)
+    print('    Removing correlated variables using SULO method')
+    correlation_dataframe = df[numvars].corr()
+    a = correlation_dataframe.values
+    col_index = correlation_dataframe.columns.tolist()
+    index_triupper = list(zip(np.triu_indices_from(a,k=1)[0],np.triu_indices_from(a,k=1)[1]))
+    high_corr_index_list = [x for x in np.argwhere(abs(a[np.triu_indices(len(a), k = 1)])>=corr_limit)]
+    low_corr_index_list =  [x for x in np.argwhere(abs(a[np.triu_indices(len(a), k = 1)])<corr_limit)]
+    tuple_list = [y for y in [index_triupper[x[0]] for x in high_corr_index_list]]
+    correlated_pair = [(col_index[tuple[0]],col_index[tuple[1]]) for tuple in tuple_list]
+    corr_pair_dict = dict(return_dictionary_list(correlated_pair))
+    keys_in_dict = list(corr_pair_dict.keys())
+    reverse_correlated_pair = [(y,x) for (x,y) in correlated_pair]
+    reverse_corr_pair_dict = dict(return_dictionary_list(reverse_correlated_pair))
+    for key, val in reverse_corr_pair_dict.items():
+        if key in keys_in_dict:
+            if len(key) > 1:
+                corr_pair_dict[key] += val
         else:
-            final_uncorr_list = flatten_values(correlated_pair_dict2)
+            corr_pair_dict[key] = val
+    flat_corr_pair_list = [item for sublist in correlated_pair for item in sublist]
+    #### You can make it a dictionary or a tuple of lists. We have chosen the latter here to keep order intact.
+    corr_pair_count_dict = count_freq_in_list(flat_corr_pair_list)
+    corr_list = [k for (k,v) in corr_pair_count_dict]
+    ###### This is for ordering the variables in the highest to lowest importance to target ###
+    if len(corr_list) == 0:
+        final_list = list(correlation_dataframe)
+        print('\nData Error:  All %d numeric vars are found to be highly correlated in this data! Check your data input...')
+        if verbose >= 1:
+            print('\nSince all numeric vars will be removed, selecting all variables...' %len(final_list))
     else:
-        final_corr_list = []
-        for name, count in final_dict.items():
-            if count >= 2:
-                final_corr_list.append(name)
-        final_uncorr_list = []
-        for name, count in final_dict.items():
-            if count == 1:
-                final_uncorr_list.append(name)
-    ####  Once we have chosen a few from the highest corr list, we add them to the highest uncorr list#####
-    selected = copy.deepcopy(final_uncorr_list)
-    #####  Now we have reduced the list of vars and these are ready to be used ####
-    final_list = list(OrderedDict.fromkeys(selected + rem_col_list))
-    if int(len(numvars)-len(final_list)) == 0:
-              print('    No variables were removed since no highly correlated variables found in data')
-    else:
-        print('    Number of variables removed due to high correlation = %d ' %(len(numvars)-len(final_list)))
-    #print('    Time taken for removing highly correlated variables (in secs)=%0.0f' %(time.time()-start_time))
+        max_feats = len(corr_list)
+        if modeltype == 'Regression':
+            sel_function = mutual_info_regression
+            fs = SelectKBest(score_func=sel_function, k=max_feats)
+            fs.fit(df[corr_list], df[target])
+            mutual_info = dict(zip(corr_list,fs.scores_))
+        else:
+            sel_function = mutual_info_classif
+            fs = SelectKBest(score_func=sel_function, k=max_feats)
+            fs.fit(df[corr_list], df[target])
+            mutual_info = dict(zip(corr_list,fs.scores_))
+        #### The first variable in list has the highest correlation to the target variable ###
+        sorted_by_mutual_info =[key for (key,val) in sorted(mutual_info.items(), key=lambda kv: kv[1],reverse=True)]
+        #####   Now we select the final list of correlated variables ###########
+        selected_corr_list = []
+        #### select each variable by the highest mutual info and see what vars are correlated to it
+        for each_corr_name in sorted_by_mutual_info:
+            ### add the selected var to the selected_corr_list
+            selected_corr_list.append(each_corr_name)
+            for each_remove in corr_pair_dict[each_corr_name]:
+                #### Now remove each variable that is highly correlated to the selected variable
+                if each_remove in sorted_by_mutual_info:
+                    sorted_by_mutual_info.remove(each_remove)
+        ##### Now we combine the uncorrelated list to the selected correlated list above
+        rem_col_list = left_subtract(list(correlation_dataframe),corr_list)
+        final_list = rem_col_list + selected_corr_list
+        if verbose >= 1:
+            print('\nAfter removing highly correlated variables, following %d numeric vars selected: %s' %(len(final_list),final_list))
     return final_list
-
+###############################################################################################
 def count_freq_in_list(lst):
     """
     This counts the frequency of items in a list but MAINTAINS the order of appearance of items.
@@ -2261,48 +2288,99 @@ def return_factorized_dict(ls):
     if -1 in factos:
         categs = np.insert(categs,np.where(factos==-1)[0][0],np.nan)
     return dict(zip(categs,factos))
+#################################################################################
 ################      Find top features using XGB     ###################
+#################################################################################
 from sklearn.model_selection import KFold
 from sklearn.model_selection import GridSearchCV
 from sklearn.multioutput import MultiOutputClassifier
 import copy
 from sklearn.multiclass import OneVsRestClassifier
 from collections import OrderedDict
-
-def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbose=0):
+################################################################################
+################      Find top features using XGB     ###################
+################################################################################
+from xgboost import XGBClassifier, XGBRegressor
+def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,verbose=0):
     """
     This is a fast utility that uses XGB to find top features. You
     It returns a list of important features.
     Since it is XGB, you dont have to restrict the input to just numeric vars.
     You can send in all kinds of vars and it will take care of transforming it. Sweet!
     """
-    subsample =  0.5
-    col_sub_sample = 0.5
+    ######################   I M P O R T A N T ##############################################
+    ###### This top_num decides how many top_n features XGB selects in each iteration.
+    ####  There a total of 5 iterations. Hence 5x10 means maximum 50 featues will be selected.
+    #####  If there are more than 50 variables, then maximum 5*25 = 125 variables will be selected
+    if len(preds) <= 50:
+        top_num = 10
+    else:
+        top_num = 25
+    ######################   I M P O R T A N T ##############################################
+    #### If there are more than 30 categorical variables in a data set, it is worth reducing features.
+    ####  Otherwise. XGBoost is pretty good at finding the best features whether cat or numeric !
+    n_splits = 5
+    max_depth = 8
+    max_cats = 5
+    ######################   I M P O R T A N T ##############################################
+    train = copy.deepcopy(train)
+    preds = copy.deepcopy(preds)
+    numvars = copy.deepcopy(numvars)
+    subsample =  0.7
+    col_sub_sample = 0.7
     train = copy.deepcopy(train)
     start_time = time.time()
     test_size = 0.2
     seed = 1
-    n_splits = 5
-    kf = KFold(n_splits=n_splits,random_state= 33)
+    early_stopping = 5
+    ####### All the default parameters are set up now #########
+    kf = KFold(n_splits=n_splits, random_state=33)
     rem_vars = left_subtract(preds,numvars)
-    if len(numvars) > 0:
-        final_list = remove_variables_using_fast_correlation(train,numvars,corr_limit,verbose)
+    catvars = copy.deepcopy(rem_vars)
+    ############   I  M P O R T A N T ! I M P O R T A N T ! ######################
+    ##### Removing the Cat Vars selection using Linear Methods since they fail so often.
+    ##### Linear methods such as Chi2 or Mutual Information Score are not great
+    ####  for feature selection since they can't handle large data and provide
+    ####  misleading results for large data sets. Hence I am using XGBoost alone.
+    ####  Also, another method of using Spearman Correlation for CatVars with 100's
+    ####  of variables is very slow. Also, is not very clear is effective: only 3-4 vars
+    ####   are removed. Hence for now, I am not going to use Spearman method. Perhaps later.
+    ##############################################################################
+    #if len(catvars) > max_cats:
+    #    start_time = time.time()
+    #    important_cats = remove_variables_using_fast_correlation(train,catvars,'spearman',
+    #                         corr_limit,verbose)
+    #    if verbose >= 1:
+    #        print('Time taken for reducing highly correlated Categorical vars was %0.0f seconds' %(time.time()-start_time))
+    #else:
+    important_cats = copy.deepcopy(catvars)
+    print('No categorical feature reduction done. All %d Categorical vars selected ' %(len(catvars)))
+    if len(numvars) > 1:
+        final_list = remove_variables_using_fast_correlation(train,numvars,modeltype,target,
+                             corr_limit,verbose)
     else:
-        final_list = numvars[:]
+        final_list = copy.deepcopy(numvars)
     print('    Adding %s categorical variables to reduced numeric variables  of %d' %(
-                            len(rem_vars),len(final_list)))
-    preds = final_list+rem_vars
+                            len(important_cats),len(final_list)))
+    if  isinstance(final_list,np.ndarray):
+        final_list = final_list.tolist()
+    preds = final_list+important_cats
+    #######You must convert category variables into integers ###############
+    for important_cat in important_cats:
+        if str(train[important_cat].dtype) == 'category':
+            train[important_cat] = train[important_cat].astype(int)
     ########    Drop Missing value rows since XGB for some reason  #########
     ########    can't handle missing values in early stopping rounds #######
     train.dropna(axis=0,subset=preds+[target],inplace=True)
     ########   Dont move this train and y definition anywhere else ########
     y = train[target]
-    ######################################################################
+    print('############## F E A T U R E   S E L E C T I O N  ####################')
     important_features = []
     if modeltype == 'Regression':
-        model_xgb = XGBRegressor(objective='reg:linear', n_estimators=100,subsample=subsample,
+        objective = 'reg:squarederror'
+        model_xgb = XGBRegressor( n_estimators=100,subsample=subsample,objective=objective,
                                 colsample_bytree=col_sub_sample,reg_alpha=0.5, reg_lambda=0.5,
-                                seed=1,n_jobs=-1,random_state=1)
+                                 seed=1,n_jobs=-1,random_state=1)
         eval_metric = 'rmse'
     else:
         #### This is for Classifiers only
@@ -2310,95 +2388,91 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit,verbos
         if len(classes) == 2:
             model_xgb = XGBClassifier(base_score=0.5, booster='gbtree', subsample=subsample,
                 colsample_bytree=col_sub_sample,gamma=1, learning_rate=0.1, max_delta_step=0,
-                max_depth=5, min_child_weight=1, missing=-999, n_estimators=100,
+                max_depth=max_depth, min_child_weight=1, missing=-999, n_estimators=100,
                 n_jobs=-1, nthread=None, objective='binary:logistic',
-                random_state=1, reg_alpha=0.5, reg_lambda=0.5, scale_pos_weight=1,
-                seed=1, silent=True)
+                random_state=1, reg_alpha=0.5, reg_lambda=0.5,
+                seed=1)
             eval_metric = 'logloss'
         else:
             model_xgb = XGBClassifier(base_score=0.5, booster='gbtree', subsample=subsample,
                         colsample_bytree=col_sub_sample, gamma=1, learning_rate=0.1, max_delta_step=0,
-                max_depth=5, min_child_weight=1, missing=-999, n_estimators=100,
+                max_depth=max_depth, min_child_weight=1, missing=-999, n_estimators=100,
                 n_jobs=-1, nthread=None, objective='multi:softmax',
-                random_state=1, reg_alpha=0.5, reg_lambda=0.5, scale_pos_weight=1,
-                seed=1, silent=True)
+                random_state=1, reg_alpha=0.5, reg_lambda=0.5,
+                seed=1)
             eval_metric = 'mlogloss'
     ####   This is where you start to Iterate on Finding Important Features ################
+    save_xgb = copy.deepcopy(model_xgb)
     train_p = train[preds]
     if train_p.shape[1] < 10:
         iter_limit = 2
     else:
         iter_limit = int(train_p.shape[1]/5+0.5)
-    print('Selected No. of variables = %d ' %(train_p.shape[1],))
-    print('Finding Important Features...')
-    catvars = copy.deepcopy(rem_vars)
-    #### First Convert Categatorical Vars to numeric before selecting top features #############
-    for col_cat in catvars:
-        if train_p[col_cat].dtype == object:
-            ####  This is the easiest way to label encode object variables in both train and test
-            #### This takes care of some categories that are present in train and not in test
-            ###     and vice versa
-            train_p, _ = convert_train_test_cat_col_to_numeric(train_p, '', col_cat)
-        elif str(train_p[col_cat].dtype) == 'category':
-            train_p[col_cat] = train_p[col_cat].astype(int)
-    #################   N O W we are ready for iterating to find best features #######
-    for i in range(0,train_p.shape[1],iter_limit):
-        if verbose == 1:
-            print('        in %d variables' %(train_p.shape[1]-i))
-        if train_p.shape[1]-i < iter_limit:
-            X = train_p.iloc[:,i:]
-            if modeltype == 'Regression':
-                train_part = int((1-test_size)*X.shape[0])
-                X_train, X_cv, y_train, y_cv = X[:train_part],X[train_part:],y[:train_part],y[train_part:]
-            else:
-                X_train, X_cv, y_train, y_cv = train_test_split(X, y,
-                                                            test_size=test_size, random_state=seed)
-            try:
-                model_xgb.fit(X_train,y_train,early_stopping_rounds=5,eval_set=[(X_cv,y_cv)],
-                                    eval_metric=eval_metric,verbose=False)
-            except:
-                print('XGB is Erroring. Check if there are missing values in your data and try again...')
-                return [], []
-            try:
-                [important_features.append(x) for x in list(pd.concat([pd.Series(model_xgb.feature_importances_
-                        ),pd.Series(list(X_train.columns.values))],axis=1).rename(columns={0:'importance',1:'column'
-                    }).sort_values(by='importance',ascending=False)[:25]['column'])]
-            except:
-                print('Model training error in find top feature...')
-                important_features = copy.deepcopy(preds)
-                return important_features, [], []
-        else:
-            X = train_p[list(train_p.columns.values)[i:train_p.shape[1]]]
-            #### Split here into train and test #####
-            if modeltype == 'Regression':
-                train_part = int((1-test_size)*X.shape[0])
-                X_train, X_cv, y_train, y_cv = X[:train_part],X[train_part:],y[:train_part],y[train_part:]
-            else:
-                X_train, X_cv, y_train, y_cv = train_test_split(X, y,
-                                                            test_size=test_size, random_state=seed)
-            model_xgb.fit(X_train,y_train,early_stopping_rounds=5,
-                        eval_set=[(X_cv,y_cv)],eval_metric=eval_metric,verbose=False)
-            try:
-                [important_features.append(x) for x in list(pd.concat([pd.Series(model_xgb.feature_importances_
-                        ),pd.Series(list(X_train.columns.values))],axis=1).rename(columns={0:'importance',1:'column'
-                    }).sort_values(by='importance',ascending=False)[:25]['column'])]
+    print('Current number of predictors = %d ' %(train_p.shape[1],))
+    print('    Finding Important Features using Boosted Trees algorithm...')
+    try:
+        for i in range(0,train_p.shape[1],iter_limit):
+            new_xgb = copy.deepcopy(save_xgb)
+            print('        using %d variables...' %(train_p.shape[1]-i))
+            if train_p.shape[1]-i < iter_limit:
+                X = train_p.iloc[:,i:]
+                if modeltype == 'Regression':
+                    train_part = int((1-test_size)*X.shape[0])
+                    X_train, X_cv, y_train, y_cv = X[:train_part],X[train_part:],y[:train_part],y[train_part:]
+                else:
+                    X_train, X_cv, y_train, y_cv = train_test_split(X, y,
+                                                                test_size=test_size, random_state=seed)
+                try:
+                    eval_set = [(X_train,y_train),(X_cv,y_cv)]
+                    model_xgb.fit(X_train,y_train,early_stopping_rounds=early_stopping,eval_set=eval_set,
+                                        eval_metric=eval_metric,verbose=False)
+                    important_features += pd.Series(model_xgb.get_booster().get_score(
+                                importance_type='gain')).sort_values(ascending=False)[:top_num].index.tolist()
+                except:
+                    new_xgb.fit(X_train,y_train,early_stopping_rounds=early_stopping,eval_set=eval_set,
+                                        eval_metric=eval_metric,verbose=False)
+                    print('XGB has a bug in version xgboost 1.02 for feature importances. Try to install version 0.90 or 1.10 - continuing...')
+                    important_features += pd.Series(new_xgb.get_booster().get_score(
+                                importance_type='gain')).sort_values(ascending=False)[:top_num].index.tolist()
                 important_features = list(OrderedDict.fromkeys(important_features))
-            except:
-                print('Multi Label possibly no feature importances.')
-                important_features = copy.deepcopy(preds)
+            else:
+                X = train_p[list(train_p.columns.values)[i:train_p.shape[1]]]
+                #### Split here into train and test #####
+                if modeltype == 'Regression':
+                    train_part = int((1-test_size)*X.shape[0])
+                    X_train, X_cv, y_train, y_cv = X[:train_part],X[train_part:],y[:train_part],y[train_part:]
+                else:
+                    X_train, X_cv, y_train, y_cv = train_test_split(X, y,
+                                                                test_size=test_size, random_state=seed)
+                eval_set = [(X_train,y_train),(X_cv,y_cv)]
+                try:
+                    model_xgb.fit(X_train,y_train,early_stopping_rounds=early_stopping,
+                                  eval_set=eval_set,eval_metric=eval_metric,verbose=False)
+                    important_features += pd.Series(model_xgb.get_booster().get_score(
+                                importance_type='gain')).sort_values(ascending=False)[:top_num].index.tolist()
+                except:
+                    new_xgb.fit(X_train,y_train,early_stopping_rounds=early_stopping,
+                                  eval_set=eval_set,eval_metric=eval_metric,verbose=False)
+                    important_features += pd.Series(model_xgb.get_booster().get_score(
+                                importance_type='gain')).sort_values(ascending=False)[:top_num].index.tolist()
+                important_features = list(OrderedDict.fromkeys(important_features))
+    except:
+        print('Finding top features using XGB is crashing. Continuing with all predictors...')
+        important_features = copy.deepcopy(preds)
+        return important_features, [], []
     important_features = list(OrderedDict.fromkeys(important_features))
-    print('    Found %d important features' %len(important_features))
+    print('Found %d important features' %len(important_features))
     #print('    Time taken (in seconds) = %0.0f' %(time.time()-start_time))
     numvars = [x for x in numvars if x in important_features]
-    return important_features, numvars
-###############################################
-#################################################################################
+    important_cats = [x for x in important_cats if x in important_features]
+    return important_features, numvars, important_cats
+################################################################################
 module_type = 'Running'if  __name__ == "__main__" else 'Imported'
-version_number = '0.0.70'
+version_number = '0.0.71'
 print("""Imported AutoViz_Class version: %s. Call using:
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
-    AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
+    AV.AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
                             lowess=False,chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30)
             """ %version_number)
 print("To remove previous versions, perform 'pip uninstall autoviz'")
