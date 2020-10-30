@@ -168,7 +168,7 @@ class AutoViz_Class():
         self.plots_dir = Path().cwd()/'plots'
         if not self.plots_dir.exists():
             self.plots_dir.mkdir(exist_ok=True)
-        
+
 
     def add_plots(self,plotname,X):
         """
@@ -1405,7 +1405,7 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression', 
             plt.savefig(save_dir/f'ViolinPlot_{plot_index}.png')
             if verbose == 1:
                 plt.show();
-                
+
             if verbose == 2:
                 imgdata_list.append(save_image_data(fig, image_count, chart_format))
                 image_count += 1
@@ -1436,7 +1436,7 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression', 
                 ax.set_title('%s for each %s' %(col,dep))
                 count += 1
             fig.suptitle('Box Plots without Outliers shown',  fontsize=20,y=1.08)
-            plt.savefig(save_dir/'ViolinPlot.png')
+            plt.savefig(save_dir/'BoxPlots.png')
             if verbose == 1:
                 plt.show();
             if verbose == 2:
@@ -1898,7 +1898,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed,max_cols_analyzed,
             important_features,num_vars, _ = find_top_features_xgb(dft,preds,continuous_vars,
                                                          depVar,problem_type,corr_limit,verbose)
             if len(important_features) >= max_cols_analyzed:
-                ### Limit the number of features to max columns analyzed ########
+                print('    Since number of features selected is greater than max columns analyzed, limiting to %d variables' %max_cols_analyzed)
                 important_features = important_features[:max_cols_analyzed]
             dft = dft[important_features+[depVar]]
             #### Time to  classify the important columns again ###
@@ -2328,6 +2328,73 @@ import copy
 from sklearn.multiclass import OneVsRestClassifier
 from collections import OrderedDict
 ################################################################################
+###########################################################################################
+############## CONVERSION OF STRING COLUMNS TO NUMERIC WITHOUT LABEL ENCODER #########
+#######################################################################################
+import copy
+import pdb
+def convert_a_column_to_numeric(x, col_dict=""):
+    '''Function converts any pandas series (or column) consisting of string chars,
+       into numeric values. It converts an all-string column to an all-number column.
+       This is an amazing function which performs exactly like a Label Encoding
+       except that it is simpler and faster'''
+    if isinstance(col_dict, str):
+        values = np.unique(x)
+        values2nums = dict(zip(values,range(len(values))))
+        convert_dict = dict(zip(range(len(values)),values))
+        return x.replace(values2nums), convert_dict
+    else:
+        convert_dict = copy.deepcopy(col_dict)
+        keys  = col_dict.keys()
+        newkeys = np.unique(x)
+        rem_keys = left_subtract(newkeys, keys)
+        max_val = max(col_dict.values()) + 1
+        for eachkey in rem_keys:
+            convert_dict.update({eachkey:max_val})
+            max_val += 1
+        return x.replace(convert_dict)
+#######################################################################################
+def convert_a_mixed_object_column_to_numeric(x, col_dict=''):
+    """
+    This is the main utility that converts any string column to numeric.
+    It does not need Label Encoder since it picks up an string that may not be in test data.
+    """
+    x = x.astype(str)
+    if isinstance(col_dict, str):
+        x, convert_dict = convert_a_column_to_numeric(x)
+        convert_dict = dict([(v,k) for (k,v) in convert_dict.items()])
+        return x, convert_dict
+    else:
+        x = convert_a_column_to_numeric(x, col_dict)
+    return x
+######################################################################################
+def convert_all_object_columns_to_numeric(train, test):
+    """
+    #######################################################################################
+    This is a utility that converts string columns to numeric WITHOUT LABEL ENCODER.
+    The beauty of this utility is that it does not blow up when it finds strings in test not in train.
+    #######################################################################################
+    """
+    train = copy.deepcopy(train)
+    if train.dtypes.any()==object:
+        lis=[]
+        for row,column in train.dtypes.iteritems():
+            if column == object:
+                lis.append(row)
+        print('%d string variables identified' %len(lis))
+        for everycol in lis:
+            print('    Converting %s to numeric' %everycol)
+            try:
+                train[everycol], train_dict = convert_a_mixed_object_column_to_numeric(train[everycol])
+                if not isinstance(test, str):
+                    test[everycol] = convert_a_mixed_object_column_to_numeric(test[everycol], train_dict)
+            except:
+                print('Error converting %s column from string to numeric. Continuing...' %everycol)
+                continue
+    else:
+        print('There is no string variable in the data set')
+    return train, test
+###################################################################################
 ################      Find top features using XGB     ###################
 ################################################################################
 from xgboost import XGBClassifier, XGBRegressor
@@ -2338,6 +2405,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     Since it is XGB, you dont have to restrict the input to just numeric vars.
     You can send in all kinds of vars and it will take care of transforming it. Sweet!
     """
+    train = copy.deepcopy(train)
     ######################   I M P O R T A N T ##############################################
     ###### This top_num decides how many top_n features XGB selects in each iteration.
     ####  There a total of 5 iterations. Hence 5x10 means maximum 50 featues will be selected.
@@ -2396,9 +2464,8 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
         final_list = final_list.tolist()
     preds = final_list+important_cats
     #######You must convert category variables into integers ###############
-    for important_cat in important_cats:
-        if str(train[important_cat].dtype) == 'category':
-            train[important_cat] = train[important_cat].astype(int)
+    if len(important_cats) > 0:
+        train, _ = convert_all_object_columns_to_numeric(train, "")
     ########    Drop Missing value rows since XGB for some reason  #########
     ########    can't handle missing values in early stopping rounds #######
     train.dropna(axis=0,subset=preds+[target],inplace=True)
@@ -2498,7 +2565,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     return important_features, numvars, important_cats
 ################################################################################
 module_type = 'Running'if  __name__ == "__main__" else 'Imported'
-version_number = '0.0.71'
+version_number = '0.0.72'
 print("""Imported AutoViz_Class version: %s. Call using:
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
