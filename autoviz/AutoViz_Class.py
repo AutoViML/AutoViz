@@ -181,7 +181,7 @@ class AutoViz_Class():
             print("Nothing to add Plot not being added")
             pass
         else:
-            eval('self.'+plotname+'["plots"].append(X)')
+            getattr(self, plotname)["plots"].append(X)
 
     def add_subheading(self,plotname,X):
         """
@@ -193,7 +193,7 @@ class AutoViz_Class():
             ### If there is nothing to add, leave it as it is.
             pass
         else:
-            eval('self.'+plotname+'["subheading"].append(X)')
+            getattr(self,plotname)["subheading"].append(X)
 
     def AutoViz(self, filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
                             lowess=False,chart_format='svg',max_rows_analyzed=150000,
