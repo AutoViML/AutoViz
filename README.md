@@ -75,9 +75,9 @@ filename = ""
 sep = ","
 dft = AV.AutoViz(
     filename,
-    sep,
-    target,
-    df,
+    sep=",",
+    depVar="",
+    dfte=None,
     header=0,
     verbose=0,
     lowess=False,
@@ -87,28 +87,32 @@ dft = AV.AutoViz(
 )
 ```
 
-This is the main calling program in AV.
-It will call all the load, display and save programs that are currently outside AV.
-This program will draw scatter and other plots for the input dataset and then call the correct variable name with the `add_plots` function and send in the chart created by that plotting program, for example, scatter.
-You have to make sure that `add_plots` function has the exact name of the variable defined in the Class AV.
-If not, this will give an error.
+AV.AutoViz is the main plotting function in AV.
 
 **Notes:**
 
 * AutoViz will visualize any sized file using a statistically valid sample.
 * `COMMA` is assumed as default separator in file. But you can change it.
 * Assumes first row as header in file but you can change it.
+- `verbose` option
+  - if 0, display minimal information but displays charts on your notebook
+  - if 1, print extra information on the notebook and also display charts
+  - if 2, will not display any charts, it will simply save them in your local machine under AutoViz_Plots directory
 
 ## API
 
 **Arguments**
 
-- `max_rows_analyzed` - limits the max number of rows that is used to display charts
+- `filename` - Make sure that you give filename as empty string ("") if there is no filename associated with this data and you want to use a dataframe, then use dfte to give the name of the dataframe. Otherwise, fill in the file name and leave dfte as empty string. Only one of these two is needed to load the data set.
+- `sep` - this is the separator in the file. It can be comma, semi-colon or tab or any value that you see in your file that separates each column.
+- `depVar` - target variable in your dataset. You can leave it as empty string if you don't have a target variable in your data.
+- `dfte` - this is the input dataframe in case you want to load a pandas dataframe to plot charts. In that case, leave filename as an empty string.
+- `header` - the row number of the header row in your file. If it is the first row, then this must be zero.
+- `verbose` - it has 3 acceptable values: 0, 1 or 2. With zero, you get all charts but limited info. With 1 you get all charts and more info. With 2, you will not see any charts but they will be quietly generated and save in your local current directory under the AutoViz_Plots directory which will be created. Make sure you delete this folder periodically, otherwise, you will have lots of charts saved here if you used verbose=2 option a lot.
+- `lowess` - this option is very nice for small datasets where you can see regression lines for each pair of continuous variable against the target variable. Don't use this for large data sets (that is over 100,000 rows)
+- `chart_format` - this can be SVG, PNG or JPG. You will get charts generated and saved in this format if you used verbose=2 option. Very useful for generating charts and using them later.
+- `max_rows_analyzed` - limits the max number of rows that is used to display charts. If you have a very large data set with millions of rows, then use this option to limit the amount of time it takes to generate charts. We will take a statistically valid sample.
 - `max_cols_analyzed` - limits the number of continuous vars that can be analyzed
-- `verbose`
-  - if 0, does not print any messages and goes into silent mode. This is the default.
-  - if 1, print messages on the terminal and also display charts on terminal.
-  - if 2, print messages but will not display charts, it will simply save them.
 
 ## Maintainers
 
@@ -124,8 +128,7 @@ PRs accepted.
 
 ## License
 
-Apache License, Version 2.0 
+Apache License, Version 2.0
 
 ## DISCLAIMER
 This project is not an official Google project. It is not supported by Google and Google specifically disclaims all warranties as to its quality, merchantability, or fitness for a particular purpose.
-
