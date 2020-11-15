@@ -1022,7 +1022,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
             timeseries_flag = False
     # Add a column: the color depends on target variable but you can use whatever function
     imgdata_list = list()
-    if modeltype != 'Regression':
+    if modeltype.endswith('Classification'):
         ########## This is for Classification problems only ###########
         if dft[dep].dtype == object or dft[dep].dtype == np.int64:
             dft[dep] = dft[dep].factorize()[0]
@@ -1936,7 +1936,9 @@ def marthas_columns(data,verbose=0):
                     ))
             print('\n------\n')
 ################################################
+################################################################################
 ######### NEW And FAST WAY to CLASSIFY COLUMNS IN A DATA SET #######
+################################################################################
 def classify_columns(df_preds, verbose=0):
     """
     Takes a dataframe containing only predictors to be classified into various types.
@@ -1946,13 +1948,16 @@ def classify_columns(df_preds, verbose=0):
     ####### Returns a dictionary with 10 kinds of vars like the following: # continuous_vars,int_vars
     # cat_vars,factor_vars, bool_vars,discrete_string_vars,nlp_vars,date_vars,id_vars,cols_delete
     """
+    train = copy.deepcopy(df_preds)
+    #### If there are 30 chars are more in a discrete_string_var, it is then considered an NLP variable
+    max_nlp_char_size = 30
+    max_cols_to_print = 30
+    print('############## C L A S S I F Y I N G  V A R I A B L E S  ####################')
     print('Classifying variables in data set...')
     #### Cat_Limit defines the max number of categories a column can have to be called a categorical colum
-    float_limit = 8 ### the reason for this number is somebody wants to leave float as float/numeric
-    cat_limit = 21 ### the reason for this low limit is to change discrete strings into cat variables
+    cat_limit = 15
     def add(a,b):
         return a+b
-    train = df_preds[:]
     sum_all_cols = dict()
     orig_cols_total = train.shape[1]
     #Types of columns
@@ -1966,7 +1971,8 @@ def classify_columns(df_preds, verbose=0):
                         and len(train[x['index']].value_counts()) == 2 else 0, axis=1)
     string_bool_vars = list(var_df[(var_df['bool'] ==1)]['index'])
     sum_all_cols['string_bool_vars'] = string_bool_vars
-    var_df['num_bool'] = var_df.apply(lambda x: 1 if x['type_of_column'] in [
+    var_df['num_bool'] = var_df.apply(lambda x: 1 if x['type_of_column'] in [np.uint8,
+                            np.uint16, np.uint32, np.uint64,
                             'int8','int16','int32','int64',
                             'float16','float32','float64'] and len(
                         train[x['index']].value_counts()) == 2 else 0, axis=1)
@@ -1986,11 +1992,11 @@ def classify_columns(df_preds, verbose=0):
             #### first fill empty or missing vals since it will blowup ###
             train[col] = train[col].fillna('  ')
             if train[col].map(lambda x: len(x) if type(x)==str else 0).mean(
-                ) >= 50 and len(train[col].value_counts()
-                        ) < len(train) and col not in string_bool_vars:
+                ) >= max_nlp_char_size and len(train[col].value_counts()
+                        ) <= len(train) and col not in string_bool_vars:
                 var_df.loc[var_df['index']==col,'nlp_strings'] = 1
             elif len(train[col].value_counts()) > cat_limit and len(train[col].value_counts()
-                        ) < len(train) and col not in string_bool_vars:
+                        ) <= len(train) and col not in string_bool_vars:
                 var_df.loc[var_df['index']==col,'discrete_strings'] = 1
             elif len(train[col].value_counts()) > cat_limit and len(train[col].value_counts()
                         ) == len(train) and col not in string_bool_vars:
@@ -2009,7 +2015,9 @@ def classify_columns(df_preds, verbose=0):
     factor_vars = list(var_df[(var_df['dcat'] ==1)]['index'])
     sum_all_cols['factor_vars'] = factor_vars
     ########################################################################
-    date_or_id = var_df.apply(lambda x: 1 if x['type_of_column'] in ['int8','int16',
+    date_or_id = var_df.apply(lambda x: 1 if x['type_of_column'] in [np.uint8,
+                         np.uint16, np.uint32, np.uint64,
+                         'int8','int16',
                         'int32','int64']  and x[
         'index'] not in string_bool_vars+num_bool_vars+discrete_string_vars+nlp_vars else 0,
                                         axis=1)
@@ -2049,8 +2057,18 @@ def classify_columns(df_preds, verbose=0):
     date_vars = list(var_df[(var_df['date_time'] == 1)]['index'])
     id_vars = list(var_df[(var_df['id_col'] == 1)]['index'])
     sum_all_cols['int_vars'] = int_vars
+    copy_date_vars = copy.deepcopy(date_vars)
+    for date_var in copy_date_vars:
+        #### This test is to make sure sure date vars are actually date vars
+        try:
+            pd.to_datetime(train[date_var],infer_datetime_format=True)
+        except:
+            ##### if not a date var, then just add it to delete it from processing
+            cols_delete.append(date_var)
+            date_vars.remove(date_var)
     sum_all_cols['date_vars'] = date_vars
     sum_all_cols['id_vars'] = id_vars
+    sum_all_cols['cols_delete'] = cols_delete
     ## This is an EXTREMELY complicated logic for cat vars. Don't change it unless you test it many times!
     var_df['numeric'] = 0
     float_or_cat = var_df.apply(lambda x: 1 if x['type_of_column'] in ['float16',
@@ -2059,15 +2077,30 @@ def classify_columns(df_preds, verbose=0):
     if len(var_df.loc[float_or_cat == 1]) > 0:
         for col in var_df.loc[float_or_cat == 1]['index'].values.tolist():
             if len(train[col].value_counts()) > 2 and len(train[col].value_counts()
-                ) <= float_limit and len(train[col].value_counts()) != len(train):
+                ) <= cat_limit and len(train[col].value_counts()) != len(train):
                 var_df.loc[var_df['index']==col,'cat'] = 1
             else:
                 if col not in num_bool_vars:
                     var_df.loc[var_df['index']==col,'numeric'] = 1
     cat_vars = list(var_df[(var_df['cat'] ==1)]['index'])
     continuous_vars = list(var_df[(var_df['numeric'] ==1)]['index'])
+    ########  V E R Y    I M P O R T A N T   ###################################################
+    ##### There are a couple of extra tests you need to do to remove abberations in cat_vars ###
+    cat_vars_copy = copy.deepcopy(cat_vars)
+    for cat in cat_vars_copy:
+        if df_preds[cat].dtype==float:
+            continuous_vars.append(cat)
+            cat_vars.remove(cat)
+            var_df.loc[var_df['index']==cat,'cat'] = 0
+            var_df.loc[var_df['index']==cat,'numeric'] = 1
+        elif len(df_preds[cat].value_counts()) == df_preds.shape[0]:
+            id_vars.append(cat)
+            cat_vars.remove(cat)
+            var_df.loc[var_df['index']==cat,'cat'] = 0
+            var_df.loc[var_df['index']==cat,'id_col'] = 1
     sum_all_cols['cat_vars'] = cat_vars
     sum_all_cols['continuous_vars'] = continuous_vars
+    sum_all_cols['id_vars'] = id_vars
     ###### This is where you consoldate the numbers ###########
     var_dict_sum = dict(zip(var_df.values[:,0], var_df.values[:,2:].sum(1)))
     for col, sumval in var_dict_sum.items():
@@ -2077,6 +2110,7 @@ def classify_columns(df_preds, verbose=0):
             print('%s of type=%s is classified into more then one type' %(col,train[col].dtype))
         else:
             pass
+    ###############  This is where you print all the types of variables ##############
     ####### Returns 8 vars in the following order: continuous_vars,int_vars,cat_vars,
     ###  string_bool_vars,discrete_string_vars,nlp_vars,date_or_id_vars,cols_delete
     if verbose == 1:
@@ -2091,6 +2125,20 @@ def classify_columns(df_preds, verbose=0):
         print("    Number of Date Time Columns = ", len(date_vars))
         print("    Number of ID Columns = ", len(id_vars))
         print("    Number of Columns to Delete = ", len(cols_delete))
+    if verbose == 2:
+        marthas_columns(df_preds,verbose=1)
+        print("    Numeric Columns: %s" %continuous_vars[:max_cols_to_print])
+        print("    Integer-Categorical Columns: %s" %int_vars[:max_cols_to_print])
+        print("    String-Categorical Columns: %s" %cat_vars[:max_cols_to_print])
+        print("    Factor-Categorical Columns: %s" %factor_vars[:max_cols_to_print])
+        print("    String-Boolean Columns: %s" %string_bool_vars[:max_cols_to_print])
+        print("    Numeric-Boolean Columns: %s" %num_bool_vars[:max_cols_to_print])
+        print("    Discrete String Columns: %s" %discrete_string_vars[:max_cols_to_print])
+        print("    NLP text Columns: %s" %nlp_vars[:max_cols_to_print])
+        print("    Date Time Columns: %s" %date_vars[:max_cols_to_print])
+        print("    ID Columns: %s" %id_vars[:max_cols_to_print])
+        print("    Columns that will not be considered in modeling: %s" %cols_delete[:max_cols_to_print])
+    ##### now collect all the column types and column names into a single dictionary to return!
     len_sum_all_cols = reduce(add,[len(v) for v in sum_all_cols.values()])
     if len_sum_all_cols == orig_cols_total:
         print('    %d Predictors classified...' %orig_cols_total)
@@ -2100,7 +2148,10 @@ def classify_columns(df_preds, verbose=0):
                    len_sum_all_cols, orig_cols_total))
         ls = sum_all_cols.values()
         flat_list = [item for sublist in ls for item in sublist]
-        print('    Missing columns = %s' %set(list(train))-set(flat_list))
+        if len(left_subtract(list(train),flat_list)) == 0:
+            print(' Missing columns = None')
+        else:
+            print(' Missing columns = %s' %left_subtract(list(train),flat_list))
     return sum_all_cols
 #################################################################################
 from collections import Counter
