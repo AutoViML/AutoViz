@@ -1948,7 +1948,8 @@ def classify_columns(df_preds, verbose=0):
     """
     print('Classifying variables in data set...')
     #### Cat_Limit defines the max number of categories a column can have to be called a categorical colum
-    cat_limit = 21 ### the reason for this number is IRIS has 22 categories of float variables.
+    float_limit = 8 ### the reason for this number is somebody wants to leave float as float/numeric
+    cat_limit = 21 ### the reason for this low limit is to change discrete strings into cat variables
     def add(a,b):
         return a+b
     train = df_preds[:]
@@ -2058,7 +2059,7 @@ def classify_columns(df_preds, verbose=0):
     if len(var_df.loc[float_or_cat == 1]) > 0:
         for col in var_df.loc[float_or_cat == 1]['index'].values.tolist():
             if len(train[col].value_counts()) > 2 and len(train[col].value_counts()
-                ) <= cat_limit and len(train[col].value_counts()) != len(train):
+                ) <= float_limit and len(train[col].value_counts()) != len(train):
                 var_df.loc[var_df['index']==col,'cat'] = 1
             else:
                 if col not in num_bool_vars:
@@ -2516,7 +2517,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     return important_features, numvars, important_cats
 ################################################################################
 module_type = 'Running'if  __name__ == "__main__" else 'Imported'
-version_number = '0.0.74'
+version_number = '0.0.75'
 print("""Imported AutoViz_Class version: %s. Call using:
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
