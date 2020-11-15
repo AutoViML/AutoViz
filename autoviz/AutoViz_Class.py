@@ -1955,7 +1955,8 @@ def classify_columns(df_preds, verbose=0):
     print('############## C L A S S I F Y I N G  V A R I A B L E S  ####################')
     print('Classifying variables in data set...')
     #### Cat_Limit defines the max number of categories a column can have to be called a categorical colum
-    cat_limit = 15
+    cat_limit = 21
+    float_limit = 8 #### Make this limit low so that float variables below this limit become cat vars ###
     def add(a,b):
         return a+b
     sum_all_cols = dict()
@@ -2077,7 +2078,7 @@ def classify_columns(df_preds, verbose=0):
     if len(var_df.loc[float_or_cat == 1]) > 0:
         for col in var_df.loc[float_or_cat == 1]['index'].values.tolist():
             if len(train[col].value_counts()) > 2 and len(train[col].value_counts()
-                ) <= cat_limit and len(train[col].value_counts()) != len(train):
+                ) <= float_limit and len(train[col].value_counts()) <= len(train):
                 var_df.loc[var_df['index']==col,'cat'] = 1
             else:
                 if col not in num_bool_vars:
