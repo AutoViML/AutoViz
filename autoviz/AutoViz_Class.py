@@ -531,6 +531,7 @@ def analyze_problem_type(train, targ,verbose=0) :
 # Pivot Tables are generally meant for Categorical Variables on the axes
 # and a Numeric Column (typically the Dep Var) as the "Value" aggregated by Sum.
 # Let's do some pivot tables to capture some meaningful insights
+import random
 def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='', classes=None):
     plot_name = 'Bar_Plots_Pivots'
     cats = list(set(cats))
@@ -551,7 +552,8 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
     categorylimit = 10
     imgdata_list = []
     width_size = 15
-    height_size = 6
+    height_size = 5
+    stringlimit = 20
     combos = combinations(cats, 2)
     cats_len = len(cats)
     N = int(cats_len*(cats_len-1)/2)
@@ -572,30 +574,43 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
                 rows = noplots/cols
         else:
             rows = (noplots/cols)+1
-        fig = plt.figure(figsize=(min(20,N*10),rows*4))
-        colors = cycle('byrcmgkbyrcmgkbyrcmgkbyrcmgkbyr')
+        #fig = plt.figure(figsize=(min(20,N*10),rows*5))
+        fig = plt.figure()
+        if cols < 2:
+            fig.set_size_inches(min(15,8),rows*height_size)
+            fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
+            fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
+        else:
+            fig.set_size_inches(min(cols*10,20),rows*height_size)
+            fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
+            fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
         for (var1, var2) in combos:
-            color1 = next(colors)
+            color1 = random.choice(colormaps)
             data = pd.DataFrame(dicti)
             x=dft[var1]
             y=dft[var2]
-            ax = fig.add_subplot(rows,cols,counter)
+            ax1 = fig.add_subplot(rows,cols,counter)
             nocats = min(categorylimit,dft[var1].nunique())
             nocats1 = min(categorylimit,dft[var2].nunique())
             if dft[depVar].dtype==object or dft[depVar].dtype==bool:
                 dft[depVar] = dft[depVar].factorize()[0]
             data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2).head(nocats)
             data = data[data.columns[:nocats1]] #### make sure you don't print more than 10 rows of data
-            data.plot(kind='bar',ax=ax,colormap='summer')
-            plt.xlabel(var1)
-            plt.ylabel(var2)
-            plt.legend(fontsize="small")
-            plt.title('%s (Mean) by %s and %s' %(depVar,var1,var2))
+            data.plot(kind='bar',ax=ax1,colormap=color1)
+            ax1.set_xlabel(var1)
+            ax1.set_ylabel(var2)
+            if dft[var1].dtype == object or str(dft[var1].dtype) == 'category':
+                labels = data.index.str[:stringlimit].tolist()
+            else:
+                labels = data.index.tolist()
+            ax1.set_xticklabels(labels,fontdict={'fontsize':9}, rotation = 45, ha="right")
+            ax1.legend(fontsize="small")
+            ax1.set_title('%s (Mean) by %s and %s' %(depVar,var1,var2))
             counter += 1
         fig.tight_layout()
-        fig.suptitle('%s (Mean) against 2 Categorical Variables' %depVar, fontsize=20,y=1.05 );
+        fig.suptitle('Bar Plots of Combinations of Dependent, Numeric and Categoricals', fontsize=15,y=1.01);
     else:
-        print('No pivot tables plotted since dependent variable given as input')
+        print('No pivot tables plotted since no dependent variable given as input')
     image_count = 0
     if verbose == 2:
         imgdata_list.append(save_image_data(fig, chart_format,
@@ -640,33 +655,8 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
     width_size = 15
     height_size = 4
     if dep == None or dep == '':
-        image_count = 0
-        ##### This is when no Dependent Variable is given ###
-        ### You have to do a Pair-wise Scatter Plot of all Continuous Variables ####
-        combos = combinations(nums, 2)
-        noplots = int((N**2-N)/2)
-        print('Number of Scatter Plots = %d' %(noplots+N))
-        rows = int((noplots/cols)+0.99)
-        fig = plt.figure(figsize=(width_size,rows*height_size))
-        for (var1,var2), plotcounter, color_val in zip(combos, range(1,noplots+1), colors):
-            ### Be very careful with the next line. It should be singular "subplot" ##
-            ##### Otherwise, if you use the plural version "subplots" it has a different meaning!
-            plt.subplot(rows,cols,plotcounter)
-            if lowess:
-                sns.regplot(x=dft[var1], y = dft[var2], lowess=lowess, color=color_val, ax=plt.gca())
-            else:
-                sns.scatterplot(x=dft[var1], y=dft[var2], ax=plt.gca(), paletter='dark',color=color_val)
-            plt.xlabel(var1)
-            plt.ylabel(var2)
-        fig.suptitle('Pair-wise Scatter Plot of all Continuous Variables',fontsize=20,y=1.08)
-        fig.tight_layout();
-        if verbose == 1:
-            plt.show();
-        #### Keep it at the figure level###
-        if verbose == 2:
-            imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, dep))
-            image_count += 1
+        ### when there is no dependent variable, you can't plot anything in scatters here ###
+        return None
     elif problem_type == 'Regression':
         image_count = 0
         ####### This is a Regression Problem so it requires 2 steps ####
@@ -684,7 +674,7 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
                 sns.scatterplot(x=dft[num], y=dft[dep], ax=plt.gca(), palette='dark',color=color_val)
             plt.xlabel(num)
             plt.ylabel(dep)
-        fig.suptitle('Pair-wise Scatter Plot of all Continuous Variables',fontsize=20,y=1.08)
+        fig.suptitle('Scatter Plot of each Continuous Variable vs Target',fontsize=15,y=1.01)
         fig.tight_layout();
         if verbose == 1:
             plt.show();
@@ -709,7 +699,7 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
             ####Strip plots are meant for categorical plots so x axis must always be depVar ##
             plt.subplot(rows,cols,plotc)
             sns.stripplot(x=dft[dep], y=dft[num], ax=plt.gca(), jitter=jitter)
-        plt.suptitle('Scatter Plot of Continuous Variable vs Target (jitter=%0.2f)' %jitter, fontsize=20,y=1.08)
+        plt.suptitle('Scatter Plot of Continuous Variable vs Target (jitter=%0.2f)' %jitter, fontsize=15,y=1.01)
         fig.tight_layout();
         if verbose == 1:
             plt.show();
@@ -770,7 +760,7 @@ def draw_pair_scatters(dfin,nums,problem_type, verbose,chart_format, dep=None, c
                 sns.scatterplot(x=dft[var1], y=dft[var2], ax=plt.gca(), palette='dark',color=color_val)
             plt.xlabel(var1)
             plt.ylabel(var2)
-        fig.suptitle('Pair-wise Scatter Plot of all Continuous Variables', fontsize=20,y=1.08)
+        fig.suptitle('Pair-wise Scatter Plot of all Continuous Variables', fontsize=15,y=1.01)
         fig.tight_layout();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
@@ -813,8 +803,8 @@ def draw_pair_scatters(dfin,nums,problem_type, verbose,chart_format, dep=None, c
                 plt.xlabel(var1)
                 plt.ylabel(var2)
                 plt.legend()
-        fig.suptitle('Pair-wise Scatter Plot of all Continuous Variables',fontsize=20,y=1.08)
-        fig.tight_layout();
+        fig.suptitle('Pair-wise Scatter Plot of all Continuous Variables',fontsize=15,y=1.01)
+        #fig.tight_layout();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
                             plot_name, dep))
@@ -825,20 +815,23 @@ def draw_pair_scatters(dfin,nums,problem_type, verbose,chart_format, dep=None, c
     return imgdata_list
 
 #Bar Plots are for 2 Categoricals and One Numeric (usually Dep Var)
-def plot_fast_average_num_by_cat(dft, cat, num_vars, verbose=0,kind="bar"):
+def plot_fast_average_num_by_cat(dft, cats, num_vars, verbose=0,kind="bar"):
     """
     Great way to plot continuous variables fast grouped by a categorical variable. Just sent them in and it will take care of the rest!
     """
     chunksize = 20
-    stringlimit = 25
+    stringlimit = 20
     col = 2
-    figsize = (10, 10)
+    width_size = 15
+    height_size = 4
+    N = int(len(num_vars)*len(cats))
     colors = cycle('byrcmgkbyrcmgkbyrcmgkbyrcmgk')
-    if len(num_vars) % 2 == 0:
-        row = len(num_vars)//col
+    if N % 2 == 0:
+        row = N//col
     else:
-        row = len(num_vars)//col + 1
-    fig, ax = plt.subplots(row, col)
+        row = int(N//col + 1)
+    fig = plt.figure()
+    #fig.suptitle('Bar Plots of all Continuous Variables by each Categorical', fontsize=12)
     if col < 2:
         fig.set_size_inches(min(15,8),row*5)
         fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
@@ -847,43 +840,39 @@ def plot_fast_average_num_by_cat(dft, cat, num_vars, verbose=0,kind="bar"):
         fig.set_size_inches(min(col*10,20),row*5)
         fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
         fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
-    counter = 0
+    counter = 1
     if row == 1:
         ax = ax.reshape(-1,1).T
-    for k in np.arange(row):
-        for l in np.arange(col):
-            if counter < len(num_vars):
-                each_conti = num_vars[counter]
-                color3 = next(colors)
-                try:
-                    ax1 = ax[k][l]
-                    if kind == "bar":
-                        dft.groupby(cat)[each_conti].mean().sort_values(
-                            ascending=False).head(chunksize).plot(kind=kind,ax=ax1,
-                                                           color=color3);
-                    elif kind == "line":
-                        dft.groupby(cat)[each_conti].mean().sort_index(
-                            ascending=True).head(chunksize).plot(kind=kind,ax=ax1,
-                                                           color=color3);
-                    if dft[cat].dtype == object or str(dft[cat].dtype) == 'category':
-                        labels = dft.groupby(cat)[each_conti].mean().sort_values(
-                            ascending=False).head(chunksize).index.str[:stringlimit].tolist()
-                        ax1.set_xticklabels(labels, rotation = 45, ha="right")
-                    ax1.set_title('Average %s by %s (Top %d)' %(each_conti,cat,chunksize))
-                    counter += 1
-                except:
-                    ax[k][l].set_title('No plot as %s is not numeric' %each_conti)
-                    counter += 1
+    for cat in cats:
+        for each_conti in num_vars:
+            color3 = next(colors)
+            try:
+                ax1 = plt.subplot(row, col, counter)
+                if kind == "bar":
+                    data = dft.groupby(cat)[each_conti].mean().sort_values(
+                            ascending=False).head(chunksize)
+                    data.plot(kind=kind,ax=ax1,color=color3);
+                elif kind == "line":
+                    data = dft.groupby(cat)[each_conti].mean().sort_index(
+                            ascending=True).head(chunksize)
+                    data.plot(kind=kind,ax=ax1,color=color3);
+                if dft[cat].dtype == object or str(dft[cat].dtype) == 'category':
+                    labels = data.index.str[:stringlimit].tolist()
+                else:
+                    labels = data.index.tolist()
+                ax1.set_xlabel("")
+                ax1.set_xticklabels(labels,fontdict={'fontsize':9}, rotation = 45, ha="right")
+                ax1.set_title('Average %s by %s (Top %d)' %(each_conti,cat,chunksize))
+                counter += 1
+            except:
+                ax1.set_title('No plot as %s is not numeric' %each_conti)
+                counter += 1
     if verbose == 2:
         return fig
 ################# The barplots module below calls the plot_fast_average_num_by_cat module above ###
 def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', classes=None):
     cats = cats[:]
     conti = conti[:]
-    if verbose <= 1:
-        # ipython inline magic shouldn't be needed because all plots are
-        # being displayed with plt.show() calls
-        get_ipython().magic('matplotlib inline')
     plot_name = 'Bar_Plots'
     #### Category limit within a variable ###
     #### Remove Floating Point Categorical Vars from this list since they Error when Bar Plots are drawn
@@ -900,8 +889,6 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
     colormaps = ['plasma','viridis','inferno','magma']
     imgdata_list = list()
     cat_limit = 10
-    width_size = 15
-    height_size = 4
     conti = list_difference(conti,dep)
     #### Make sure that you plot charts for the depVar as well by including it #######
     if problem_type == 'Regression':
@@ -911,13 +898,11 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
     chunksize = 20
     ########## This is for Regression Problems only ######
     image_count = 0
-    for each_cat in cats:
-        figx = plot_fast_average_num_by_cat(dft, each_cat, conti, verbose)
-        additional = '_by_{}_'.format(each_cat)
-        if verbose == 2:
-            imgdata_list.append(save_image_data(figx, chart_format,
+    figx = plot_fast_average_num_by_cat(dft, cats, conti, verbose)
+    if verbose == 2:
+        imgdata_list.append(save_image_data(figx, chart_format,
                             plot_name, dep))
-            image_count += 1
+        image_count += 1
     return imgdata_list
 ############## End of Bar Plotting ##########################################
 ##### Draw a Heatmap using Pearson Correlation #########################################
@@ -928,6 +913,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
     plot_name = 'Heat_Maps'
     width_size = 3
     height_size = 2
+    timeseries_flag = False
     if len(conti) <= 1:
         return
     if isinstance(dft.index, pd.DatetimeIndex) :
@@ -955,6 +941,10 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         N = len(conti)
         target_vars = dft[dep].unique()
         fig = plt.figure(figsize=(min(N*width_size,20),min(N*height_size,20)))
+        if timeseries_flag:
+            fig.suptitle('Time Series: Heatmap of all Differenced Continuous vars for target = %s' %dep, fontsize=15,y=1.01)
+        else:
+            fig.suptitle('Heatmap of all Continuous Variables for target = %s' %dep, fontsize=15,y=1.01)
         plotc = 1
         #rows = len(target_vars)
         rows = 1
@@ -969,11 +959,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         ax1 = plt.gca()
         sns.heatmap(corr, annot=True,ax=ax1)
         plotc += 1
-        if timeseries_flag:
-            plt.title('Time Series: Heatmap of all Differenced Continuous vars for target = %s' %dep)
-        else:
-            plt.title('Heatmap of all Continuous Variables for target = %s' %dep)
-        #fig.tight_layout();
+        fig.tight_layout();
         if verbose == 1:
             plt.show();
         if verbose == 2:
@@ -997,10 +983,10 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         corr = dft_target.corr()
         sns.heatmap(corr, annot=True)
         if timeseries_flag:
-            plt.title('Time Series Data: Heatmap of Differenced Continuous vars including target = %s' %dep)
+            fig.suptitle('Time Series Data: Heatmap of Differenced Continuous vars including target = %s' %dep, fontsize=15,y=1.01)
         else:
-            plt.title('Heatmap of all Continuous Variables including target = %s' %dep)
-        #fig.tight_layout();
+            fig.suptitle('Heatmap of all Continuous Variables including target = %s' %dep,fontsize=15,y=1.01)
+        fig.tight_layout();
         if verbose == 1:
             plt.show();
         if verbose == 2:
@@ -1061,6 +1047,7 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
                 plt.subplot(rows, cols, k+1)
                 ax1 = plt.gca()
                 #ax2 = ax1.twiny()
+                color1 = next(colors)
                 if len(dft[dft[conti_iter]<0]) > 0:
                     ### If there are simply neg numbers in the column, better to skip the Log...
                     #dft[conti_iter].hist(bins=hist_bins, ax=ax1, color=color2,label='%s' %conti_iter,
@@ -1068,7 +1055,7 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
                     sns.distplot(dft[conti_iter],
                         hist=False, kde=True,label='%s' %conti_iter,
                         bins=hist_bins, ax= ax1,hist_kws={'alpha':transparent},
-                        color=color2)
+                        color=color1)
                     ax1.legend(loc='upper right')
                     ax1.set_xscale('linear')
                     ax1.set_xlabel('Linear Scale')
@@ -1081,7 +1068,7 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
                     sns.distplot(dft[conti_iter],
                         hist=False, kde=True,label='%s' %conti_iter,hist_kws={'alpha':transparent},
                         bins=hist_bins, ax= ax1,
-                        color=color2)
+                        color=color1)
                     #np.log(dft[conti_iter]+1).hist(bins=hist_bins, ax=ax2, color=next(colors),
                     #    alpha=transparent, label='after log transform',bw_method=3)
                     #sns.distplot(np.log10(dft[conti_iter]+1),
@@ -1102,7 +1089,7 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
                     sns.distplot(dft[conti_iter],
                         hist=False, kde=True,label='%s' %conti_iter,
                         bins=hist_bins, ax= ax1,hist_kws={'alpha':transparent},
-                        color=color2)
+                        color=color1)
                     #np.log(dft[conti_iter]).fillna(0).hist(bins=hist_bins, ax=ax2, color=next(colors),
                     #    alpha=transparent, label='after log transform',bw_method=3)
                     #sns.distplot(np.log10(dft[conti_iter]),
@@ -1121,15 +1108,16 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
                 ax1 = plt.gca()
                 kwds = {"rotation": 45, "ha":"right"}
                 labels = dft[conti_iter].value_counts()[:width_size].index.tolist()
-                dft[conti_iter].value_counts()[:width_size].plot(kind='bar',ax=ax1,label='%s' %conti_iter)
+                dft[conti_iter].value_counts()[:width_size].plot(kind='bar', color=next(colors),
+                                            ax=ax1,label='%s' %conti_iter)
                 ax1.set_xticklabels(labels,**kwds);
                 ax1.set_title('Distribution of %s (top %d categories only)' %(conti_iter,width_size))
-        #fig.tight_layout();
+        fig.tight_layout();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
                             plot_name, dep))
             image_count += 1
-        fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=20, y=1.08)
+        fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=12,y=1.01)
         if verbose == 1:
             plt.show();
     else:
@@ -1195,7 +1183,7 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
             imgdata_list.append(save_image_data(fig, chart_format,
                             plot_name, dep))
             image_count += 1
-        fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=20, y=1.08)
+        fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=12,y=1.01)
         ###### Now draw the distribution of the target variable in Classification only ####
         if problem_type.endswith('Classification'):
             col = 2
@@ -1203,7 +1191,7 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
             fig, (ax1,ax2) = plt.subplots(row, col)
             fig.set_figheight(5)
             fig.set_figwidth(15)
-            fig.suptitle('%s : Distribution of Target Variable' %dep, fontsize=20,y=1.08)
+            fig.suptitle('%s : Distribution of Target Variable' %dep, fontsize=12)
             #fig.subplots_adjust(hspace=0.3) ### This controls the space betwen rows
             #fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
             ###### Precentage Distribution is first #################
@@ -1219,14 +1207,14 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
                 ax2.annotate(str(round(p.get_height(),2)), (round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
             ax2.set_xticks(dft[dep].unique().tolist())
             ax2.set_xticklabels(classes, rotation = 45, ha="right")
-            ax2.set_title('Freq Distribution of Target Variable = %s' %dep,  fontsize=10,y=1.05)
+            ax2.set_title('Freq Distribution of Target Variable = %s' %dep,  fontsize=12)
         else:
             ############################################################################
             width_size = 5
             height_size = 5
             fig = plt.figure(figsize=(width_size,height_size))
             dft[dep].plot(kind='hist')
-            fig.suptitle('%s : Distribution of Target Variable' %dep, fontsize=20,y=1.05)
+            fig.suptitle('%s : Distribution of Target Variable' %dep, fontsize=12)
             fig.tight_layout();
         if verbose == 1:
             plt.show();
@@ -1275,7 +1263,8 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression'):
             #ax.set_xticklabels (df.columns, tolist(), size=10)
             sns.violinplot(data=df_norm, orient='v', fliersize=5, scale='width',
                 linewidth=3, notch=False, saturations=0.5, ax=ax, inner='box')
-            fig.suptitle('Violin Plot of all Continuous Variables', fontsize=20,y=1.08)
+            fig.suptitle('Violin Plot of all Continuous Variables', fontsize=15)
+            fig.tight_layout();
             if verbose == 1:
                 plt.show();
             if verbose == 2:
@@ -1310,7 +1299,8 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression'):
                         linewidth=3, notch=False, saturation=0.5, showfliers=False)
                 ax.set_title('%s for each %s' %(col,dep))
                 count += 1
-            fig.suptitle('Box Plots without Outliers shown',  fontsize=20,y=1.08)
+            fig.suptitle('Box Plots without Outliers shown',  fontsize=15)
+            fig.tight_layout();
             if verbose == 1:
                 plt.show();
             if verbose == 2:
@@ -1340,7 +1330,7 @@ def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='
         height_size = 5
         fig = plt.figure(figsize=(width_size,height_size))
         df[var1].plot(title=var1, label=var1)
-        fig.suptitle('Time Series Plot of %s' %var1, fontsize=20,y=1.08)
+        fig.suptitle('Time Series Plot of %s' %var1, fontsize=12)
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
                             plot_name, dep))
@@ -1383,7 +1373,7 @@ def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='
                 df[var2].plot(title=var2 +' (left_axis) vs. ' + var1+' (right_axis)', ax=ax1)
                 plt.legend(loc='best')
                 counter += 1
-            fig.suptitle('Time Series Plot by %s: Pairwise Continuous Variables' %col, fontsize=20,y=1.08)
+            fig.suptitle('Time Series Plot by %s: Pairwise Continuous Variables' %col, fontsize=12)
         except:
             for each_date in datevars:
                 figx = plot_fast_average_num_by_cat(dfx, each_date, num_vars, verbose,kind="line")
@@ -1427,7 +1417,7 @@ def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='
                 df_target[var2].plot(title='Target = '+class_label+': '+var2 +' (left_axis) vs. '+var1,ax=ax1)
                 plt.legend(loc='best')
                 counter += 1
-        fig.suptitle('Time Series Plot by %s: Continuous Variables Pair' %col, fontsize=20,y=1.08)
+        fig.suptitle('Time Series Plot by %s: Continuous Variables Pair' %col, fontsize=12)
         if verbose == 1:
             plt.show();
         if verbose == 2:
