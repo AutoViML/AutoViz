@@ -263,7 +263,10 @@ class AutoViz_Class():
             except:
                 print('Could not draw Violin Plot')
             try:
-                svg_data = draw_heatmap(dft, continuous_vars, verbose,chart_format, date_vars, depVar,
+                #### Since there is no depependent variable in this dataset, you can leave it as-is
+                numeric_cols = dft.select_dtypes(include='number').columns.tolist()
+                numeric_cols = list_difference(numeric_cols, date_vars)
+                svg_data = draw_heatmap(dft, numeric_cols, verbose,chart_format, date_vars, depVar,
                                     problem_type,classes)
                 self.add_plots('heat_map',svg_data)
             except:
@@ -277,7 +280,7 @@ class AutoViz_Class():
                     print('Could not draw Date Vars')
             if len(continuous_vars) > 0:
                 try:
-                    svg_data = draw_barplots(dft,find_remove_duplicates(cats+bool_vars),continuous_vars, problem_type,
+                    svg_data = draw_barplots(dft,cats,continuous_vars, problem_type,
                                     verbose,chart_format,depVar,classes)
                     self.add_plots('bar_plot',svg_data)
                 except:
@@ -324,8 +327,10 @@ class AutoViz_Class():
                 except:
                     print('Could not draw Violin Plots')
                 try:
+                    numeric_cols = [x for x in dft.select_dtypes(include='number').columns.tolist() if x not in [depVar]]
+                    numeric_cols = list_difference(numeric_cols, date_vars)
                     svg_data = draw_heatmap(dft,
-                                        continuous_vars, verbose,chart_format, date_vars, depVar,
+                                        numeric_cols, verbose,chart_format, date_vars, depVar,
                                             problem_type, classes)
                     self.add_plots('heat_map',svg_data)
                 except:
@@ -345,15 +350,15 @@ class AutoViz_Class():
                     except:
                         print('Could not draw Pivot Charts against Dependent Variable')
                     try:
-                        svg_data = draw_barplots(dft,find_remove_duplicates(cats+bool_vars),continuous_vars,problem_type,verbose,
+                        svg_data = draw_barplots(dft,cats,continuous_vars,problem_type,verbose,
                                                     chart_format,depVar,classes)
                         self.add_plots('bar_plot',svg_data)
                         #self.add_plots('bar_plot',None)
-                        print('All Plots done')
                     except:
                         print('Could not draw Bar Charts')
                 else:
                     print ('No Continuous Variables at all in this dataset...')
+                print('All Plots done')
                 print('Time to run AutoViz (in seconds) = %0.3f' %(time.time()-start_time))
                 if verbose == 1:
                     print('\n ###################### VISUALIZATION Completed ########################')
@@ -393,7 +398,9 @@ class AutoViz_Class():
                 except:
                     print('Could not draw Violin Plots')
                 try:
-                    svg_data = draw_heatmap(dft, continuous_vars,
+                    numeric_cols = [x for x in dft.select_dtypes(include='number').columns.tolist() if x not in [depVar]]
+                    numeric_cols = list_difference(numeric_cols, date_vars)
+                    svg_data = draw_heatmap(dft, numeric_cols,
                                             verbose,chart_format, date_vars, depVar,problem_type,
                                             classes)
                     self.add_plots('heat_map',svg_data)
@@ -414,13 +421,9 @@ class AutoViz_Class():
                     except:
                         print('Could not draw Pivot Charts against Dependent Variable')
                     try:
-                        if len(classes) > 2:
-                            svg_data = draw_barplots(dft,find_remove_duplicates(cats+bool_vars),continuous_vars,problem_type,
-                                            verbose,chart_format,depVar, classes)
-                            self.add_plots('bar_plot',svg_data)
-                        else:
-                            self.add_plots('bar_plot',None)
-                        print('All plots done')
+                        svg_data = draw_barplots(dft,find_remove_duplicates(cats+bool_vars),continuous_vars,problem_type,
+                                        verbose,chart_format,depVar, classes)
+                        self.add_plots('bar_plot',svg_data)
                         pass
                     except:
                         if verbose == 1:
@@ -822,20 +825,73 @@ def draw_pair_scatters(dfin,nums,problem_type, verbose,chart_format, dep=None, c
     return imgdata_list
 
 #Bar Plots are for 2 Categoricals and One Numeric (usually Dep Var)
+def plot_fast_average_num_by_cat(dft, cat, num_vars, verbose=0,kind="bar"):
+    """
+    Great way to plot continuous variables fast grouped by a categorical variable. Just sent them in and it will take care of the rest!
+    """
+    chunksize = 20
+    stringlimit = 25
+    col = 2
+    figsize = (10, 10)
+    colors = cycle('byrcmgkbyrcmgkbyrcmgkbyrcmgk')
+    if len(num_vars) % 2 == 0:
+        row = len(num_vars)//col
+    else:
+        row = len(num_vars)//col + 1
+    fig, ax = plt.subplots(row, col)
+    if col < 2:
+        fig.set_size_inches(min(15,8),row*5)
+        fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
+        fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
+    else:
+        fig.set_size_inches(min(col*10,20),row*5)
+        fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
+        fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
+    counter = 0
+    if row == 1:
+        ax = ax.reshape(-1,1).T
+    for k in np.arange(row):
+        for l in np.arange(col):
+            if counter < len(num_vars):
+                each_conti = num_vars[counter]
+                color3 = next(colors)
+                try:
+                    ax1 = ax[k][l]
+                    if kind == "bar":
+                        dft.groupby(cat)[each_conti].mean().sort_values(
+                            ascending=False).head(chunksize).plot(kind=kind,ax=ax1,
+                                                           color=color3);
+                    elif kind == "line":
+                        dft.groupby(cat)[each_conti].mean().sort_index(
+                            ascending=True).head(chunksize).plot(kind=kind,ax=ax1,
+                                                           color=color3);
+                    if dft[cat].dtype == object or str(dft[cat].dtype) == 'category':
+                        labels = dft.groupby(cat)[each_conti].mean().sort_values(
+                            ascending=False).head(chunksize).index.str[:stringlimit].tolist()
+                        ax1.set_xticklabels(labels, rotation = 45, ha="right")
+                    ax1.set_title('Average %s by %s (Top %d)' %(each_conti,cat,chunksize))
+                    counter += 1
+                except:
+                    ax[k][l].set_title('No plot as %s is not numeric' %each_conti)
+                    counter += 1
+    if verbose == 2:
+        return fig
+################# The barplots module below calls the plot_fast_average_num_by_cat module above ###
 def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', classes=None):
+    cats = cats[:]
+    conti = conti[:]
+    if verbose <= 1:
+        # ipython inline magic shouldn't be needed because all plots are
+        # being displayed with plt.show() calls
+        get_ipython().magic('matplotlib inline')
     plot_name = 'Bar_Plots'
     #### Category limit within a variable ###
-    cats = cats[:]
-    cat_limit = 10
-    width_size = 15
-    height_size = 4
-    conti = list_difference(conti,dep)
     #### Remove Floating Point Categorical Vars from this list since they Error when Bar Plots are drawn
     cats = [x for x in cats if dft[x].dtype != float]
     dft = dft[:]
     N = len(cats)
-    if N==0:
-        print('No categorical or boolean vars in data set. Hence no bar charts.')
+    if len(cats) == 0 or len(conti) == 0:
+        print('No categorical or numeric vars in data set. Hence no bar charts.')
         return None
     cmap = plt.get_cmap('jet')
     ### Not sure why the cmap doesn't work and gives an error in some cases #################
@@ -843,158 +899,27 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
     colors = cycle('gkbyrcmgkbyrcmgkbyrcmgkbyr')
     colormaps = ['plasma','viridis','inferno','magma']
     imgdata_list = list()
-    nums = [x for x in list (dft) if dft[x].dtype=='float64' and x not in [dep]+cats]
-    for k in range(len(cats)):
-        image_count = 0
-        N = len(conti)
-        order= dft[cats[k]].unique().tolist()
-        nocats = len(order)
-        if nocats >= 100:
-            chunksize = 25
-            cols = 1
-        else:
-            if nocats >= 25:
-                chunksize = 15
-                cols = 2
-            else:
-                chunksize = cat_limit
-                cols = 2
-        if len(cats) == 0:
-            noplots = len(conti)*cols
-        else:
-            noplots=len(conti)*len(cats)*cols
-        if cols==2:
-            if noplots%cols == 0:
-                rows = noplots/cols
-            else:
-                rows = (noplots/cols)+1
-        else:
-            rows = copy.deepcopy(noplots)
-        if rows >= 50:
-            rows = 50
-        stringlimit = 25
-        if dep==None or dep == '':
-            ########## This is when no Dependent Variable is Given ######
-            fig = plt.figure(figsize=(width_size,rows*height_size))
-            fig.suptitle('Bar Plots of each Continuous Var by Categoricals',fontsize=20,y=1.03)
-            kadd = 1
-            for each_conti,color in zip(conti,colors):
-                plt.subplot(rows,cols,kadd)
-                ax1 = plt.gca()
-                dft.groupby(cats[k])[each_conti].mean().sort_values(ascending=False).head(chunksize).plot(
-                    kind='bar',ax=ax1, color=color)
-                ax1.set_title('Average %s by %s (Descending)' %(each_conti, cats[k]))
-                if dft[cats[k]].dtype == object:
-                    labels = dft.groupby(cats[k])[each_conti].mean().sort_values(
-                        ascending=False).head(chunksize).index.str[:stringlimit].tolist()
-                    ax1.set_xticklabels(labels, rotation = 45, ha="right")
-                kadd += 1
-                if verbose == 2:
-                    imgdata_list.append(save_image_data(fig, chart_format,
-                                    plot_name, dep))
-                    image_count += 1
-                ### This code is redundant unless number of levels in category are >20
-                if dft[cats[k]].nunique() > chunksize:
-                    plt.subplot(rows,cols,kadd)
-                    ax1 = plt.gca()
-                    dft.groupby(cats[k])[each_conti].mean().sort_values(
-                        ascending=True).head(chunksize).plot(kind='bar',ax=ax1, color=color)
-                    if dft[cats[k]].dtype == object:
-                        labels = dft.groupby(cats [k])[each_conti].mean().sort_values(
-                            ascending=True).head(chunksize).index.str[:stringlimit].tolist()
-                        ax1.set_xticklabels(labels, rotation = 45, ha="right")
-                    ax1.set_title('Average %s by %s (Ascending)' %(each_conti,cats[k]))
-                    kadd += 1
-            fig.tight_layout();
-            if verbose == 1:
-                plt.show();
-            ###########
-            if verbose == 2:
-                additional = f'_{each_conti}_by_{cats[k]}_'
-                imgdata_list.append(save_image_data(fig, chart_format,
-                                plot_name, dep, additional))
-                image_count += 1
-        elif problem_type == 'Regression':
-            ########## This is for Regression Problems only ######
-            fig = plt.figure(figsize=(width_size,rows*height_size))
-            fig.suptitle('Bar Plots of each Continuous Var by Categoricals',fontsize=20,y=1.03)
-            N = len(conti)
-            noplots=int((N**2-N)/4)
-            kadd = 1
-            for each_conti,color in zip(conti,colors):
-                if len(dft[cats[k]].value_counts()) < 20:
-                    plt.subplot(rows,cols,kadd)
-                    ax1 = plt.gca()
-                    dft.groupby(cats[k])[each_conti].mean().sort_values(
-                        ascending=False).head(chunksize).plot(kind='bar',ax=ax1,
-                        colormap=random.choice(colormaps))
-                    for p in ax1.patches:
-                        ax1.annotate(str(round(p.get_height(),2)),(round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
-                    if dft[cats[k]].dtype == object:
-                        labels = dft.groupby(cats[k])[each_conti].mean().sort_values(
-                            ascending= True).head(chunksize).index.str[:stringlimit].tolist()
-                        ax1.set_xticklabels(labels, rotation = 45, ha="right")
-                    ax1.set_title('Average %s by %s (Descending)' %(each_conti,cats[k]))
-                    kadd += 1
-                else:
-                    ### This code is redundant unless number of levels in category are >20
-                    plt.subplot(rows,cols,kadd)
-                    ax1 = plt.gca()
-                    dft.groupby(cats[k])[each_conti].mean().sort_values(
-                        ascending=True).head(chunksize).plot(kind='bar',ax=ax1,
-                        colormap=random.choice(colormaps))
-                    if dft[cats[k]].dtype == object:
-                        labels = dft.groupby(cats[k])[each_conti].mean().sort_values(
-                            ascending= True).head(chunksize).index.str[:stringlimit].tolist()
-                        ax1.set_xticklabels(labels, rotation = 45, ha="right")
-                    ax1.set_title('Mean %s by %s (Ascending)' %(each_conti,cats[k]))
-                    kadd += 1
-            fig.tight_layout();
-            additional = f'_{each_conti}_by_{cats[k]}_'
-            if verbose == 2:
-                imgdata_list.append(save_image_data(fig, chart_format,
-                                plot_name, dep))
-                image_count += 1
-            elif verbose == 1:
-                plt.show();
-        else:
-            ########## This is for Classification Problems ######
-            image_count = 0
-            target_vars = dft[dep].unique()
-            noplots = len(conti)*cols
-            kadd = 1
-            fig = plt.figure(figsize=(width_size,rows*height_size))
-            if len(nums) == 0:
-                for each_conti,color3 in zip(conti,colors):
-                    plt.subplot(rows,cols,kadd)
-                    ax1 = plt.gca()
-                    dft.groupby(cats[k])[each_conti].mean().sort_values(
-                        ascending=False).head(chunksize).plot(kind='bar',ax=ax1,
-                                                       color=color3)
-                    ax1.set_title('Average %s by %s (Descending)' %(each_conti,cats[k]))
-                    kadd += 1
-            else:
-                conti = copy.deepcopy(nums)
-                for each_conti in conti:
-                    plt.subplot(rows,cols,kadd)
-                    ax1 = plt.gca()
-                    dft.groupby([dep, cats[k]])[each_conti].mean().sort_values(
-                        ascending=False).head(chunksize).unstack().plot(kind='bar',ax=ax1,
-                                                       colormap=random.choice(colormaps))
-                    ax1.set_title('Average %s by %s (Descending)' %(each_conti,cats[k]))
-                    kadd += 1
-            fig.tight_layout();
-            fig.suptitle('Bar Plots of Continuous Variables by %s' %cats[k], fontsize=20, y=1.08)
-            if verbose == 2:
-                additional = f'_{each_conti}_by_{cats[k]}_'
-                imgdata_list.append(save_image_data(fig, chart_format,
-                                plot_name, dep, additional))
-                image_count += 1
-            elif verbose == 1:
-                plt.show();
+    cat_limit = 10
+    width_size = 15
+    height_size = 4
+    conti = list_difference(conti,dep)
+    #### Make sure that you plot charts for the depVar as well by including it #######
+    if problem_type == 'Regression':
+        conti.append(dep)
+    else:
+        cats.append(dep)
+    chunksize = 20
+    ########## This is for Regression Problems only ######
+    image_count = 0
+    for each_cat in cats:
+        figx = plot_fast_average_num_by_cat(dft, each_cat, conti, verbose)
+        additional = f'_by_{each_cat}_'
+        if verbose == 2:
+            imgdata_list.append(save_image_data(figx, chart_format,
+                            plot_name, dep))
+            image_count += 1
     return imgdata_list
-    ############## End of Bar Plotting ##########################################
-
+############## End of Bar Plotting ##########################################
 ##### Draw a Heatmap using Pearson Correlation #########################################
 def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
                                     modeltype='Regression',classes=None):
@@ -1009,15 +934,15 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         dft = dft[:]
         timeseries_flag = True
         pass
-    else:
+    elif len(datevars) > 0:
         dft = dft[:]
         try:
             dft.index = pd.to_datetime(dft.pop(datevars[0]),infer_datetime_format=True)
             timeseries_flag = True
         except:
-            if verbose == 1 and len(datevars) > 0:
+            if verbose >= 1 and len(datevars) > 0:
                 print('No date vars could be found or %s could not be indexed.' %datevars)
-            elif verbose == 1 and len(datevars) == 0:
+            elif verbose >= 1 and len(datevars) == 0:
                 print('No date vars could be found in data set')
             timeseries_flag = False
     # Add a column: the color depends on target variable but you can use whatever function
@@ -1038,7 +963,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
             dft_target = dft[[dep]+conti].diff()
         else:
             dft_target = dft[:]
-        dft_target[dep] = dft[dep]
+        dft_target[dep] = dft[dep].values
         corr = dft_target.corr()
         plt.subplot(rows, cols, plotc)
         ax1 = plt.gca()
@@ -1048,7 +973,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
             plt.title('Time Series: Heatmap of all Differenced Continuous vars for target = %s' %dep)
         else:
             plt.title('Heatmap of all Continuous Variables for target = %s' %dep)
-        fig.tight_layout();
+        #fig.tight_layout();
         if verbose == 1:
             plt.show();
         if verbose == 2:
@@ -1075,7 +1000,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
             plt.title('Time Series Data: Heatmap of Differenced Continuous vars including target = %s' %dep)
         else:
             plt.title('Heatmap of all Continuous Variables including target = %s' %dep)
-        fig.tight_layout();
+        #fig.tight_layout();
         if verbose == 1:
             plt.show();
         if verbose == 2:
@@ -1397,7 +1322,10 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression'):
     ########## End of Violin Plots #########
 
 #### Drawing Date Variables is very important in Time Series data
-def draw_date_vars(df,dep,datevars, num_vars,verbose, chart_format, modeltype='Regression'):
+import copy
+def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='Regression'):
+    dfx = copy.deepcopy(dfx)
+    df =  copy.deepcopy(dfx)
     plot_name = 'Time_Series_Plots'
     #### Now you want to display 2 variables at a time to see how they change over time
     ### Don't change the number of cols since you will have to change rows formula as well
@@ -1405,6 +1333,7 @@ def draw_date_vars(df,dep,datevars, num_vars,verbose, chart_format, modeltype='R
     image_count = 0
     N = len(num_vars)
     df = df.set_index(pd.to_datetime(df.pop(datevars[0])))
+    chunksize = 20
     if N < 2:
         var1 = num_vars[0]
         width_size = 5
@@ -1418,10 +1347,8 @@ def draw_date_vars(df,dep,datevars, num_vars,verbose, chart_format, modeltype='R
             image_count += 1
         return imgdata_list
     if isinstance(df.index, pd.DatetimeIndex) :
-        df =  df[:]
         pass
-    else:
-        df = df[:]
+    elif len(datevars) > 0:
         try:
             col = datevars[0]
             if df[col].map(lambda x: 0 if len(str(x)) == 4 else 1).sum() == 0:
@@ -1448,19 +1375,29 @@ def draw_date_vars(df,dep,datevars, num_vars,verbose, chart_format, modeltype='R
         rows = int((noplots/cols)+0.99)
         counter = 1
         fig = plt.figure(figsize=(width_size,rows*height_size))
-        for (var1,var2) in combos:
-            plt.subplot(rows,cols,counter)
-            ax1 = plt.gca()
-            df[var1].plot(secondary_y=True, label=var1, ax=ax1)
-            df[var2].plot(title=var2 +' (left_axis) vs. ' + var1+' (right_axis)', ax=ax1)
-            plt.legend(loc='best')
-            counter += 1
-        fig.suptitle('Time Series Plot by %s: Pairwise Continuous Variables' %col, fontsize=20,y=1.08)
+        try:
+            for (var1,var2) in combos:
+                plt.subplot(rows,cols,counter)
+                ax1 = plt.gca()
+                df[var1].plot(secondary_y=True, label=var1, ax=ax1)
+                df[var2].plot(title=var2 +' (left_axis) vs. ' + var1+' (right_axis)', ax=ax1)
+                plt.legend(loc='best')
+                counter += 1
+            fig.suptitle('Time Series Plot by %s: Pairwise Continuous Variables' %col, fontsize=20,y=1.08)
+        except:
+            for each_date in datevars:
+                figx = plot_fast_average_num_by_cat(dfx, each_date, num_vars, verbose,kind="line")
+                additional = f'_by_{each_date}_'
+                if verbose == 2:
+                    imgdata_list.append(save_image_data(figx, chart_format,
+                                    plot_name, dep))
+                    image_count += 1
+                elif verbose == 1:
+                    plt.show();
+            return imgdata_list
         #fig.tight_layout();
-        if verbose == 1:
-            plt.show();
         if verbose == 2:
-            imgdata_list.append(save_image_data(fig, chart_format,
+            imgdata_list.append(save_image_data(figx, chart_format,
                             plot_name, dep))
             image_count += 1
     else:
@@ -1772,14 +1709,15 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
     discrete_string_vars = var_df['nlp_vars']+var_df['discrete_string_vars']
     cols_delete = var_df['cols_delete']
     bool_vars = var_df['string_bool_vars'] + var_df['num_bool_vars']
-    categorical_vars = var_df['cat_vars'] + var_df['factor_vars'] + var_df['int_vars'] + bool_vars
-    continuous_vars = var_df['continuous_vars']
+    int_vars = var_df['int_vars']
+    categorical_vars = var_df['cat_vars'] + var_df['factor_vars'] + int_vars + bool_vars
     date_vars = var_df['date_vars']
-    if len(var_df['continuous_vars'])==0 and len(var_df['int_vars'])>0:
+    if len(var_df['continuous_vars'])==0 and len(int_vars)>0:
         continuous_vars = var_df['int_vars']
+        categorical_vars = list_difference(categorical_vars, int_vars)
         int_vars = []
     else:
-        int_vars = var_df['int_vars']
+        continuous_vars = var_df['continuous_vars']
     preds = [x for x in orig_preds if x not in IDcols+cols_delete+discrete_string_vars]
     if len(IDcols+cols_delete+discrete_string_vars) == 0:
         print('        No variables removed since no ID or low-information variables found in data set')
@@ -1841,11 +1779,11 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
         else:
             classes = []
     #############  Check if there are too many columns to visualize  ################
-    if len(continuous_vars) >= max_cols_analyzed:
+    if len(preds) >= max_cols_analyzed:
         #########     In that case, SELECT IMPORTANT FEATURES HERE   ######################
         if problem_type.endswith('Classification') or problem_type == 'Regression':
-            print('%d numeric variables in data exceeds limit, taking top %d variables' %(len(
-                                            continuous_vars), max_cols_analyzed))
+            print('Number of variables = %d exceeds limit, finding top %d variables through XGBoost' %(len(
+                                            preds), max_cols_analyzed))
             important_features,num_vars, _ = find_top_features_xgb(dft,preds,continuous_vars,
                                                          depVar,problem_type,corr_limit,verbose)
             if len(important_features) >= max_cols_analyzed:
@@ -1858,10 +1796,15 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
             discrete_string_vars = var_df['nlp_vars']+var_df['discrete_string_vars']
             cols_delete = var_df['cols_delete']
             bool_vars = var_df['string_bool_vars'] + var_df['num_bool_vars']
-            categorical_vars = var_df['cat_vars'] + var_df['factor_vars'] + var_df['int_vars'] + bool_vars
-            continuous_vars = var_df['continuous_vars']
-            date_vars = var_df['date_vars']
             int_vars = var_df['int_vars']
+            categorical_vars = var_df['cat_vars'] + var_df['factor_vars'] + int_vars + bool_vars
+            if len(var_df['continuous_vars'])==0 and len(int_vars)>0:
+                continuous_vars = var_df['int_vars']
+                categorical_vars = list_difference(categorical_vars, int_vars)
+                int_vars = []
+            else:
+                continuous_vars = var_df['continuous_vars']
+            date_vars = var_df['date_vars']
             preds = [x for x in important_features if x not in IDcols+cols_delete+discrete_string_vars]
             if len(IDcols+cols_delete+discrete_string_vars) == 0:
                 print('    No variables removed since no ID or low-information variables found in data')
@@ -1918,11 +1861,11 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
 def marthas_columns(data,verbose=0):
     """
     This program is named  in honor of my one of students who came up with the idea for it.
-    It's a neat way of looking at data compared to the boring describe() function in Pandas.
+    It's a neat way of printing data types and information compared to the boring describe() function in Pandas.
     """
     data = data[:]
-    print('Data Set Shape: %d rows, %d cols\n' % data.shape)
-    if data.shape[1] > 25:
+    print('Data Set Shape: %d rows, %d cols' % data.shape)
+    if data.shape[1] > 30:
         print('Too many columns to print')
     else:
         if verbose==1:
@@ -1934,7 +1877,7 @@ def marthas_columns(data,verbose=0):
                         data[col].nunique(),
                         data[col].value_counts().head(2).to_dict()
                     ))
-            print('\n------\n')
+            print('--------------------------------------------------------------------')
 ################################################
 ################################################################################
 ######### NEW And FAST WAY to CLASSIFY COLUMNS IN A DATA SET #######
@@ -2187,7 +2130,7 @@ def remove_variables_using_fast_correlation(df, numvars, modeltype, target,
     Finally we are left with uncorrelated variables that are also highly important (mutual score).
     ##############  YOU MUST INCLUDE THE ABOVE MESSAGE IF YOU COPY THIS CODE IN YOUR LIBRARY #####
     """
-    print('    Removing correlated variables using SULO method')
+    print('    Removing correlated variables from %d numerics using SULO method' %len(numvars))
     correlation_dataframe = df[numvars].corr()
     a = correlation_dataframe.values
     col_index = correlation_dataframe.columns.tolist()
@@ -2456,7 +2399,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     #        print('Time taken for reducing highly correlated Categorical vars was %0.0f seconds' %(time.time()-start_time))
     #else:
     important_cats = copy.deepcopy(catvars)
-    print('No categorical feature reduction done. All %d Categorical vars selected ' %(len(catvars)))
+    print('    No categorical feature reduction done. All %d Categorical vars selected ' %(len(catvars)))
     if len(numvars) > 1:
         final_list = remove_variables_using_fast_correlation(train,numvars,modeltype,target,
                              corr_limit,verbose)
