@@ -913,7 +913,7 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
     image_count = 0
     for each_cat in cats:
         figx = plot_fast_average_num_by_cat(dft, each_cat, conti, verbose)
-        additional = f'_by_{each_cat}_'
+        additional = '_by_{}_'.format(each_cat)
         if verbose == 2:
             imgdata_list.append(save_image_data(figx, chart_format,
                             plot_name, dep))
@@ -1387,7 +1387,7 @@ def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='
         except:
             for each_date in datevars:
                 figx = plot_fast_average_num_by_cat(dfx, each_date, num_vars, verbose,kind="line")
-                additional = f'_by_{each_date}_'
+                additional = '_by_{}_'.format(each_date)
                 if verbose == 2:
                     imgdata_list.append(save_image_data(figx, chart_format,
                                     plot_name, dep))
