@@ -2404,6 +2404,9 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     #else:
     important_cats = copy.deepcopy(catvars)
     print('    No categorical feature reduction done. All %d Categorical vars selected ' %(len(catvars)))
+    ########    Drop Missing value rows since XGB for some reason  #########
+    ########    can't handle missing values in early stopping rounds #######
+    train.dropna(axis=0,subset=preds+[target],inplace=True)
     if len(numvars) > 1:
         final_list = remove_variables_using_fast_correlation(train,numvars,modeltype,target,
                              corr_limit,verbose)
@@ -2417,9 +2420,6 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     #######You must convert category variables into integers ###############
     if len(important_cats) > 0:
         train, _ = convert_all_object_columns_to_numeric(train, "")
-    ########    Drop Missing value rows since XGB for some reason  #########
-    ########    can't handle missing values in early stopping rounds #######
-    train.dropna(axis=0,subset=preds+[target],inplace=True)
     ########   Dont move this train and y definition anywhere else ########
     y = train[target]
     print('############## F E A T U R E   S E L E C T I O N  ####################')
@@ -2516,7 +2516,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     return important_features, numvars, important_cats
 ################################################################################
 module_type = 'Running'if  __name__ == "__main__" else 'Imported'
-version_number = '0.0.75'
+version_number = '0.0.76'
 print("""Imported AutoViz_Class version: %s. Call using:
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
