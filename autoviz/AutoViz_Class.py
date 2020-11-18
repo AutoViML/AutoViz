@@ -1824,7 +1824,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
         else:
             continuous_vars = continuous_vars[:max_cols_analyzed]
             print('%d numeric variables in data exceeds limit, taking top %d variables' %(len(
-                                            continuous_vars, max_cols_analyzed)))
+                                            continuous_vars), max_cols_analyzed))
             if verbose >= 1:
                 print('    List of variables selected: %s' %(continuous_vars[:max_cols_analyzed]))
     elif len(continuous_vars) < 1:
