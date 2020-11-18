@@ -288,7 +288,7 @@ class AutoViz_Class():
             else:
                 print ('No Continuous Variables at all in this dataset...')
             print('Time to run AutoViz (in seconds) = %0.3f' %(time.time()-start_time))
-            if verbose == 1:
+            if verbose <= 1:
                 print('\n ###################### VISUALIZATION Completed ########################')
         else:
             if problem_type=='Regression':
@@ -360,7 +360,7 @@ class AutoViz_Class():
                     print ('No Continuous Variables at all in this dataset...')
                 print('All Plots done')
                 print('Time to run AutoViz (in seconds) = %0.3f' %(time.time()-start_time))
-                if verbose == 1:
+                if verbose <= 1:
                     print('\n ###################### VISUALIZATION Completed ########################')
             else :
                 ############ This is a Classification Problem ##################
@@ -426,13 +426,13 @@ class AutoViz_Class():
                         self.add_plots('bar_plot',svg_data)
                         pass
                     except:
-                        if verbose == 1:
+                        if verbose <= 1:
                             print('Could not draw Bar Charts')
                         pass
                 else:
                     print ('No Continuous Variables at all in this dataset...')
                 print('Time to run AutoViz (in seconds) = %0.3f' %(time.time()-start_time))
-                if verbose == 1:
+                if verbose <= 1:
                     print ('\n ###################### VISUALIZATION Completed ########################')
         return dft
 
@@ -476,54 +476,54 @@ def save_image_data(fig, chart_format, plot_name, depVar, additional=''):
 def analyze_problem_type(train, targ,verbose=0) :
     if train[targ].dtype != 'int64' and train[targ].dtype != float :
         if len(train[targ].unique()) == 2:
-            if verbose == 1:
+            if verbose <= 1:
                 print('''\n################### Binary-Class VISUALIZATION Started #####################''')
             model_class = 'Binary_Classification'
         elif len(train[targ].unique()) > 1 and len(train[targ].unique()) <= 15:
                 model_class = 'Multi_Classification'
-                if verbose == 1:
+                if verbose <= 1:
                     print('''\n################### Multi-Class VISUALIZATION Started ######################''')
     elif train[targ].dtype == 'int64' or train[targ].dtype == float :
         if len(train[targ].unique()) == 2:
-            if verbose == 1:
+            if verbose <= 1:
                 print('''\n################### Binary-Class VISUALIZATION Started #####################''')
             model_class = 'Binary_Classification'
         elif len(train[targ].unique()) > 1 and len(train[targ].unique()) <= 15:
                 model_class = 'Multi_Classification'
-                if verbose == 1:
+                if verbose <= 1:
                     print('''\n################### Multi-Class VISUALIZATION Started ######################''')
         else:
             model_class = 'Regression'
-            if verbose == 1:
+            if verbose <= 1:
                 print('''\n################### Regression VISUALIZATION Started ######################''')
     elif train[targ].dtype == object:
             if len(train[targ].unique()) > 1 and len(train[targ].unique()) <= 2:
                 model_class = 'Binary_Classification'
-                if verbose == 1:
+                if verbose <= 1:
                     print('''\n################### Binary-Class VISUALIZATION Started #####################''')
             else:
                 model_class = 'Multi_Classification'
-                if verbose == 1:
+                if verbose <= 1:
                     print('''\n################### Multi-Class VISUALIZATION Started ######################''')
     elif train[targ].dtype == bool:
                 model_class = 'Binary_Classification'
-                if verbose == 1:
+                if verbose <= 1:
                     print('''\n################### Binary-Class VISUALIZATION Started ######################''')
     elif train[targ].dtype == 'int64':
         if len(train[targ].unique()) == 2:
-            if verbose == 1:
+            if verbose <= 1:
                 print('''\n################### Binary-Class VISUALIZATION Started #####################''')
             model_class = 'Binary_Classification'
         elif len(train[targ].unique()) > 1 and len(train[targ].unique()) <= 25:
                 model_class = 'Multi_Classification'
-                if verbose == 1:
+                if verbose <= 1:
                     print('''\n################### Multi-Class VISUALIZATION Started ######################''')
         else:
             model_class = 'Regression'
-            if verbose == 1:
+            if verbose <= 1:
                 print('''\n################### Regression VISUALIZATION Started ######################''')
     else :
-        if verbose == 1:
+        if verbose <= 1:
             print('''\n###################### REGRESSION VISUALIZATION Started #####################''')
         model_class = 'Regression'
     return model_class
@@ -541,7 +541,11 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
     #### For some reason, the cmap colors are not working #########################
     colors = cmap(np.linspace(0, 1, len(cats)))
     colors = cycle('byrcmgkbyrcmgkbyrcmgkbyrcmgkbyr')
-    colormaps = ['summer', 'rainbow','viridis','inferno','magma','jet','plasma']
+    #colormaps = ['summer', 'rainbow','viridis','inferno','magma','jet','plasma']
+    colormaps = ['Greys','Blues','Greens','GnBu','PuBu',
+                    'YlGnBu','PuBuGn','BuGn','YlGn']
+    #colormaps = ['Purples','Oranges','Reds','YlOrBr',
+    #                'YlOrRd','OrRd','PuRd','RdPu','BuPu',]
     N = len(cats)
     if N==0:
         print('No categorical or boolean vars in data set. Hence no pivot plots...')
@@ -560,7 +564,10 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
     if cats_len <= 1:
         ### if there are not many categorical variables, there is nothing to plot
         return imgdata_list
-    elif not depVar==None or not depVar=='' or not depVar==[] :
+    if len(nums) == 0:
+        ### if there are no numeric variables, there is nothing to plot
+        return imgdata_list
+    if not depVar is None or not depVar=='' or not depVar==[] :
         ###########  This works equally well for classification as well as Regression ###
         lst=[]
         noplots=int((N**2-N)/2)
@@ -603,12 +610,12 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
                 labels = data.index.str[:stringlimit].tolist()
             else:
                 labels = data.index.tolist()
-            ax1.set_xticklabels(labels,fontdict={'fontsize':9}, rotation = 45, ha="right")
-            ax1.legend(fontsize="small")
-            ax1.set_title('%s (Mean) by %s and %s' %(depVar,var1,var2))
+            ax1.set_xticklabels(labels,fontdict={'fontsize':10}, rotation = 45, ha="right")
+            ax1.legend(fontsize="medium")
+            ax1.set_title('%s (Mean) by %s and %s' %(depVar,var1,var2),fontsize=12)
             counter += 1
         fig.tight_layout()
-        fig.suptitle('Bar Plots of Combinations of Dependent, Numeric and Categoricals', fontsize=15,y=1.01);
+        fig.suptitle('Pivot Tables of each Continuous var by 2 Categoricals', fontsize=15,y=1.01);
     else:
         print('No pivot tables plotted since no dependent variable given as input')
     image_count = 0
@@ -616,7 +623,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
         imgdata_list.append(save_image_data(fig, chart_format,
                             plot_name, depVar))
         image_count += 1
-    if verbose == 1:
+    if verbose <= 1:
         plt.show();
     ####### End of Pivot Plotting #############################
     return imgdata_list
@@ -642,13 +649,13 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
         transparent = 0.6
         bubble_size = 80
     else:
-        if verbose == 1:
+        if verbose <= 1:
             print('Using Lowess Smoothing. This might take a few minutes for large data sets...')
         lowess = True
         x_est = None
         transparent = 0.6
         bubble_size = 100
-    if verbose == 1:
+    if verbose <= 1:
         x_est = np.mean
     N = len(nums)
     cols = 2
@@ -676,7 +683,7 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
             plt.ylabel(dep)
         fig.suptitle('Scatter Plot of each Continuous Variable vs Target',fontsize=15,y=1.01)
         fig.tight_layout();
-        if verbose == 1:
+        if verbose <= 1:
             plt.show();
         #### Keep it at the figure level###
         if verbose == 2:
@@ -701,7 +708,7 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
             sns.stripplot(x=dft[dep], y=dft[num], ax=plt.gca(), jitter=jitter)
         plt.suptitle('Scatter Plot of Continuous Variable vs Target (jitter=%0.2f)' %jitter, fontsize=15,y=1.01)
         fig.tight_layout();
-        if verbose == 1:
+        if verbose <= 1:
             plt.show();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
@@ -740,7 +747,7 @@ def draw_pair_scatters(dfin,nums,problem_type, verbose,chart_format, dep=None, c
         x_est = None
         transparent =0.7
         bubble_size = 100
-    if verbose == 1:
+    if verbose <= 1:
         x_est = np.mean
     if problem_type == 'Regression' or problem_type == 'Clustering':
         image_count = 0
@@ -766,7 +773,7 @@ def draw_pair_scatters(dfin,nums,problem_type, verbose,chart_format, dep=None, c
             imgdata_list.append(save_image_data(fig, chart_format,
                             plot_name, dep))
             image_count += 1
-        if verbose == 1:
+        if verbose <= 1:
             plt.show();
     else:
         ########## This is for Classification problems ##########
@@ -809,7 +816,7 @@ def draw_pair_scatters(dfin,nums,problem_type, verbose,chart_format, dep=None, c
             imgdata_list.append(save_image_data(fig, chart_format,
                             plot_name, dep))
             image_count += 1
-        if verbose == 1:
+        if verbose <= 1:
             plt.show();
     ####### End of Pair Scatter Plots ######
     return imgdata_list
@@ -819,6 +826,10 @@ def plot_fast_average_num_by_cat(dft, cats, num_vars, verbose=0,kind="bar"):
     """
     Great way to plot continuous variables fast grouped by a categorical variable. Just sent them in and it will take care of the rest!
     """
+    #if verbose <= 1:
+        # ipython inline magic shouldn't be needed because all plots are
+        # being displayed with plt.show() calls
+        #get_ipython().magic('matplotlib inline')
     chunksize = 20
     stringlimit = 20
     col = 2
@@ -831,7 +842,10 @@ def plot_fast_average_num_by_cat(dft, cats, num_vars, verbose=0,kind="bar"):
     else:
         row = int(N//col + 1)
     fig = plt.figure()
-    #fig.suptitle('Bar Plots of all Continuous Variables by each Categorical', fontsize=12)
+    if kind == 'bar':
+        fig.suptitle('Bar plots for each Continuous by each Categorical variable', fontsize=15,y=1.01)
+    else:
+        fig.suptitle('Time Series plots for all date-time vars %s' %cats, fontsize=15,y=1.01)
     if col < 2:
         fig.set_size_inches(min(15,8),row*5)
         fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
@@ -841,8 +855,6 @@ def plot_fast_average_num_by_cat(dft, cats, num_vars, verbose=0,kind="bar"):
         fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
         fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
     counter = 1
-    if row == 1:
-        ax = ax.reshape(-1,1).T
     for cat in cats:
         for each_conti in num_vars:
             color3 = next(colors)
@@ -851,11 +863,11 @@ def plot_fast_average_num_by_cat(dft, cats, num_vars, verbose=0,kind="bar"):
                 if kind == "bar":
                     data = dft.groupby(cat)[each_conti].mean().sort_values(
                             ascending=False).head(chunksize)
-                    data.plot(kind=kind,ax=ax1,color=color3);
+                    data.plot(kind=kind,ax=ax1,color=color3)
                 elif kind == "line":
                     data = dft.groupby(cat)[each_conti].mean().sort_index(
                             ascending=True).head(chunksize)
-                    data.plot(kind=kind,ax=ax1,color=color3);
+                    data.plot(kind=kind,ax=ax1,color=color3)
                 if dft[cat].dtype == object or str(dft[cat].dtype) == 'category':
                     labels = data.index.str[:stringlimit].tolist()
                 else:
@@ -867,6 +879,8 @@ def plot_fast_average_num_by_cat(dft, cats, num_vars, verbose=0,kind="bar"):
             except:
                 ax1.set_title('No plot as %s is not numeric' %each_conti)
                 counter += 1
+    if verbose <= 1:
+        plt.show()
     if verbose == 2:
         return fig
 ################# The barplots module below calls the plot_fast_average_num_by_cat module above ###
@@ -960,7 +974,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         sns.heatmap(corr, annot=True,ax=ax1)
         plotc += 1
         fig.tight_layout();
-        if verbose == 1:
+        if verbose <= 1:
             plt.show();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
@@ -987,7 +1001,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         else:
             fig.suptitle('Heatmap of all Continuous Variables including target = %s' %dep,fontsize=15,y=1.01)
         fig.tight_layout();
-        if verbose == 1:
+        if verbose <= 1:
             plt.show();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
@@ -1118,7 +1132,7 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
                             plot_name, dep))
             image_count += 1
         fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=12,y=1.01)
-        if verbose == 1:
+        if verbose <= 1:
             plt.show();
     else:
         ######### This is for Classification problems only ########
@@ -1177,7 +1191,7 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
                         pass
             ax1.legend(loc='best')
         fig.tight_layout();
-        if verbose == 1:
+        if verbose <= 1:
             plt.show();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
@@ -1216,7 +1230,7 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
             dft[dep].plot(kind='hist')
             fig.suptitle('%s : Distribution of Target Variable' %dep, fontsize=12)
             fig.tight_layout();
-        if verbose == 1:
+        if verbose <= 1:
             plt.show();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
@@ -1265,7 +1279,7 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression'):
                 linewidth=3, notch=False, saturations=0.5, ax=ax, inner='box')
             fig.suptitle('Violin Plot of all Continuous Variables', fontsize=15)
             fig.tight_layout();
-            if verbose == 1:
+            if verbose <= 1:
                 plt.show();
             if verbose == 2:
                 additional = '_'+str(plot_index)+'_'
@@ -1301,7 +1315,7 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression'):
                 count += 1
             fig.suptitle('Box Plots without Outliers shown',  fontsize=15)
             fig.tight_layout();
-            if verbose == 1:
+            if verbose <= 1:
                 plt.show();
             if verbose == 2:
                 imgdata_list.append(save_image_data(fig, chart_format,
@@ -1314,116 +1328,119 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression'):
 #### Drawing Date Variables is very important in Time Series data
 import copy
 def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='Regression'):
-    dfx = copy.deepcopy(dfx)
-    df =  copy.deepcopy(dfx)
+    dfx = copy.deepcopy(dfx) ## use this to preserve the original dataframe
+    df =  copy.deepcopy(dfx) #### use this for making it into a datetime index etc...
     plot_name = 'Time_Series_Plots'
     #### Now you want to display 2 variables at a time to see how they change over time
     ### Don't change the number of cols since you will have to change rows formula as well
+    gap = 0.3 ### adjusts the gap between rows in multiple rows of charts
     imgdata_list = list()
     image_count = 0
     N = len(num_vars)
-    df = df.set_index(pd.to_datetime(df.pop(datevars[0])))
     chunksize = 20
-    if N < 2:
-        var1 = num_vars[0]
-        width_size = 5
-        height_size = 5
-        fig = plt.figure(figsize=(width_size,height_size))
-        df[var1].plot(title=var1, label=var1)
-        fig.suptitle('Time Series Plot of %s' %var1, fontsize=12)
-        if verbose == 2:
-            imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, dep))
-            image_count += 1
+    if N < 1 or len(datevars) == 0:
+        #### If there are no numeric variables, nothing to plot here ######
         return imgdata_list
+    else:
+        width_size = 15
+        height_size = 5
     if isinstance(df.index, pd.DatetimeIndex) :
         pass
     elif len(datevars) > 0:
         try:
-            col = datevars[0]
-            if df[col].map(lambda x: 0 if len(str(x)) == 4 else 1).sum() == 0:
-                if df[col].min() > 1900 or df[col].max() < 2100:
-                    df[col] = df[col].map(lambda x: '01-01-'+str(x) if len(str(x)) == 4 else x)
-                    df.index = pd.to_datetime(df.pop(col), infer_datetime_format=True)
+            ts_column = datevars[0]
+            ### if we have already found that it was a date time var, then leave it as it is. Thats good enough!
+            date_items = df[ts_column].apply(str).apply(len).values
+            date_4_digit = all(date_items[0] == item for item in date_items) ### this checks for 4 digits date
+            #### In some cases, date time variable is a year like 1999 (4-digit), this must be translated correctly
+            if date_4_digit:
+                if date_items[0] == 4:
+                    ### If it is just a year variable alone, you should leave it as just a year!
+                    df[ts_column] = df[ts_column].map(lambda x: pd.to_datetime(x,format='%Y', errors='coerce')).values
                 else:
-                    print('%s could not be indexed. Could not draw date_vars.' %col)
-                    return imgdata_list
+                    ### if it is not a year alone, then convert it into a date time variable
+                    if df[col].min() > 1900 or df[col].max() < 2100:
+                        df[ts_column] = df[ts_column].map(lambda x: '0101'+str(x) if len(str(x)) == 4 else x)
+                        df[ts_column] = pd.to_datetime(df[ts_column], format='%m%d%Y', errors='coerce')
+                    else:
+                        print('%s could not be indexed. Could not draw date_vars.' %col)
+                        return imgdata_list
             else:
-                df.index = pd.to_datetime(df.pop(col), infer_datetime_format=True)
+                df[ts_column] = pd.to_datetime(df[ts_column], infer_datetime_format=True, errors='coerce')
+            ##### Now set the column to be the date - time index
+            df.index = df.pop(ts_column) #### This is where we set the date time column as the index ######
         except:
             print('%s could not be indexed. Could not draw date_vars.' %col)
             return imgdata_list
     ####### Draw the time series for Regression and DepVar
-    if modeltype == 'Regression' or dep == None or dep == '':
-        width_size = 15
-        height_size = 4
+    width_size = 15
+    height_size = 4
+    cols = 2
+    if modeltype == 'Regression':
+        gap=0.5
+        rows = int(len(num_vars)/cols+0.99)
+        fig,ax = plt.subplots(figsize=(width_size,rows*height_size))
+        fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows
+        df.groupby(ts_column).mean().plot(subplots=True,ax=ax,layout=(rows,cols))
+        fig.suptitle('Time Series Plot for each Continuous Variable by %s' %ts_column, fontsize=15,y=1.01)
+    elif modeltype == 'Clustering':
+        kind = 'line' #### you can change this to plot any kind of time series plot you want
         image_count = 0
-        cols = 2
         combos = combinations(num_vars, 2)
         combs = copy.deepcopy(combos)
         noplots = int((N**2-N)/2)
         rows = int((noplots/cols)+0.99)
         counter = 1
         fig = plt.figure(figsize=(width_size,rows*height_size))
+        fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows
         try:
             for (var1,var2) in combos:
                 plt.subplot(rows,cols,counter)
                 ax1 = plt.gca()
-                df[var1].plot(secondary_y=True, label=var1, ax=ax1)
-                df[var2].plot(title=var2 +' (left_axis) vs. ' + var1+' (right_axis)', ax=ax1)
+                df[var1].plot(kind=kind, secondary_y=True, label=var1, ax=ax1)
+                df[var2].plot(kind=kind, title=var2 +' (left_axis) vs. ' + var1+' (right_axis)', ax=ax1)
                 plt.legend(loc='best')
                 counter += 1
-            fig.suptitle('Time Series Plot by %s: Pairwise Continuous Variables' %col, fontsize=12)
+                fig.suptitle('Time Series Plot by %s: Pairwise Continuous Variables' %ts_column, fontsize=15,y=1.01)
         except:
-            for each_date in datevars:
-                figx = plot_fast_average_num_by_cat(dfx, each_date, num_vars, verbose,kind="line")
-                additional = '_by_{}_'.format(each_date)
-                if verbose == 2:
-                    imgdata_list.append(save_image_data(figx, chart_format,
-                                    plot_name, dep))
-                    image_count += 1
-                elif verbose == 1:
-                    plt.show();
-            return imgdata_list
-        #fig.tight_layout();
-        if verbose == 2:
-            imgdata_list.append(save_image_data(figx, chart_format,
-                            plot_name, dep))
-            image_count += 1
+            plt.close('all')
+            fig = plot_fast_average_num_by_cat(dfx, datevars, num_vars, verbose,kind="line")
     else:
-        ######## This is for Classification problems only
+        ######## This is for Classification problems only ####
+        kind = 'line' ### you can decide what kind of plots you want to show here ####
         image_count = 0
-        classes = df[dep].factorize()[1].tolist()
-        classes = copy.deepcopy(classes)
+        target_vars = df[dep].factorize()[1].tolist()
+        #classes = copy.deepcopy(classes)
         ##### Now separate out the drawing of time series data by the number of classes ###
         colors = cycle('gkbyrcmgkbyrcmgkbyrcmgkbyr')
-        target_vars = df[dep].unique()
+        classes = df[dep].unique()
         if type(classes[0])==int or type(classes[0])==float:
             classes = [str(x) for x in classes]
         cols = 2
-        noplots = int((N**2-N)/2)
+        count = 0
+        combos = combinations(num_vars, 2)
+        combs = copy.deepcopy(combos)
+        noplots = len(target_vars)
         rows = int((noplots/cols)+0.99)
         fig = plt.figure(figsize=(width_size,rows*height_size))
-        for target_var, class_label, color2 in zip(target_vars, classes, colors):
-            ## Once the date var has been set as the index, you can draw num variables against it
-            df_target = df[df[dep]==target_var]
-            combos = combinations(num_vars, 2)
-            combs = copy.deepcopy(combos)
-            counter = 1
-            for (var1,var2) in combos :
-                plt.subplot(rows,cols,counter)
-                ax1 = plt.gca()
-                df_target[var1].plot(secondary_y=True, label=var1,ax=ax1)
-                df_target[var2].plot(title='Target = '+class_label+': '+var2 +' (left_axis) vs. '+var1,ax=ax1)
-                plt.legend(loc='best')
+        fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows
+        counter = 1
+        copy_target_vars = copy.deepcopy(target_vars)
+        try:
+            for target_var in copy_target_vars:
+                df_target = df[df[dep]==target_var]
+                ax1 = plt.subplot(rows,cols,counter)
+                df_target.groupby(ts_column).mean().plot(subplots=False,ax=ax1)
+                ax1.set_title('Time Series plots for '+dep + ' value = '+target_var)
                 counter += 1
-        fig.suptitle('Time Series Plot by %s: Continuous Variables Pair' %col, fontsize=12)
-        if verbose == 1:
-            plt.show();
-        if verbose == 2:
-            imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, dep))
-            image_count += 1
+        except:
+            plt.close('all')
+            fig = plot_fast_average_num_by_cat(df_target, datevars, num_vars, verbose,kind="line")
+        fig.suptitle('Time Series Plot by %s: Continuous Variables Pair' %ts_column, fontsize=15, y=1.01)
+    if verbose == 2:
+        imgdata_list.append(save_image_data(fig, chart_format,
+                        plot_name, dep))
+        image_count += 1
     return imgdata_list
     ############# End of Date vars plotting #########################
 
@@ -1521,7 +1538,7 @@ def start_classifying_vars(dfin, verbose):
                 missing_rows=dfin[col].isnull().sum()
                 pct_missing = float(missing_rows)/float(totrows)
                 if pct_missing > 0.90:
-                    if verbose == 1:
+                    if verbose <= 1:
                         print('Pct of Missing Values in %s exceed 90 pct, hence will be dropped...' %col)
                     cols_to_delete.append(dfin[col].name)
                     continue
@@ -1566,7 +1583,7 @@ def start_classifying_vars(dfin, verbose):
                 missing_rows=dfin[col].isnull().sum()
                 pct_missing = float(missing_rows)/float(totrows)
                 if pct_missing > 0.90:
-                    if verbose == 1:
+                    if verbose <= 1:
                         print('Pct of Missing Values in %s exceed 90 pct, hence will be dropped...' %col)
                     cols_to_delete.append(dfin[col].name)
                     continue
@@ -2047,7 +2064,7 @@ def classify_columns(df_preds, verbose=0):
     ###############  This is where you print all the types of variables ##############
     ####### Returns 8 vars in the following order: continuous_vars,int_vars,cat_vars,
     ###  string_bool_vars,discrete_string_vars,nlp_vars,date_or_id_vars,cols_delete
-    if verbose == 1:
+    if verbose <= 1:
         print("    Number of Numeric Columns = ", len(continuous_vars))
         print("    Number of Integer-Categorical Columns = ", len(int_vars))
         print("    Number of String-Categorical Columns = ", len(cat_vars))
@@ -2146,9 +2163,8 @@ def remove_variables_using_fast_correlation(df, numvars, modeltype, target,
     ###### This is for ordering the variables in the highest to lowest importance to target ###
     if len(corr_list) == 0:
         final_list = list(correlation_dataframe)
-        print('\nData Error:  All %d numeric vars are found to be highly correlated in this data! Check your data input...')
-        if verbose >= 1:
-            print('\nSince all numeric vars will be removed, selecting all variables...' %len(final_list))
+        print('Selecting all (%d) variables since none of them are highly correlated...' %len(numvars))
+        return numvars
     else:
         max_feats = len(corr_list)
         if modeltype == 'Regression':
@@ -2178,7 +2194,7 @@ def remove_variables_using_fast_correlation(df, numvars, modeltype, target,
         final_list = rem_col_list + selected_corr_list
         if verbose >= 1:
             print('\nAfter removing highly correlated variables, following %d numeric vars selected: %s' %(len(final_list),final_list))
-    return final_list
+        return final_list
 ###############################################################################################
 def count_freq_in_list(lst):
     """
@@ -2318,18 +2334,16 @@ def convert_all_object_columns_to_numeric(train, test):
         for row,column in train.dtypes.iteritems():
             if column == object:
                 lis.append(row)
-        print('%d string variables identified' %len(lis))
+        #print('%d string variables identified' %len(lis))
         for everycol in lis:
-            print('    Converting %s to numeric' %everycol)
+            #print('    Converting %s to numeric' %everycol)
             try:
                 train[everycol], train_dict = convert_a_mixed_object_column_to_numeric(train[everycol])
                 if not isinstance(test, str):
                     test[everycol] = convert_a_mixed_object_column_to_numeric(test[everycol], train_dict)
             except:
-                print('Error converting %s column from string to numeric. Continuing...' %everycol)
+                #print('Error converting %s column from string to numeric. Continuing...' %everycol)
                 continue
-    else:
-        print('There is no string variable in the data set')
     return train, test
 ###################################################################################
 ################      Find top features using XGB     ###################
