@@ -907,8 +907,11 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
     #### Make sure that you plot charts for the depVar as well by including it #######
     if problem_type == 'Regression':
         conti.append(dep)
-    else:
+    elif problem_type.endswith('Classification'):
         cats.append(dep)
+    else:
+        ### Since there is no dependent variable in clustering there is nothing to add dep to.
+        pass
     chunksize = 20
     ########## This is for Regression Problems only ######
     image_count = 0
@@ -2357,14 +2360,18 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     You can send in all kinds of vars and it will take care of transforming it. Sweet!
     """
     train = copy.deepcopy(train)
+    preds = copy.deepcopy(preds)
+    numvars = copy.deepcopy(numvars)
     ######################   I M P O R T A N T ##############################################
     ###### This top_num decides how many top_n features XGB selects in each iteration.
-    ####  There a total of 5 iterations. Hence 5x10 means maximum 50 featues will be selected.
-    #####  If there are more than 50 variables, then maximum 5*25 = 125 variables will be selected
+    ####  There a total of 5 iterations. Hence 5x10 means maximum 50 features will be selected.
+    #####  If there are more than 50 variables, then maximum 25% of its variables will be selected
     if len(preds) <= 50:
         top_num = 10
     else:
-        top_num = 25
+        ### the maximum number of variables will 25% of preds which means we divide by 5 and get 5% here
+        ### The five iterations result in 5% being chosen in each iteration. Hence max 25% of variables!
+        top_num = int(len(preds)*0.05)
     ######################   I M P O R T A N T ##############################################
     #### If there are more than 30 categorical variables in a data set, it is worth reducing features.
     ####  Otherwise. XGBoost is pretty good at finding the best features whether cat or numeric !
@@ -2372,9 +2379,6 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     max_depth = 8
     max_cats = 5
     ######################   I M P O R T A N T ##############################################
-    train = copy.deepcopy(train)
-    preds = copy.deepcopy(preds)
-    numvars = copy.deepcopy(numvars)
     subsample =  0.7
     col_sub_sample = 0.7
     train = copy.deepcopy(train)
