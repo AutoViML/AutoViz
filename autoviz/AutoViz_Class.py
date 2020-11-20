@@ -252,7 +252,7 @@ class AutoViz_Class():
                 print(e)
                 print('Could not draw Pair Scatter Plots')
             try:
-                svg_data = draw_distplot(dft, bool_vars+cats+continuous_vars,verbose,chart_format,problem_type,
+                svg_data = draw_distplot(dft, bool_vars+cats, continuous_vars,verbose,chart_format,problem_type,
                                     depVar,classes)
                 self.add_plots('dist_plot',svg_data)
             except:
@@ -314,7 +314,7 @@ class AutoViz_Class():
                     else:
                         othernums = [x for x in continuous_vars if x not in depVar]
                     if len(othernums) >= 1:
-                        svg_data = draw_distplot(dft, bool_vars+cats+continuous_vars,verbose,chart_format,
+                        svg_data = draw_distplot(dft, bool_vars+cats, continuous_vars,verbose,chart_format,
                                             problem_type, depVar, classes)
                         self.add_plots('dist_plot',svg_data)
                     else:
@@ -385,7 +385,7 @@ class AutoViz_Class():
                     else:
                         othernums = [x for x in continuous_vars if x not in depVar]
                     if len(othernums) >= 1:
-                        svg_data = draw_distplot(dft, bool_vars+cats+continuous_vars,verbose,chart_format,
+                        svg_data = draw_distplot(dft, bool_vars+cats, continuous_vars,verbose,chart_format,
                                                 problem_type,depVar,classes)
                         self.add_plots('dist_plot',svg_data)
                     else:
@@ -1015,14 +1015,15 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
 
 ##### Draw the Distribution of each variable using Distplot
 ##### Must do this only for Continuous Variables
-def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes=None):
-    plot_name = 'KDE_Plots'
+from scipy.stats import probplot,skew
+def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=None, classes=None):
+    cats = find_remove_duplicates(cat_bools) ### first make sure there are no duplicates in this ###
+    plot_name = 'Dist_Plots'
     #### Since we are making changes to dft and classes, we will be making copies of it here
     conti = list(set(conti))
     dft = dft[:]
     classes = copy.deepcopy(classes)
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
-    cols = 2
     imgdata_list = list()
     width_size = 15  #### this is to control the width of chart as well as number of categories to display
     height_size = 5
@@ -1036,103 +1037,58 @@ def draw_distplot(dft, conti,verbose,chart_format,problem_type,dep=None, classes
                 conti += dep
             else:
                 conti += [dep]
-        noplots = len(conti)
-        rows = int((noplots/cols)+0.99 )
         ### Be very careful with the next line. we have used the plural "subplots" ##
         ## In this case, you have ax as an array and you have to use (row,col) to get each ax!
-        fig = plt.figure(figsize=(width_size,rows*height_size))
-        fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows
-        for k, color2 in zip(range(noplots),colors):
-            #print('Iteration %s' %k)
-            conti_iter = conti[k]
-            if dft[conti_iter].dtype == float or dft[conti_iter].dtype==np.int32 or dft[conti_iter].dtype==np.int64:
-                if dft[conti_iter].nunique() <= 25:
-                    chart_type = 'bar'
-                else:
-                    chart_type = 'float'
-            elif dft[conti_iter].dtype == object and dft[conti_iter].nunique() <= 25:
-                chart_type = 'bar'
-            else:
-                chart_type = 'bar'
-            if chart_type == 'float':
-                if dft[conti_iter].min() == 0.0:
-                    hist_bins = 25
-                elif dft[conti_iter].max()/dft[conti_iter].min() > 50 or dft[conti_iter].max()-dft[conti_iter].min()  > 50:
-                    hist_bins = 50
-                else:
-                    hist_bins = 30
-                plt.subplot(rows, cols, k+1)
-                ax1 = plt.gca()
-                #ax2 = ax1.twiny()
-                color1 = next(colors)
-                if len(dft[dft[conti_iter]<0]) > 0:
-                    ### If there are simply neg numbers in the column, better to skip the Log...
-                    #dft[conti_iter].hist(bins=hist_bins, ax=ax1, color=color2,label='%s' %conti_iter,
-                    #               )
-                    sns.distplot(dft[conti_iter],
-                        hist=False, kde=True,label='%s' %conti_iter,
-                        bins=hist_bins, ax= ax1,hist_kws={'alpha':transparent},
-                        color=color1)
-                    ax1.legend(loc='upper right')
-                    ax1.set_xscale('linear')
-                    ax1.set_xlabel('Linear Scale')
-                    #ax1.set_title('%s Distribution (No Log transform since negative numbers)' %conti_iter,
-                    #                            loc='center',y=1.18)
-                elif len(dft[dft[conti_iter]==0]) > 0:
-                    ### If there are only zeros numbers in the column, you can do log transform by adding 1...
-                    #dft[conti_iter].hist(bins=hist_bins, ax=ax1, color=color2,label='before log transform'
-                    #                    )
-                    sns.distplot(dft[conti_iter],
-                        hist=False, kde=True,label='%s' %conti_iter,hist_kws={'alpha':transparent},
-                        bins=hist_bins, ax= ax1,
-                        color=color1)
-                    #np.log(dft[conti_iter]+1).hist(bins=hist_bins, ax=ax2, color=next(colors),
-                    #    alpha=transparent, label='after log transform',bw_method=3)
-                    #sns.distplot(np.log10(dft[conti_iter]+1),
-                    #    hist=False, kde=True,hist_kws={'alpha':transparent},
-                    #    bins=hist_bins, ax= ax2,label='after potential log transform',
-                    #    color=next(colors))
-                    ax1.legend(loc='upper right')
-                    #ax2.legend(loc='upper left')
-                    ax1.set_xscale('linear')
-                    #ax2.set_xscale('log')
-                    ax1.set_xlabel('Linear Scale')
-                    #ax2.set_xlabel('Log Scale')
-                    #ax1.set_title('%s Distribution and potential Log Transform' %conti_iter, loc='center',y=1.18)
-                else:
-                    ### if there are no zeros and no negative numbers then it is a clean data ########
-                    #dft[conti_iter].hist(bins=hist_bins, ax=ax1, color=color2,label='before log transform',
-                    #                    bw_method=3)
-                    sns.distplot(dft[conti_iter],
-                        hist=False, kde=True,label='%s' %conti_iter,
-                        bins=hist_bins, ax= ax1,hist_kws={'alpha':transparent},
-                        color=color1)
-                    #np.log(dft[conti_iter]).fillna(0).hist(bins=hist_bins, ax=ax2, color=next(colors),
-                    #    alpha=transparent, label='after log transform',bw_method=3)
-                    #sns.distplot(np.log10(dft[conti_iter]),
-                    #    hist=False, kde=True,label='after potential log transform',
-                    #    bins=hist_bins, ax= ax2,hist_kws={'alpha':transparent},
-                    #    color=next(colors))
-                    ax1.legend(loc='upper right')
-                    #ax2.legend(loc='upper left')
-                    ax1.set_xscale('linear')
-                    #ax2.set_xscale('log')
-                    ax1.set_xlabel('Linear Scale')
-                    #ax2.set_xlabel('Log Scale')
-                    #ax1.set_title('%s Distribution and potential Log Transform' %conti_iter, loc='center',y=1.18)
-            else:
-                plt.subplot(rows, cols, k+1)
-                ax1 = plt.gca()
-                kwds = {"rotation": 45, "ha":"right"}
-                labels = dft[conti_iter].value_counts()[:width_size].index.tolist()
-                dft[conti_iter].value_counts()[:width_size].plot(kind='bar', color=next(colors),
-                                            ax=ax1,label='%s' %conti_iter)
-                ax1.set_xticklabels(labels,**kwds);
-                ax1.set_title('Distribution of %s (top %d categories only)' %(conti_iter,width_size))
-        fig.tight_layout();
+        ########## This is where you insert the logic for displots ##############
+        sns.color_palette("Set1")
+        ##### First draw all the numeric variables in row after row #############
+        cols = 3
+        rows = len(conti)
+        fig, axes = plt.subplots(rows, cols, figsize=(width_size,rows*height_size))
+        k = 1
+        for each_conti in conti:
+            color1 = next(colors)
+            ax1 = plt.subplot(rows, cols, k)
+            sns.distplot(dft[each_conti],kde=False, ax=ax1, color=color1)
+            k += 1
+            ax2 = plt.subplot(rows, cols, k)
+            sns.boxplot(dft[each_conti], ax=ax2, color=color1)
+            k += 1
+            ax3 = plt.subplot(rows, cols, k)
+            probplot(dft[each_conti], plot=ax3)
+            k += 1
+            skew_val=round(dft[each_conti].skew(), 1)
+            ax2.set_yticklabels([])
+            ax2.set_yticks([])
+            ax1.set_title(each_conti + " | Distplot")
+            ax2.set_title(each_conti + " | Boxplot")
+            ax3.set_title(each_conti + " | Probability Plot - Skew: "+str(skew_val))
+        ###### Save the plots to disk if verbose = 2 ############
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, dep))
+                            plot_name+'_Numeric', dep))
+            image_count += 1
+        #####  Now draw each of the categorical variable distributions in each subplot ####
+        cols = 2
+        noplots = len(cats)
+        rows = int((noplots/cols)+0.99 )
+        k = 0
+        fig = plt.figure(figsize=(width_size,rows*height_size))
+        fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows
+        for each_cat in cats:
+            color2 = next(colors)
+            ax1 = plt.subplot(rows, cols, k+1)
+            kwds = {"rotation": 45, "ha":"right"}
+            labels = dft[each_cat].value_counts()[:width_size].index.tolist()
+            dft[each_cat].value_counts()[:width_size].plot(kind='bar', color=color2,
+                                        ax=ax1,label='%s' %each_cat)
+            ax1.set_xticklabels(labels,**kwds);
+            ax1.set_title('Distribution of %s (top %d categories only)' %(each_cat,width_size))
+        fig.tight_layout();
+        ########## This is where you end the logic for distplots ################
+        if verbose == 2:
+            imgdata_list.append(save_image_data(fig, chart_format,
+                            plot_name+'_Cats', dep))
             image_count += 1
         fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=12,y=1.01)
         if verbose <= 1:
@@ -2520,7 +2476,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     return important_features, numvars, important_cats
 ################################################################################
 module_type = 'Running'if  __name__ == "__main__" else 'Imported'
-version_number = '0.0.77'
+version_number = '0.0.78'
 print("""Imported AutoViz_Class version: %s. Call using:
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
