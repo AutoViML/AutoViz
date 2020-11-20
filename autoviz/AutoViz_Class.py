@@ -1042,59 +1042,62 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
         ########## This is where you insert the logic for displots ##############
         sns.color_palette("Set1")
         ##### First draw all the numeric variables in row after row #############
-        cols = 3
-        rows = len(conti)
-        fig, axes = plt.subplots(rows, cols, figsize=(width_size,rows*height_size))
-        k = 1
-        for each_conti in conti:
-            color1 = next(colors)
-            ax1 = plt.subplot(rows, cols, k)
-            sns.distplot(dft[each_conti],kde=False, ax=ax1, color=color1)
-            k += 1
-            ax2 = plt.subplot(rows, cols, k)
-            sns.boxplot(dft[each_conti], ax=ax2, color=color1)
-            k += 1
-            ax3 = plt.subplot(rows, cols, k)
-            probplot(dft[each_conti], plot=ax3)
-            k += 1
-            skew_val=round(dft[each_conti].skew(), 1)
-            ax2.set_yticklabels([])
-            ax2.set_yticks([])
-            ax1.set_title(each_conti + " | Distplot")
-            ax2.set_title(each_conti + " | Boxplot")
-            ax3.set_title(each_conti + " | Probability Plot - Skew: "+str(skew_val))
-        ###### Save the plots to disk if verbose = 2 ############
-        if verbose == 2:
-            imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name+'_Numeric', dep))
-            image_count += 1
+        if not len(conti) == 0:
+            cols = 3
+            rows = len(conti)
+            fig, axes = plt.subplots(rows, cols, figsize=(width_size,rows*height_size))
+            k = 1
+            for each_conti in conti:
+                color1 = next(colors)
+                ax1 = plt.subplot(rows, cols, k)
+                sns.distplot(dft[each_conti],kde=False, ax=ax1, color=color1)
+                k += 1
+                ax2 = plt.subplot(rows, cols, k)
+                sns.boxplot(dft[each_conti], ax=ax2, color=color1)
+                k += 1
+                ax3 = plt.subplot(rows, cols, k)
+                probplot(dft[each_conti], plot=ax3)
+                k += 1
+                skew_val=round(dft[each_conti].skew(), 1)
+                ax2.set_yticklabels([])
+                ax2.set_yticks([])
+                ax1.set_title(each_conti + " | Distplot")
+                ax2.set_title(each_conti + " | Boxplot")
+                ax3.set_title(each_conti + " | Probability Plot - Skew: "+str(skew_val))
+            ###### Save the plots to disk if verbose = 2 ############
+            if verbose == 2:
+                imgdata_list.append(save_image_data(fig, chart_format,
+                                plot_name+'_Numeric', dep))
+                image_count += 1
         #####  Now draw each of the categorical variable distributions in each subplot ####
-        cols = 2
-        noplots = len(cats)
-        rows = int((noplots/cols)+0.99 )
-        k = 0
-        fig = plt.figure(figsize=(width_size,rows*height_size))
-        fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows
-        for each_cat in cats:
-            color2 = next(colors)
-            ax1 = plt.subplot(rows, cols, k+1)
-            kwds = {"rotation": 45, "ha":"right"}
-            labels = dft[each_cat].value_counts()[:width_size].index.tolist()
-            dft[each_cat].value_counts()[:width_size].plot(kind='bar', color=color2,
-                                        ax=ax1,label='%s' %each_cat)
-            ax1.set_xticklabels(labels,**kwds);
-            ax1.set_title('Distribution of %s (top %d categories only)' %(each_cat,width_size))
-        fig.tight_layout();
-        ########## This is where you end the logic for distplots ################
-        if verbose == 2:
-            imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name+'_Cats', dep))
-            image_count += 1
-        fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=12,y=1.01)
-        if verbose <= 1:
-            plt.show();
+        if not len(cats) == 0:
+            cols = 2
+            noplots = len(cats)
+            rows = int((noplots/cols)+0.99 )
+            k = 0
+            fig = plt.figure(figsize=(width_size,rows*height_size))
+            fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows
+            for each_cat in cats:
+                color2 = next(colors)
+                ax1 = plt.subplot(rows, cols, k+1)
+                kwds = {"rotation": 45, "ha":"right"}
+                labels = dft[each_cat].value_counts()[:width_size].index.tolist()
+                dft[each_cat].value_counts()[:width_size].plot(kind='bar', color=color2,
+                                            ax=ax1,label='%s' %each_cat)
+                ax1.set_xticklabels(labels,**kwds);
+                ax1.set_title('Distribution of %s (top %d categories only)' %(each_cat,width_size))
+            fig.tight_layout();
+            ########## This is where you end the logic for distplots ################
+            if verbose == 2:
+                imgdata_list.append(save_image_data(fig, chart_format,
+                                plot_name+'_Cats', dep))
+                image_count += 1
+            fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=12,y=1.01)
+            if verbose <= 1:
+                plt.show();
     else:
         ######### This is for Classification problems only ########
+        cols = 2
         image_count = 0
         transparent = 0.7
         noplots = len(conti)
@@ -1181,7 +1184,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             ax2.set_xticks(dft[dep].unique().tolist())
             ax2.set_xticklabels(classes, rotation = 45, ha="right")
             ax2.set_title('Freq Distribution of Target Variable = %s' %dep,  fontsize=12)
-        else:
+        elif problem_type == 'Regression':
             ############################################################################
             width_size = 5
             height_size = 5
@@ -1189,11 +1192,13 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             dft[dep].plot(kind='hist')
             fig.suptitle('%s : Distribution of Target Variable' %dep, fontsize=12)
             fig.tight_layout();
+        else:
+            return imgdata_list
         if verbose <= 1:
             plt.show();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, dep))
+                            plot_name+'_target', dep))
             image_count += 1
     ####### End of Distplots ###########
     return imgdata_list
@@ -2476,7 +2481,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     return important_features, numvars, important_cats
 ################################################################################
 module_type = 'Running'if  __name__ == "__main__" else 'Imported'
-version_number = '0.0.78'
+version_number = '0.0.79'
 print("""Imported AutoViz_Class version: %s. Call using:
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
