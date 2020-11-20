@@ -559,9 +559,8 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
     height_size = 5
     stringlimit = 20
     combos = combinations(cats, 2)
-    cats_len = len(cats)
-    N = int(cats_len*(cats_len-1)/2)
-    if cats_len <= 1:
+    N = len(cats)
+    if N <= 1:
         ### if there are not many categorical variables, there is nothing to plot
         return imgdata_list
     if len(nums) == 0:
@@ -1018,6 +1017,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
 from scipy.stats import probplot,skew
 def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=None, classes=None):
     cats = find_remove_duplicates(cat_bools) ### first make sure there are no duplicates in this ###
+    copy_cats = copy.deepcopy(cats)
     plot_name = 'Dist_Plots'
     #### Since we are making changes to dft and classes, we will be making copies of it here
     conti = list(set(conti))
@@ -1077,7 +1077,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             k = 0
             fig = plt.figure(figsize=(width_size,rows*height_size))
             fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows
-            for each_cat in cats:
+            for each_cat in copy_cats:
                 color2 = next(colors)
                 ax1 = plt.subplot(rows, cols, k+1)
                 kwds = {"rotation": 45, "ha":"right"}
@@ -1097,6 +1097,8 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 plt.show();
     else:
         ######### This is for Classification problems only ########
+        #### Now you can draw both object and numeric variables using same conti_
+        conti = conti + cats
         cols = 2
         image_count = 0
         transparent = 0.7
@@ -1152,15 +1154,18 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                     except:
                         pass
             ax1.legend(loc='best')
+            k += 1
         fig.tight_layout();
         if verbose <= 1:
             plt.show();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, dep))
+                            plot_name+'_Numerics', dep))
             image_count += 1
         fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=12,y=1.01)
         ###### Now draw the distribution of the target variable in Classification only ####
+        #####  Now draw each of the categorical variable distributions in each subplot ####
+        ############################################################################
         if problem_type.endswith('Classification'):
             col = 2
             row = 1
@@ -2486,7 +2491,7 @@ print("""Imported AutoViz_Class version: %s. Call using:
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
     AV.AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
-                            lowess=False,chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30)
-            """ %version_number)
-print("ALERT: verbose=2 saves plots in local disk under AutoViz_Plots dir and does not display charts anymore")
+                            lowess=False,chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30)""" %version_number)
+print("Note: verbose=0 or 1 generates charts and displays them in your local Jupyter notebook.")
+print("      verbose=2 saves plots in your local machine under AutoViz_Plots directory and does not display charts.")
 ###########################################################################################
