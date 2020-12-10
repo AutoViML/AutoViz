@@ -473,61 +473,41 @@ def save_image_data(fig, chart_format, plot_name, depVar, additional=''):
 
 #### This module analyzes a dependent Variable and finds out whether it is a
 #### Regression or Classification type problem
-def analyze_problem_type(train, targ,verbose=0) :
-    if train[targ].dtype != 'int64' and train[targ].dtype != float :
-        if len(train[targ].unique()) == 2:
-            if verbose <= 1:
-                print('''\n################### Binary-Class VISUALIZATION Started #####################''')
+def analyze_problem_type(train, target, verbose=0) :
+    target = copy.deepcopy(target)
+    cat_limit = 30 ### this determines the number of categories to name integers as classification ##
+    float_limit = 15 ### this limits the number of float variable categories for it to become cat var
+    if isinstance(target, str):
+        target = [target]
+    if len(target) == 1:
+        targ = target[0]
+    else:
+        targ = target[0]
+    ####  This is where you detect what kind of problem it is #################
+    if  train[targ].dtype in ['int64', 'int32','int16']:
+        if len(train[targ].unique()) <= 2:
             model_class = 'Binary_Classification'
-        elif len(train[targ].unique()) > 1 and len(train[targ].unique()) <= 15:
-                model_class = 'Multi_Classification'
-                if verbose <= 1:
-                    print('''\n################### Multi-Class VISUALIZATION Started ######################''')
-    elif train[targ].dtype == 'int64' or train[targ].dtype == float :
-        if len(train[targ].unique()) == 2:
-            if verbose <= 1:
-                print('''\n################### Binary-Class VISUALIZATION Started #####################''')
-            model_class = 'Binary_Classification'
-        elif len(train[targ].unique()) > 1 and len(train[targ].unique()) <= 15:
-                model_class = 'Multi_Classification'
-                if verbose <= 1:
-                    print('''\n################### Multi-Class VISUALIZATION Started ######################''')
+        elif len(train[targ].unique()) > 2 and len(train[targ].unique()) <= cat_limit:
+            model_class = 'Multi_Classification'
         else:
             model_class = 'Regression'
-            if verbose <= 1:
-                print('''\n################### Regression VISUALIZATION Started ######################''')
-    elif train[targ].dtype == object:
-            if len(train[targ].unique()) > 1 and len(train[targ].unique()) <= 2:
-                model_class = 'Binary_Classification'
-                if verbose <= 1:
-                    print('''\n################### Binary-Class VISUALIZATION Started #####################''')
-            else:
-                model_class = 'Multi_Classification'
-                if verbose <= 1:
-                    print('''\n################### Multi-Class VISUALIZATION Started ######################''')
-    elif train[targ].dtype == bool:
-                model_class = 'Binary_Classification'
-                if verbose <= 1:
-                    print('''\n################### Binary-Class VISUALIZATION Started ######################''')
-    elif train[targ].dtype == 'int64':
-        if len(train[targ].unique()) == 2:
-            if verbose <= 1:
-                print('''\n################### Binary-Class VISUALIZATION Started #####################''')
+    elif  train[targ].dtype in ['float']:
+        if len(train[targ].unique()) <= 2:
             model_class = 'Binary_Classification'
-        elif len(train[targ].unique()) > 1 and len(train[targ].unique()) <= 25:
-                model_class = 'Multi_Classification'
-                if verbose <= 1:
-                    print('''\n################### Multi-Class VISUALIZATION Started ######################''')
+        elif len(train[targ].unique()) > 2 and len(train[targ].unique()) <= float_limit:
+            model_class = 'Multi_Classification'
         else:
             model_class = 'Regression'
-            if verbose <= 1:
-                print('''\n################### Regression VISUALIZATION Started ######################''')
-    else :
-        if verbose <= 1:
-            print('''\n###################### REGRESSION VISUALIZATION Started #####################''')
-        model_class = 'Regression'
+    else:
+        if len(train[targ].unique()) <= 2:
+            model_class = 'Binary_Classification'
+        else:
+            model_class = 'Multi_Classification'
+    ########### print this for the start of next step ###########
+    if verbose <= 1:
+        print('''\n################ %s VISUALIZATION Started #####################''' %model_class)
     return model_class
-
+#################################################################################
 # Pivot Tables are generally meant for Categorical Variables on the axes
 # and a Numeric Column (typically the Dep Var) as the "Value" aggregated by Sum.
 # Let's do some pivot tables to capture some meaningful insights
@@ -1913,10 +1893,10 @@ def classify_columns(df_preds, verbose=0):
             train[col] = train[col].fillna('  ')
             if train[col].map(lambda x: len(x) if type(x)==str else 0).mean(
                 ) >= max_nlp_char_size and len(train[col].value_counts()
-                        ) <= len(train) and col not in string_bool_vars:
+                        ) <= int(0.9*len(train)) and col not in string_bool_vars:
                 var_df.loc[var_df['index']==col,'nlp_strings'] = 1
             elif len(train[col].value_counts()) > cat_limit and len(train[col].value_counts()
-                        ) <= len(train) and col not in string_bool_vars:
+                        ) <= int(0.9*len(train)) and col not in string_bool_vars:
                 var_df.loc[var_df['index']==col,'discrete_strings'] = 1
             elif len(train[col].value_counts()) > cat_limit and len(train[col].value_counts()
                         ) == len(train) and col not in string_bool_vars:
@@ -2486,7 +2466,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     return important_features, numvars, important_cats
 ################################################################################
 module_type = 'Running'if  __name__ == "__main__" else 'Imported'
-version_number = '0.0.79'
+version_number = '0.0.81'
 print("""Imported AutoViz_Class version: %s. Call using:
     from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
