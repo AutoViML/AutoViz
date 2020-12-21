@@ -584,7 +584,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
             data = data[data.columns[:nocats1]] #### make sure you don't print more than 10 rows of data
             data.plot(kind='bar',ax=ax1,colormap=color1)
             ax1.set_xlabel(var1)
-            ax1.set_ylabel(var2)
+            ax1.set_ylabel(depVar)
             if dft[var1].dtype == object or str(dft[var1].dtype) == 'category':
                 labels = data.index.str[:stringlimit].tolist()
             else:
