@@ -1627,36 +1627,77 @@ def find_remove_duplicates(values):
             seen.add(value)
     return output
 #################################################################################
+def load_file_dataframe(dataname, sep=",", header=0, verbose=0, nrows=None,parse_dates=False):
+    start_time = time.time()
+    ###########################  This is where we load file or data frame ###############
+    if isinstance(dataname,str):
+        #### this means they have given file name as a string to load the file #####
+        codex_flag = False
+        codex = ['ascii', 'utf-8', 'iso-8859-1', 'cp1252', 'latin1']
+        if dataname != '' and dataname.endswith(('csv')):
+            try:
+                dfte = pd.read_csv(dataname, sep=sep, header=header, encoding=None, 
+                                parse_dates=parse_dates)
+                if not nrows is None:
+                    if nrows < dfte.shape[0]:
+                        print('    max_rows_analyzed is smaller than dataset shape %d...' %dfte.shape[0])
+                        dfte = dfte.sample(nrows, replace=False, random_state=99)
+                        print('        randomly sampled %d rows from read CSV file' %nrows)
+                print('Shape of your Data Set loaded: %s' %(dfte.shape,))
+                if len(np.array(list(dfte))[dfte.columns.duplicated()]) > 0:
+                    print('You have duplicate column names in your data set. Removing duplicate columns now...')
+                    dfte = dfte[list(dfte.columns[~dfte.columns.duplicated(keep='first')])]
+                return dfte
+            except:
+                codex_flag = True
+        if codex_flag:
+            for code in codex:
+                try:
+                    dfte = pd.read_csv(dataname, sep=sep, header=header, encoding=None, nrows=nrows,
+                                    skiprows=skip_function, parse_dates=parse_dates) 
+                except:
+                    print('    pandas %s encoder does not work for this file. Continuing...' %code)
+                    continue
+        elif dataname.endswith(('xlsx','xls','txt')):
+            #### It's very important to get header rows in Excel since people put headers anywhere in Excel#
+            if nrows is None:
+                dfte = pd.read_excel(dataname,header=header, parse_dates=parse_dates)
+            else:
+                dfte = pd.read_excel(dataname,header=header, nrows=nrows, parse_dates=parse_dates)
+            print('Shape of your Data Set loaded: %s' %(dfte.shape,))
+            return dfte
+        else:
+            print('    Filename is an empty string or file not able to be loaded')
+            return None
+    elif isinstance(dataname,pd.DataFrame):
+        #### this means they have given a dataframe name to use directly in processing #####
+        if nrows is None:
+            dfte = copy.deepcopy(dataname)
+        else:
+            if nrows < dataname.shape[0]:
+                print('    Since nrows is smaller than dataset, loading random sample of %d rows into pandas...' %nrows)
+                dfte = dataname.sample(n=nrows, replace=False, random_state=99)
+            else:
+                dfte = copy.deepcopy(dataname)
+        print('Shape of your Data Set loaded: %s' %(dfte.shape,))
+        if len(np.array(list(dfte))[dfte.columns.duplicated()]) > 0:
+            print('You have duplicate column names in your data set. Removing duplicate columns now...')
+            dfte = dfte[list(dfte.columns[~dfte.columns.duplicated(keep='first')])]
+        return dfte
+    else:
+        print('Dataname input must be a filename with path to that file or a Dataframe')
+        return None
+##########################################################################################
+import copy
 def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
                         depVar='',dfte=None, header=0,verbose=0):
     corr_limit = 0.7  ### This limit represents correlation above this, vars will be removed
     start_time=time.time()
-    if filename == '':
-        dft = dfte[:]
-        pass
-    elif filename != '' and not filename.endswith(('.xls', '.xlsx')):
-        codex = ['utf-8', 'iso-8859-11', 'cpl252', 'latin1']
-        for code in codex:
-            try:
-                dfte = pd.read_csv(filename,sep=sep,index_col=None,encoding=code)
-                break
-            except:
-                print('File encoding decoder %s does not work for this file' %code)
-                continue
-    elif filename != '' and filename.endswith(('xlsx','xls')):
-        try:
-            dfte = pd.read_excel(filename, header=header)
-        except:
-            print('Could not load your Excel file')
-            return
+    if filename:
+        dataname = copy.deepcopy(filename)
     else:
-        print('Could not read your data file')
-        return
-    try:
-        print('Shape of your Data Set: %s' %(dfte.shape,))
-    except:
-        print('None of the decoders work...')
-        return
+        dataname = copy.deepcopy(dfte)
+    dfte = load_file_dataframe(dataname, sep=sep, header=header, verbose=verbose, nrows=max_rows_analyzed)
     orig_preds = [x for x in list(dfte) if x not in [depVar]]
     #################    CLASSIFY  COLUMNS   HERE    ######################
     var_df = classify_columns(dfte[orig_preds], verbose)
@@ -2464,14 +2505,86 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     numvars = [x for x in numvars if x in important_features]
     important_cats = [x for x in important_cats if x in important_features]
     return important_features, numvars, important_cats
+######################################################################################
+import re
+from wordcloud import WordCloud, STOPWORDS
+import matplotlib.pyplot as plt
+
+def return_stop_words():
+    STOP_WORDS = ['it', "this", "that", "to", 'its', 'am', 'is', 'are', 'was', 'were', 'a',
+                'an', 'the', 'and', 'or', 'of', 'at', 'by', 'for', 'with', 'about', 'between',
+                 'into','above', 'below', 'from', 'up', 'down', 'in', 'out', 'on', 'over',
+                  'under', 'again', 'further', 'then', 'once', 'all', 'any', 'both', 'each',
+                   'few', 'more', 'most', 'other', 'some', 'such', 'only', 'own', 'same', 'so',
+                    'than', 'too', 'very', 's', 't', 'can', 'just', 'd', 'll', 'm', 'o', 're',
+                    've', 'y', 'ain', 'ma']
+    add_words = ["s", "m",'you', 'not',  'get', 'no', 'via', 'one', 'still', 'us', 'u','hey','hi','oh','jeez',
+                'the', 'a', 'in', 'to', 'of', 'i', 'and', 'is', 'for', 'on', 'it', 'got','aww','awww',
+                'not', 'my', 'that', 'by', 'with', 'are', 'at', 'this', 'from', 'be', 'have', 'was',
+                '', ' ', 'say', 's', 'u', 'ap', 'afp', '...', 'n', '\\']
+    stop_words = list(set(STOP_WORDS+add_words))
+    return sorted(stop_words)
+
+def draw_wordcloud_from_dataframe(dataframe, column):
+    """
+    This handy function draws a dataframe column using Wordcloud library and nltk.
+    """
+
+    replace_spaces = re.compile('[/(){}\[\]\|@,;]')
+    remove_special_chars = re.compile('[^0-9a-z #+_]')
+    STOPWORDS = return_stop_words()
+    remove_ip_addr = re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b')
+    
+    def clean_text(text):
+        """
+        cleans text fast.
+        """
+        text = text.replace('\n', ' ').lower()# 
+        text = remove_ip_addr.sub('', text) 
+        text = replace_spaces.sub(' ',text)
+        text = remove_special_chars.sub('',text)
+        text = ' '.join([w for w in text.split() if not w in STOPWORDS])
+        return text
+
+    X_train = dataframe[column].fillna("missing")
+    X_train = X_train.map(clean_text)
+
+    # Dictionary of all words from train corpus with their counts.
+
+    words_counts = {}
+    for words in X_train:
+        for word in words.split():
+            if word not in words_counts:
+                words_counts[word] = 1
+            words_counts[word] += 1
+
+    vocab_size = 50000
+    top_words = sorted(words_counts, key=words_counts.get, reverse=True)[:vocab_size]
+
+    text_join = ' '.join(top_words)
+
+    picture_mask = plt.imread('test.png')
+
+    wordcloud = WordCloud(
+                          stopwords=STOPWORDS,
+                          background_color='white',
+                          width=1800,
+                          height=1400,
+                          mask=picture_mask
+                ).generate(text_join)
+
+    plt.figure(figsize = (15, 15), facecolor = None)
+    plt.imshow(wordcloud)
+    plt.axis("off")
+    plt.savefig('wordcloud_'+column+'.png', dpi=300)
+    plt.show();
 ################################################################################
 module_type = 'Running'if  __name__ == "__main__" else 'Imported'
-version_number = '0.0.81'
+version_number = '0.0.83'
 print("""Imported AutoViz_Class version: %s. Call using:
-    from autoviz.AutoViz_Class import AutoViz_Class
     AV = AutoViz_Class()
     AV.AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
                             lowess=False,chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30)""" %version_number)
 print("Note: verbose=0 or 1 generates charts and displays them in your local Jupyter notebook.")
-print("      verbose=2 saves plots in your local machine under AutoViz_Plots directory and does not display charts.")
+print("      verbose=2 does not show plot but creates them and saves them in AutoViz_Plots directory in your local machine.")
 ###########################################################################################

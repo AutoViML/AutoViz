@@ -1,2 +1,2 @@
 name = "autoviz"
-__version__ = "0.0.71"
+__version__ = "0.0.83"
