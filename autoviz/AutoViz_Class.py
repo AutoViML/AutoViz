@@ -1636,7 +1636,7 @@ def load_file_dataframe(dataname, sep=",", header=0, verbose=0, nrows=None,parse
         codex = ['ascii', 'utf-8', 'iso-8859-1', 'cp1252', 'latin1']
         if dataname != '' and dataname.endswith(('csv')):
             try:
-                dfte = pd.read_csv(dataname, sep=sep, header=header, encoding=None, 
+                dfte = pd.read_csv(dataname, sep=sep, header=header, encoding=None,
                                 parse_dates=parse_dates)
                 if not nrows is None:
                     if nrows < dfte.shape[0]:
@@ -1654,7 +1654,7 @@ def load_file_dataframe(dataname, sep=",", header=0, verbose=0, nrows=None,parse
             for code in codex:
                 try:
                     dfte = pd.read_csv(dataname, sep=sep, header=header, encoding=None, nrows=nrows,
-                                    skiprows=skip_function, parse_dates=parse_dates) 
+                                    skiprows=skip_function, parse_dates=parse_dates)
                 except:
                     print('    pandas %s encoder does not work for this file. Continuing...' %code)
                     continue
@@ -2374,7 +2374,7 @@ def find_top_features_xgb(train,preds,numvars,target,modeltype,corr_limit=0.7,ve
     seed = 1
     early_stopping = 5
     ####### All the default parameters are set up now #########
-    kf = KFold(n_splits=n_splits, random_state=33)
+    kf = KFold(n_splits=n_splits)
     rem_vars = left_subtract(preds,numvars)
     catvars = copy.deepcopy(rem_vars)
     ############   I  M P O R T A N T ! I M P O R T A N T ! ######################
@@ -2534,13 +2534,13 @@ def draw_wordcloud_from_dataframe(dataframe, column):
     remove_special_chars = re.compile('[^0-9a-z #+_]')
     STOPWORDS = return_stop_words()
     remove_ip_addr = re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b')
-    
+
     def clean_text(text):
         """
         cleans text fast.
         """
-        text = text.replace('\n', ' ').lower()# 
-        text = remove_ip_addr.sub('', text) 
+        text = text.replace('\n', ' ').lower()#
+        text = remove_ip_addr.sub('', text)
         text = replace_spaces.sub(' ',text)
         text = remove_special_chars.sub('',text)
         text = ' '.join([w for w in text.split() if not w in STOPWORDS])
@@ -2580,7 +2580,7 @@ def draw_wordcloud_from_dataframe(dataframe, column):
     plt.show();
 ################################################################################
 module_type = 'Running'if  __name__ == "__main__" else 'Imported'
-version_number = '0.0.83'
+version_number = '0.0.84'
 print("""Imported AutoViz_Class version: %s. Call using:
     AV = AutoViz_Class()
     AV.AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
