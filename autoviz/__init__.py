@@ -1,2 +1,3 @@
 name = "autoviz"
-__version__ = "0.0.84"
+from autoviz.AutoViz_Class import AutoViz_Class
+from autoviz.AutoViz_Holo import AutoViz_Holo

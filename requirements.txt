@@ -1,7 +1,13 @@
 ipython
 jupyter
+xlrd
+wordcloud
 pandas
 matplotlib
 seaborn
 scikit-learn
+statsmodels
+holoviews
+bokeh
+hvplot
 xgboost

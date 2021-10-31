@@ -1,6 +1,6 @@
 # AutoViz
 
-![banner](logo.png)
+![banner](logo.JPG)
 
 [![Pepy Downloads](https://pepy.tech/badge/autoviz)](https://pepy.tech/project/autoviz)
 [![Pepy Downloads per week](https://pepy.tech/badge/autoviz/week)](https://pepy.tech/project/autoviz)
@@ -13,7 +13,18 @@
 Automatically Visualize any dataset, any size with a single line of code.
 
 AutoViz performs automatic visualization of any dataset with one line.
-Give any input file (CSV, txt or json) and AutoViz will visualize it.
+Give it any input file (CSV, txt or json format) and AutoViz will visualize it.
+
+AutoViz can now create charts in multiple  formats:
+    ####  If chart_format='png' or 'svg' or 'jpg': Matplotlib charts plotted. ####
+    ####  Can be saved locally or displayed in Jupyter Notebooks.             ####
+    ####  This is the default behavior for AutoViz.                          #####
+    ####  If chart_format='bokeh': Bokeh charts are plotted on Jupyter Notebooks##
+    ####  This is the default for AutoViz_Holo.                              #####
+    ####  If chart_format='server', dashboards will pop up for each kind of    ###
+    ####  chart on your browser.                                             #####
+    ####  In both cases, all charts are interactive and you can play with them####
+    ####  In the next version, I will let you save them in HTML.             #####
 
 ## Table of Contents
 
@@ -68,7 +79,6 @@ Load a dataset (any CSV or text file) into a Pandas dataframe or give the name o
 If you don't have a filename, you can simply assign the filename argument `""` (empty string).
 
 Call AutoViz using the filename (or dataframe) along with the separator and the name of the target variable in the input.
-AutoViz will do the rest. You will see charts and plots on your screen.
 
 ```py
 filename = ""
@@ -86,6 +96,9 @@ dft = AV.AutoViz(
     max_cols_analyzed=30,
 )
 ```
+AutoViz will do the rest. You will see charts and plots on your screen.
+
+![var_charts](var_charts.JPG)
 
 AV.AutoViz is the main plotting function in AV.
 
@@ -99,6 +112,13 @@ AV.AutoViz is the main plotting function in AV.
   - if 1, print extra information on the notebook and also display charts
   - if 2, will not display any charts, it will simply save them in your local machine under AutoViz_Plots directory
 
+- `chart_format` option
+  - if 'svg','jpg' or 'png', displays all charts or saves them depending on verbose option.
+  - if 'bokeh', plots interactive charts using Bokeh on your Jupyter Notebook
+  - if 'server', will display charts on your browser with one chart type in each tab
+
+![bokeh_charts](bokeh_charts.JPG)
+
 ## API
 
 **Arguments**
@@ -110,9 +130,11 @@ AV.AutoViz is the main plotting function in AV.
 - `header` - the row number of the header row in your file. If it is the first row, then this must be zero.
 - `verbose` - it has 3 acceptable values: 0, 1 or 2. With zero, you get all charts but limited info. With 1 you get all charts and more info. With 2, you will not see any charts but they will be quietly generated and save in your local current directory under the AutoViz_Plots directory which will be created. Make sure you delete this folder periodically, otherwise, you will have lots of charts saved here if you used verbose=2 option a lot.
 - `lowess` - this option is very nice for small datasets where you can see regression lines for each pair of continuous variable against the target variable. Don't use this for large data sets (that is over 100,000 rows)
-- `chart_format` - this can be SVG, PNG or JPG. You will get charts generated and saved in this format if you used verbose=2 option. Very useful for generating charts and using them later.
+- `chart_format` - this can be SVG, PNG, JPG or 'bokeh', 'server'. You will get charts generated and saved in multiple formats if you used verbose=2 option. The latter options are useful for interactive charts.
 - `max_rows_analyzed` - limits the max number of rows that is used to display charts. If you have a very large data set with millions of rows, then use this option to limit the amount of time it takes to generate charts. We will take a statistically valid sample.
 - `max_cols_analyzed` - limits the number of continuous vars that can be analyzed
+
+![server_charts](server_charts.JPG)
 
 ## Maintainers
 
