@@ -235,7 +235,7 @@ class AutoViz_Class():
                         lowess,chart_format,max_rows_analyzed,
                             max_cols_analyzed)
         else:
-            dft = AutoViz_Main(self, filename, sep, depVar, dfte, header, verbose,
+            dft = self.AutoViz_Main(filename, sep, depVar, dfte, header, verbose,
                         lowess,chart_format,max_rows_analyzed,
                             max_cols_analyzed)
         return dft
