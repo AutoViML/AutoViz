@@ -921,12 +921,4 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         #display_obj(hv_panel)  ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()
     return hv_panel
 #######################################################################################
-module_type = 'Running'if  __name__ == "__main__" else 'Imported'
-from .__version__ import __holo_version__
-holo_version_number = __holo_version__
-print("""Imported AutoViz_Holo version: %s. Call using:
-    AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
-                lowess=False,chart_format='bokeh',max_rows_analyzed=150000,max_cols_analyzed=30)""" %holo_version_number)
-print("Note: chart_format='bokeh' generates and displays charts in your local Jupyter notebook.")
-print("      chart_format='server' generates and displays charts in the browser - one tab for each chart.")
 ###########################################################################################
