@@ -59,10 +59,6 @@ import holoviews as hv
 from holoviews import opts
 #hv.notebook_extension('bokeh')
 hv.extension('bokeh', 'matplotlib')
-import datashader as ds
-from holoviews.operation.datashader import aggregate, datashade, dynspread, shade
-from holoviews.operation import decimate
-decimate.max_samples=1000
 import panel as pn
 import holoviews.plotting.bokeh
 ######################################################################################

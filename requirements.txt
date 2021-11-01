@@ -11,3 +11,4 @@ holoviews
 bokeh
 hvplot
 xgboost
+fsspec>=0.3.3
