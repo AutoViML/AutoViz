@@ -58,17 +58,7 @@ from xgboost.sklearn import XGBClassifier
 from xgboost.sklearn import XGBRegressor
 from sklearn.model_selection import train_test_split
 ######## This is where we store the image data in a dictionary with a list of images #########
-def save_image_data(fig, chart_format, plot_name, depVar, additional=''):
-    ############    THis is where you save the figures in a target directory #######
-    target_dir = 'target'
-    if not depVar is None:
-        if depVar == '':
-            target_dir = "empty_string"
-        else:
-            target_dir = copy.deepcopy(depVar)
-    else:
-        target_dir = "no_target"
-    mk_dir = os.path.join(".","AutoViz_Plots",target_dir)
+def save_image_data(fig, chart_format, plot_name, depVar, mk_dir, additional=''):
     if not os.path.isdir(mk_dir):
         os.mkdir(mk_dir)
     if additional == '':
@@ -125,7 +115,7 @@ def analyze_problem_type(train, target, verbose=0) :
         else:
             model_class = 'Multi_Classification'
     ########### print this for the start of next step ###########
-    if verbose <= 1:
+    if verbose <= 2:
         print('''\n################ %s VISUALIZATION Started #####################''' %model_class)
     return model_class
 #################################################################################
@@ -133,7 +123,7 @@ def analyze_problem_type(train, target, verbose=0) :
 # and a Numeric Column (typically the Dep Var) as the "Value" aggregated by Sum.
 # Let's do some pivot tables to capture some meaningful insights
 import random
-def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='', classes=None):
+def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='', classes=None, mk_dir=None):
     plot_name = 'Bar_Plots_Pivots'
     cats = list(set(cats))
     dft = dft[:]
@@ -221,7 +211,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
     image_count = 0
     if verbose == 2:
         imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, depVar))
+                            plot_name, depVar, mk_dir))
         image_count += 1
     if verbose <= 1:
         plt.show();
@@ -230,7 +220,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
 
 # In[ ]:
 # SCATTER PLOTS ARE USEFUL FOR COMPARING NUMERIC VARIABLES
-def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=None, lowess=False):
+def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=None, lowess=False, mk_dir=None):
     plot_name = 'Scatter_Plots'
     dft = dfin[:]
     ##### we are going to modify dfin and classes, so we are making copies to make changes
@@ -288,7 +278,7 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
         #### Keep it at the figure level###
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, dep))
+                            plot_name, dep, mk_dir))
             image_count += 1
     else:
         ####### This is a Classification Problem #### You need to plot a strip plot ####
@@ -312,13 +302,13 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
             plt.show();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, dep))
+                            plot_name, dep, mk_dir))
             image_count += 1
     ####### End of Scatter Plots ######
     return imgdata_list
 
 # PAIR SCATTER PLOTS ARE NEEDED ONLY FOR CLASSIFICATION PROBLEMS IN NUMERIC VARIABLES
-def draw_pair_scatters(dfin,nums,problem_type, verbose,chart_format, dep=None, classes=None, lowess=False):
+def draw_pair_scatters(dfin,nums,problem_type, verbose,chart_format, dep=None, classes=None, lowess=False, mk_dir=None):
     """
     ### This is where you plot a pair-wise scatter plot of Independent Variables against each other####
     """
@@ -371,7 +361,7 @@ def draw_pair_scatters(dfin,nums,problem_type, verbose,chart_format, dep=None, c
         fig.tight_layout();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, dep))
+                            plot_name, dep, mk_dir))
             image_count += 1
         if verbose <= 1:
             plt.show();
@@ -414,7 +404,7 @@ def draw_pair_scatters(dfin,nums,problem_type, verbose,chart_format, dep=None, c
         #fig.tight_layout();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, dep))
+                            plot_name, dep, mk_dir))
             image_count += 1
         if verbose <= 1:
             plt.show();
@@ -484,7 +474,7 @@ def plot_fast_average_num_by_cat(dft, cats, num_vars, verbose=0,kind="bar"):
     if verbose == 2:
         return fig
 ################# The barplots module below calls the plot_fast_average_num_by_cat module above ###
-def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', classes=None):
+def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', classes=None, mk_dir=None):
     cats = cats[:]
     conti = conti[:]
     plot_name = 'Bar_Plots'
@@ -518,13 +508,13 @@ def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', class
     figx = plot_fast_average_num_by_cat(dft, cats, conti, verbose)
     if verbose == 2:
         imgdata_list.append(save_image_data(figx, chart_format,
-                            plot_name, dep))
+                            plot_name, dep, mk_dir))
         image_count += 1
     return imgdata_list
 ############## End of Bar Plotting ##########################################
 ##### Draw a Heatmap using Pearson Correlation #########################################
 def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
-                                    modeltype='Regression',classes=None):
+                                    modeltype='Regression',classes=None, mk_dir=None):
     ### Test if this is a time series data set, then differene the continuous vars to find
     ###  if they have true correlation to Dependent Var. Otherwise, leave them as is
     plot_name = 'Heat_Maps'
@@ -581,7 +571,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
             plt.show();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, dep))
+                            plot_name, dep, mk_dir))
             image_count += 1
     else:
         ### This is for Regression and None Dep variable problems only ##
@@ -608,7 +598,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
             plt.show();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, dep))
+                            plot_name, dep, mk_dir))
             image_count += 1
     return imgdata_list
     ############# End of Heat Maps ##############
@@ -616,7 +606,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
 ##### Draw the Distribution of each variable using Distplot
 ##### Must do this only for Continuous Variables
 from scipy.stats import probplot,skew
-def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=None, classes=None):
+def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=None, classes=None, mk_dir=None):
     cats = find_remove_duplicates(cat_bools) ### first make sure there are no duplicates in this ###
     copy_cats = copy.deepcopy(cats)
     plot_name = 'Dist_Plots'
@@ -668,7 +658,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             ###### Save the plots to disk if verbose = 2 ############
             if verbose == 2:
                 imgdata_list.append(save_image_data(fig, chart_format,
-                                plot_name+'_Numeric', dep))
+                                plot_name+'_Numeric', dep, mk_dir))
                 image_count += 1
         #####  Now draw each of the categorical variable distributions in each subplot ####
         if not len(cats) == 0:
@@ -691,7 +681,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             ########## This is where you end the logic for distplots ################
             if verbose == 2:
                 imgdata_list.append(save_image_data(fig, chart_format,
-                                plot_name+'_Cats', dep))
+                                plot_name+'_Cats', dep, mk_dir))
                 image_count += 1
             fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=12,y=1.01)
             if verbose <= 1:
@@ -761,7 +751,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             plt.show();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name+'_Numerics', dep))
+                            plot_name+'_Numerics', dep, mk_dir))
             image_count += 1
         fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=12,y=1.01)
         ###### Now draw the distribution of the target variable in Classification only ####
@@ -804,14 +794,14 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             plt.show();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name+'_target', dep))
+                            plot_name+'_target', dep, mk_dir))
             image_count += 1
     ####### End of Distplots ###########
     return imgdata_list
 
 ##### Standardize all the variables in One step. But be careful !
 #### All the variables must be numeric for this to work !!
-def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression'):
+def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression', mk_dir=None):
     plot_name = 'Violin_Plots'
     df = df[:]
     number_in_each_row = 8
@@ -854,7 +844,7 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression'):
             if verbose == 2:
                 additional = '_'+str(plot_index)+'_'
                 imgdata_list.append(save_image_data(fig, chart_format,
-                                plot_name, dep, additional))
+                                plot_name, dep, mk_dir, additional))
                 image_count += 1
     else :
         plot_name = "Box_Plots"
@@ -889,7 +879,7 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression'):
                 plt.show();
             if verbose == 2:
                 imgdata_list.append(save_image_data(fig, chart_format,
-                                plot_name, dep))
+                                plot_name, dep, mk_dir))
                 image_count += 1
         #########################################
     return imgdata_list
@@ -897,7 +887,7 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression'):
 
 #### Drawing Date Variables is very important in Time Series data
 import copy
-def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='Regression'):
+def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='Regression', mk_dir=None):
     dfx = copy.deepcopy(dfx) ## use this to preserve the original dataframe
     df =  copy.deepcopy(dfx) #### use this for making it into a datetime index etc...
     plot_name = 'Time_Series_Plots'
@@ -1009,7 +999,7 @@ def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='
         fig.suptitle('Time Series Plot by %s: Continuous Variables Pair' %ts_column, fontsize=15, y=1.01)
     if verbose == 2:
         imgdata_list.append(save_image_data(fig, chart_format,
-                        plot_name, dep))
+                        plot_name, dep, mk_dir))
         image_count += 1
     return imgdata_list
     ############# End of Date vars plotting #########################

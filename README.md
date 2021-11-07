@@ -94,6 +94,7 @@ dft = AV.AutoViz(
     chart_format="svg",
     max_rows_analyzed=150000,
     max_cols_analyzed=30,
+    save_plot_dir=None
 )
 ```
 AutoViz will do the rest. You will see charts and plots on your screen.
@@ -133,7 +134,7 @@ AV.AutoViz is the main plotting function in AV.
 - `chart_format` - this can be SVG, PNG, JPG or 'bokeh', 'server'. You will get charts generated and saved in multiple formats if you used verbose=2 option. The latter options are useful for interactive charts.
 - `max_rows_analyzed` - limits the max number of rows that is used to display charts. If you have a very large data set with millions of rows, then use this option to limit the amount of time it takes to generate charts. We will take a statistically valid sample.
 - `max_cols_analyzed` - limits the number of continuous vars that can be analyzed
-
+- `save_plot_dir` - directory you want the plots to be saved. Default is None which means it is saved under the current directory under a sub-folder named `AutoViz_Plots`
 ![server_charts](server_charts.JPG)
 
 ## Maintainers

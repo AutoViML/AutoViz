@@ -16,7 +16,11 @@ def warn(*args, **kwargs):
     pass
 warnings.warn = warn
 ########################################
-import warnings
+import logging
+logging.getLogger("param").setLevel(logging.ERROR)
+from bokeh.util.warnings import BokehUserWarning 
+import warnings 
+warnings.simplefilter(action='ignore', category=BokehUserWarning)
 warnings.filterwarnings("ignore")
 from sklearn.exceptions import DataConversionWarning
 warnings.filterwarnings(action='ignore', category=DataConversionWarning)
@@ -26,9 +30,6 @@ matplotlib.use('agg')
 import matplotlib.pyplot as plt
 # from matplotlib import io
 import io
-# ipython inline magic shouldn't be needed because all plots are
-# being displayed with plt.show() calls
-get_ipython().magic('matplotlib inline')
 import seaborn as sns
 sns.set(style="whitegrid", color_codes=True)
 import re
@@ -57,9 +58,11 @@ import os
 import hvplot.pandas
 import holoviews as hv
 from holoviews import opts
-#hv.notebook_extension('bokeh')
-hv.extension('bokeh', 'matplotlib')
+hv.notebook_extension('bokeh')
+#hv.extension('bokeh', 'matplotlib')
+hv.extension('bokeh')
 import panel as pn
+import panel.widgets as pnw
 import holoviews.plotting.bokeh
 ######################################################################################
 ######## This is where we store the image data in a dictionary with a list of images #########
@@ -171,12 +174,13 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
         pdf1 = pd.DataFrame(dfin[dep].value_counts().reset_index())
         pdf2 = pd.DataFrame(dfin[dep].value_counts(1).reset_index())
         drawobj41 = pdf1.hvplot(kind='bar', color='r', title='Distribution of Target variable').opts(
-                        height=height_size)
-        drawobj42 = pdf2.hvplot(kind='bar', color='b', title='Percent Distribution of Target variable').opts(
-                        height=height_size)
-        dmap = hv.DynamicMap((drawobj41+drawobj42).opts(shared_axes=False).opts(title='Histogram and KDE of Target = %s' %dep))
+                        height=height_size, width=width_size)
+        drawobj42 = pdf2.hvplot(kind='bar', color='g', title='Percent Distribution of Target variable').opts(
+                        )
+        dmap = hv.DynamicMap((drawobj41+drawobj42).opts(shared_axes=False).opts(title='Histogram and KDE of Target = %s' %dep)).opts(
+                            height=height_size, width=800)
         dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
-        hv_all = pn.pane.HoloViews(dmap, sizing_mode="stretch_both")
+        hv_all = pn.pane.HoloViews(dmap)#, sizing_mode="stretch_both")
         if chart_format.lower() in ['server', 'bokeh_server']:
             #### If you want it on a server, you use drawobj.show()
             #(drawobj41+drawobj42).show()
@@ -187,11 +191,11 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
         ls_objects.append(drawobj41)
         ls_objects.append(drawobj42)
     else:
-        drawobj41 = dfin[dep].hvplot(kind='bar', title='Histogram of Target variable').opts(
+        drawobj41 = dfin[dep].hvplot(kind='bar', color='r', title='Histogram of Target variable').opts(
                         height=height_size,width=width_size,color='lightgreen', )
-        drawobj42 = dfin[dep].hvplot(kind='kde', title='KDE Plot of Target variable').opts(
+        drawobj42 = dfin[dep].hvplot(kind='kde', color='g', title='KDE Plot of Target variable').opts(
                         height=height_size,width=width_size,color='lightblue')
-        dmap = hv.DynamicMap((drawobj41+drawobj42).opts(title='Histogram and KDE of Target = %s' %dep, width=800))
+        dmap = hv.DynamicMap((drawobj41+drawobj42)).opts(title='Histogram and KDE of Target = %s' %dep, width=800)
         dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
         hv_all = pn.pane.HoloViews(dmap)
         if chart_format.lower() in ['server', 'bokeh_server', 'bokeh-server']:
@@ -214,6 +218,7 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
         ls_objects.append(drawobj7)
     if len(nums) > 0 and len(cats) > 0:
         drawobj8 = draw_cat_vars(dfin, dep, nums, cats, chart_format, problem_type, verbose)
+    print('Time to run AutoViz (in seconds) = %0.0f' %(time.time()-start_time))
     return dfin
 ####################################################################################
 def draw_cat_vars(dfin, dep, nums, cats, chart_format, problem_type, verbose=0):
@@ -282,7 +287,7 @@ def draw_scatters(dfin,nums,chart_format,problem_type,
     height_size = 400
     jitter = 0.05
     alpha = 0.5
-    size = 5
+    bubble_size = 10
     colortext = 'brycgkbyrcmgkbyrcmgkbyrcmgkbyr'
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
     #####################################################
@@ -297,7 +302,7 @@ def draw_scatters(dfin,nums,chart_format,problem_type,
         colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
         def load_symbol(symbol, **kwargs):
             color = next(colors)
-            return hv.Scatter((dft[symbol].values,dft[dep].values)).opts(framewise=True).opts(size=5,
+            return hv.Scatter((dft[symbol].values,dft[dep].values)).opts(framewise=True).opts(size=bubble_size,
                     color=color, alpha=alpha, height=height_size, width=width_size).opts(
                     xlabel='%s' %symbol).opts(ylabel='%s' %dep).opts(
                    title='Scatter Plot of %s against %s variable' %(symbol,dep))
@@ -320,7 +325,7 @@ def draw_scatters(dfin,nums,chart_format,problem_type,
         y = pn.widgets.Select(name='y', options=nums)
         kind = pn.widgets.Select(name='kind', value='scatter', options=['scatter'])
         #######  This is where you call the widget and pass it the hv_plotto draw a Chart #######
-        plot = dft.hvplot(x=dep, y=y, kind=kind, height=height_size, width=width_size,
+        plot = dft.hvplot(x=dep, y=y, kind=kind, height=height_size, width=width_size, size=bubble_size,
                         title='Scatter Plot of each independent numeric variable against target variable')
         hv_all = pn.Row(pn.WidgetBox(y), plot)
 
@@ -345,7 +350,7 @@ def draw_scatters(dfin,nums,chart_format,problem_type,
         #        else:
         #            each_ts = copy.deepcopy(each_t)
         #        next_color = next(colors)
-        #        #add_string = "hv.Scatter((dfin[dfin['"+dep+"']=="+each_ts+"]['"+dep+"'].values,dfin[dfin['"+dep+"']=="+each_ts+"]['"+Select_numeric_variable+"'].values)).opts(color='"+next_color+"',jitter=eval('"+str(jitter)+"'),alpha=eval('"+str(alpha)+"'),size=eval('"+str(size)+"'),height=eval('"+str(height_size)+"'),width=eval('"+str(width_size)+"'))"
+        #        #add_string = "hv.Scatter((dfin[dfin['"+dep+"']=="+each_ts+"]['"+dep+"'].values,dfin[dfin['"+dep+"']=="+each_ts+"]['"+Select_numeric_variable+"'].values)).opts(color='"+next_color+"',jitter=eval('"+str(jitter)+"'),alpha=eval('"+str(alpha)+"'),size=eval('"+str(bubble_size)+"'),height=eval('"+str(height_size)+"'),width=eval('"+str(width_size)+"'))"
         #        add_string = "hv.Scatter((dfin[dfin['"+dep+"']=="+each_ts+"]['"+dep+"'].values,dfin[dfin['"+dep+"']=="+each_ts+"]['"+Select_numeric_variable+"'].values)).opts(color='"+next_color+"',jitter=eval('"+str(jitter)+"'),alpha=eval('"+str(alpha)+"'),ylim=(eval('"+str(lowerbound)+"'),eval('"+str(upperbound)+"')),height=eval('"+str(height_size)+"'),width=eval('"+str(width_size)+"'))"
         #        hv_string += add_string + " * "
         #    return eval(hv_string[:-2]).opts(
@@ -384,6 +389,8 @@ def draw_pair_scatters(dfin,nums,problem_type,chart_format, dep=None,
     height_size = 400
     width_size = 600
     alpha = 0.5
+    bubble_size = 10
+    cmap_list = ['rainbow', 'viridis', 'plasma', 'inferno', 'magma', 'cividis']
     if problem_type == 'Regression' or problem_type == 'Clustering':
         ########## This is for Regression problems ##########
         #########  Here we plot a pair-wise scatter plot of Independent Variables ####
@@ -401,34 +408,83 @@ def draw_pair_scatters(dfin,nums,problem_type,chart_format, dep=None,
         #plot = dft.hvplot(x=x, y=y, kind=kind,  color=next(colors), alpha=0.5, xlim=xlimi, ylim=ylimi,
         #            title='Pair-wise Scatter Plot of two Independent Numeric variables')
         #hv_panel = pn.Row(pn.WidgetBox(x, y, kind),plot)
-        ########################   E N D  of   W I D G E T   B  O X  ################################
-        colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
-        def load_symbol(symbol, variable, **kwargs):
-            color = next(colors)
-            return hv.Scatter((dft[symbol].values,dft[variable].values)).opts(framewise=True).opts(size=5,
-                    color=color, alpha=alpha, height=height_size, width=width_size).opts(
-                    xlabel='%s' %symbol).opts(ylabel='%s' %variable).opts(
-                   title='Scatter Plot of %s against %s variable' %(symbol,variable))
+        ########################   This is the new way of drawing scatter   ###############################
+        quantileable = [x for x in nums if len(dft[x].unique()) > 20]
+
+        x = pnw.Select(name='X-Axis', value=quantileable[0], options=quantileable)
+        y = pnw.Select(name='Y-Axis', value=quantileable[1], options=quantileable)
+        size = pnw.Select(name='Size', value='None', options=['None'] + quantileable)
+        color = pnw.Select(name='Color', value='None', options=['None', dep])
+
+        @pn.depends(x.param.value, y.param.value, color.param.value) 
+        def create_figure(x, y, color):
+            opts = dict(cmap=cmap_list[0], width=width_size, height=height_size, line_color='black')
+            if color != 'None':
+                opts['color'] = color 
+            opts['size'] = bubble_size
+            opts['alpha'] = alpha
+            opts['tools'] = ['hover']
+            opts['toolbar'] = 'above'
+            opts['colorbar'] = True
+            return hv.Points(dft, [x, y], label="%s vs %s" % (x.title(), y.title()),
+                title='Pair-wise Scatter Plot of two Independent Numeric variables').opts(**opts)
+
+        widgets = pn.WidgetBox(x, y, color)
+
+        hv_panel = pn.Row(widgets, create_figure).servable('Cross-selector')
+        ########################   This is the old way of drawing scatter  ################################
+        #colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
+        #def load_symbol(symbol, variable, **kwargs):
+        #    color = next(colors)
+        #    return hv.Scatter((dft[symbol].values,dft[variable].values)).opts(framewise=True).opts(size=5,
+        #            color=color, alpha=alpha, height=height_size, width=width_size).opts(
+        #            xlabel='%s' %symbol).opts(ylabel='%s' %variable).opts(
+        #           title='Scatter Plot of %s against %s variable' %(symbol,variable))
         ### This is where you create the dynamic map and pass it the variable to load the chart!
-        dmap = hv.DynamicMap(load_symbol, kdims=['Select_X','Select_Y']).redim.values(Select_X=nums, Select_Y=nums).opts(framewise=True)
+        #dmap = hv.DynamicMap(load_symbol, kdims=['Select_X','Select_Y']).redim.values(Select_X=nums, Select_Y=nums).opts(framewise=True)
         ###########  This is where you put the Panel Together ############
-        hv_panel = pn.panel(dmap)
-        widgets = hv_panel[0]
-        hv_panel = pn.Column(pn.Row(*widgets))
+        #hv_panel = pn.panel(dmap)
+        #widgets = hv_panel[0]
+        #hv_panel = pn.Column(pn.Row(*widgets))
+        ########################   End of the old way of drawing scatter  ################################
         if verbose == 2:
             imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
             image_count += 1
     else:
         ########## This is for Classification problems ##########
-        #########  Here we plot a pair-wise scatter plot of Independent Variables ####
-        target_vars = dft[dep].unique()
-        x = pn.widgets.Select(name='x', options=nums)
-        y = pn.widgets.Select(name='y', options=nums)
-        kind = pn.widgets.Select(name='kind', value='scatter', options=['bivariate', 'scatter'])
+        #########  This is the new way to plot a pair-wise scatter plot ####
+        quantileable = [x for x in nums if len(dft[x].unique()) > 20]
 
-        plot = dft.hvplot(x=x, y=y, kind=kind, by=dep, height=height_size, alpha=0.5,
-                        title='Pair-wise Scatter Plot of two Independent Numeric variables')
-        hv_panel = pn.Row(pn.WidgetBox(x, y, kind), plot)
+        x = pnw.Select(name='X-Axis', value=quantileable[0], options=quantileable)
+        y = pnw.Select(name='Y-Axis', value=quantileable[1], options=quantileable)
+        size = pnw.Select(name='Size', value='None', options=['None'] + quantileable)
+        color = pnw.Select(name='Color', value='None', options=['None',dep])
+
+        @pn.depends(x.param.value, y.param.value, color.param.value) 
+        def create_figure(x, y, color):
+            opts = dict(cmap=cmap_list[0], width=width_size, height=height_size, line_color='black')
+            if color != 'None':
+                opts['color'] = color 
+            opts['size'] = bubble_size
+            opts['alpha'] = alpha
+            opts['tools'] = ['hover']
+            opts['toolbar'] = 'above'
+            opts['colorbar'] = True
+            return hv.Points(dft, [x, y], label="%s vs %s" % (x.title(), y.title()),
+                title='Pair-wise Scatter Plot of two Independent Numeric variables').opts(**opts)
+
+        widgets = pn.WidgetBox(x, y, color)
+
+        hv_panel = pn.Row(widgets, create_figure).servable('Cross-selector')
+        #########  This is an old way to plot a pair-wise scatter plot ####
+        #target_vars = dft[dep].unique()
+        #x = pn.widgets.Select(name='x', options=nums)
+        #y = pn.widgets.Select(name='y', options=nums)
+        #kind = pn.widgets.Select(name='kind', value='scatter', options=['bivariate', 'scatter'])
+
+        #plot = dft.hvplot(x=x, y=y, kind=kind, by=dep, height=height_size, alpha=0.5,
+        #                title='Pair-wise Scatter Plot of two Independent Numeric variables')
+        #hv_panel = pn.Row(pn.WidgetBox(x, y, kind), plot)
         if verbose == 2:
             imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
             image_count += 1
@@ -479,10 +535,10 @@ def draw_distplot(dft, cats, conti, chart_format,problem_type,dep=None, classes=
                 color_list = next(colors)
                 pivotdf = pd.DataFrame(conti_df.to_records()).set_index(each_cat)
                 plot = pivotdf.hvplot(kind='bar',stacked=False,use_index=False, color=color_list,
-                                      title='Distribution of Target = %s by each Categorical Variable' %dep)
+                                      title='Mean Target = %s by each Categorical Variable' %dep)
                 return plot
             #######  This is where you call the widget and pass it the select_variable to draw a Chart #######
-            dmap = hv.DynamicMap(select_widget,  kdims=['each_cat']).redim.values(each_cat=cats)
+            dmap = hv.DynamicMap(select_widget,  kdims=['Select_Cat_Variable']).redim.values(Select_Cat_Variable=cats)
             dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
             ###########  This is where you put the Panel Together ############
             hv_panel = pn.panel(dmap)
@@ -654,13 +710,13 @@ def draw_violinplot(dft, dep, nums,chart_format, modeltype='Regression',verbose=
         counter = 0
         for i in range(0,df_p.shape[1],iter_limit):
             new_end = i+iter_limit
-            print('i = ',i,"new end = ", new_end)
+            #print('i = ',i,"new end = ", new_end)
             if i == 0:
                 title_string = 'using first %d variables...' %(iter_limit)
-                print(title_string )
+                #print(title_string )
             else:
                 title_string = 'using next %d variables...' %(iter_limit)
-                print(title_string )
+                #print(title_string )
             conti = nums[i:new_end]
             ######################### Add Standard Scaling here ##################################
             from sklearn.preprocessing import StandardScaler
@@ -669,8 +725,8 @@ def draw_violinplot(dft, dep, nums,chart_format, modeltype='Regression',verbose=
             var_name = 'drawobjv_list['+str(counter)+']'
             drawobj_list.append(var_name)
             drawobjv_list.append(var_name)
-            drawobj = data.hvplot(kind='violin', label='Violin Plot %s (Standard Scaled)' %title_string,
-                                     height=height_size,width=width_size)
+            drawobj = data.hvplot(kind='violin', label='Violin Plot %s (Standard Scaled)' %title_string,)
+                                     #height=height_size,width=width_size)
             drawobjv_list[counter] = drawobj
             counter += 1
         ######### After collecting all the drawobjv's put them in a dynamic map and display them ###
@@ -678,12 +734,15 @@ def draw_violinplot(dft, dep, nums,chart_format, modeltype='Regression',verbose=
         if chart_format.lower() in ['server', 'bokeh_server', 'bokeh-server']:
             ### If you want it on a server, you use drawobj.show()
             #(drawobj41+drawobj42).show()
-            dmap = hv.DynamicMap(eval(combined_charts).opts(title='Violin Plots of all Numeric Variables', width=800))
+            dmap = hv.DynamicMap(eval(combined_charts).opts(title='Violin Plots of all Numeric Variables', width=width_size))
             dmap = pn.pane.HoloViews(dmap, sizing_mode="stretch_both")
-            server = pn.serve(dmap, start=True, show=True)
         else:
             ### This will display it in a Jupyter Notebook.
-            display(eval(combined_charts))
+            dmap = hv.DynamicMap(eval(combined_charts).opts(title='Violin Plots of all Numeric Variables', width=width_size))
+        ###########  This is where you put the Panel Together ############
+        hv_panel = pn.panel(dmap)
+        widgets = hv_panel[0]
+        hv_all = pn.Column(pn.Row(*widgets))
         #### This is where we add them to the list ######        
         if verbose == 2:
             imgdata_list = append_panels(hv_all, imgdata_list, chart_format)
@@ -725,13 +784,14 @@ def draw_violinplot(dft, dep, nums,chart_format, modeltype='Regression',verbose=
                 var_name = 'drawobjv_list['+str(counter)+']'
                 drawobj_list.append(var_name)
                 drawobjv_list.append(var_name)
-                drawobj =  dft_sym.hvplot(kind='violin').opts(framewise=True).opts(height=height_size, width=width_size).opts(
+                drawobj =  dft_sym.hvplot(kind='violin').opts(framewise=True).opts(
+                        #height=height_size, width=width_size).opts(
                        title='Violin Plot %s (Standard Scaled):' %title_string)
                 drawobjv_list[counter] = drawobj
                 counter += 1
             ######### After collecting all the drawobjv's put them in a dynamic map and display them ###
             combined_charts = "("+"".join([x+'+' for x in drawobj_list])[:-1]+")"
-            dmap = hv.DynamicMap(eval(combined_charts).opts(title='Violin Plots for %s target class' %symbol, width=800))
+            dmap = hv.DynamicMap(eval(combined_charts).opts(title='Violin Plots for %s target class' %symbol, width=width_size))
             dmap = pn.pane.HoloViews(dmap, sizing_mode="stretch_both")
             ###########  This is where you put the Panel Together ############
             hv_panel = pn.panel(dmap)
@@ -822,6 +882,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
     ###  if they have true correlation to Dependent Var. Otherwise, leave them as is
     width_size = 600
     height_size = 400
+    cmap_list = ["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
     if len(conti) <= 1:
         return
     elif len(conti) <= 10:
@@ -866,12 +927,12 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         corre = dft_target.corr()
         if timeseries_flag:
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size, colorbar=True, 
-                    cmap=["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"],
+                    cmap=cmap_list,
                                            rot=70,
             title='Time Series: Heatmap of all Differenced Continuous vars for target = %s' %dep)
         else:
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size,  colorbar=True,
-                    cmap=["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"],
+                    cmap=cmap_list,
                     rot=70,
             title='Heatmap of all Continuous Variables including target = %s' %dep);
         hv_panel = heatmap * hv.Labels(heatmap).opts(opts.Labels(text_font_size='7pt'))
@@ -894,13 +955,13 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         corre = dft_target.corr()
         if timeseries_flag:
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size, colorbar=True, 
-                    cmap=["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"],
+                    cmap=cmap_list,
                                            rot=70,
                 title='Time Series Data: Heatmap of Differenced Continuous vars including target = %s' %dep).opts(
                         opts.HeatMap(tools=['hover'], toolbar='above'))
         else:
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size, colorbar=True, 
-                    cmap=["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"],
+                    cmap=cmap_list,
                                            rot=70,
             title='Heatmap of all Continuous Variables including target = %s' %dep).opts(
                                     opts.HeatMap(tools=['hover'],  toolbar='above'))
