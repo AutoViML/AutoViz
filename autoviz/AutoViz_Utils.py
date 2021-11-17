@@ -88,6 +88,7 @@ def analyze_problem_type(train, target, verbose=0) :
     target = copy.deepcopy(target)
     cat_limit = 30 ### this determines the number of categories to name integers as classification ##
     float_limit = 15 ### this limits the number of float variable categories for it to become cat var
+    
     if isinstance(target, str):
         target = [target]
     if len(target) == 1:
@@ -102,7 +103,7 @@ def analyze_problem_type(train, target, verbose=0) :
             model_class = 'Multi_Classification'
         else:
             model_class = 'Regression'
-    elif  train[targ].dtype in ['float']:
+    elif  train[targ].dtype in ['float16','float32','float64']:
         if len(train[targ].unique()) <= 2:
             model_class = 'Binary_Classification'
         elif len(train[targ].unique()) > 2 and len(train[targ].unique()) <= float_limit:
@@ -1495,6 +1496,8 @@ def marthas_columns(data,verbose=0):
 ################################################################################
 def classify_columns(df_preds, verbose=0):
     """
+    This actually does Exploratory data analysis - it means this function performs EDA
+    ######################################################################################
     Takes a dataframe containing only predictors to be classified into various types.
     DO NOT SEND IN A TARGET COLUMN since it will try to include that into various columns.
     Returns a data frame containing columns and the class it belongs to such as numeric,
@@ -1504,21 +1507,20 @@ def classify_columns(df_preds, verbose=0):
     """
     train = copy.deepcopy(df_preds)
     #### If there are 30 chars are more in a discrete_string_var, it is then considered an NLP variable
-    row_limit = 500  ### if there are 1000 rows or less, then don't do ID vars search on integer variables
     max_nlp_char_size = 30
     max_cols_to_print = 30
     print('############## C L A S S I F Y I N G  V A R I A B L E S  ####################')
     print('Classifying variables in data set...')
     #### Cat_Limit defines the max number of categories a column can have to be called a categorical colum
-    cat_limit = 15
-    float_limit = 8 #### Make this limit low so that float variables below this limit become cat vars ###
+    cat_limit = 35
+    float_limit = 15 #### Make this limit low so that float variables below this limit become cat vars ###
     def add(a,b):
         return a+b
     sum_all_cols = dict()
     orig_cols_total = train.shape[1]
     #Types of columns
     cols_delete = [col for col in list(train) if (len(train[col].value_counts()) == 1
-                                   ) | (train[col].isnull().sum()/len(train) >= 0.90)]
+                                       ) | (train[col].isnull().sum()/len(train) >= 0.90)]
     train = train[left_subtract(list(train),cols_delete)]
     var_df = pd.Series(dict(train.dtypes)).reset_index(drop=False).rename(
                         columns={0:'type_of_column'})
@@ -1543,7 +1545,6 @@ def classify_columns(df_preds, verbose=0):
     var_df['cat'] = 0
     var_df['id_col'] = 0
     discrete_or_nlp_vars = var_df.loc[discrete_or_nlp==1]['index'].values.tolist()
-    ##### This is complicated logic - do not touch #############################
     if len(var_df.loc[discrete_or_nlp==1]) != 0:
         for col in discrete_or_nlp_vars:
             #### first fill empty or missing vals since it will blowup ###
@@ -1552,20 +1553,14 @@ def classify_columns(df_preds, verbose=0):
                 ) >= max_nlp_char_size and len(train[col].value_counts()
                         ) <= int(0.9*len(train)) and col not in string_bool_vars:
                 var_df.loc[var_df['index']==col,'nlp_strings'] = 1
-            elif len(train[col].value_counts()) >= cat_limit and len(train[col].value_counts()
+            elif len(train[col].value_counts()) > cat_limit and len(train[col].value_counts()
                         ) <= int(0.9*len(train)) and col not in string_bool_vars:
                 var_df.loc[var_df['index']==col,'discrete_strings'] = 1
-            elif len(train[col].value_counts()) >= cat_limit and len(train[col].value_counts()
+            elif len(train[col].value_counts()) > cat_limit and len(train[col].value_counts()
                         ) == len(train) and col not in string_bool_vars:
                 var_df.loc[var_df['index']==col,'id_col'] = 1
-            elif len(train[col].value_counts()) < cat_limit and col not in string_bool_vars:
-                var_df.loc[var_df['index']==col,'cat'] = 1
             else:
-                if train[col].map(lambda x: len(x) if type(x)==str else 0).mean() >= max_nlp_char_size:
-                    var_df.loc[var_df['index']==col,'nlp_strings'] = 1
-                else:
-                    var_df.loc[var_df['index']==col,'discrete_strings'] = 1
-    ##### This is complicated logic - do not touch #############################
+                var_df.loc[var_df['index']==col,'cat'] = 1
     nlp_vars = list(var_df[(var_df['nlp_strings'] ==1)]['index'])
     sum_all_cols['nlp_vars'] = nlp_vars
     discrete_string_vars = list(var_df[(var_df['discrete_strings'] ==1) ]['index'])
@@ -1594,7 +1589,7 @@ def classify_columns(df_preds, verbose=0):
     ### this is where we save them as date time variables ###
     if len(var_df.loc[date_or_id==1]) != 0:
         for col in var_df.loc[date_or_id==1]['index'].values.tolist():
-            if len(train[col].value_counts()) == len(train) and len(train) > row_limit:
+            if len(train[col].value_counts()) == len(train):
                 if train[col].min() < 1900 or train[col].max() > 2050:
                     var_df.loc[var_df['index']==col,'id_col'] = 1
                 else:
@@ -1705,7 +1700,7 @@ def classify_columns(df_preds, verbose=0):
     len_sum_all_cols = reduce(add,[len(v) for v in sum_all_cols.values()])
     if len_sum_all_cols == orig_cols_total:
         print('    %d Predictors classified...' %orig_cols_total)
-        print('        This does not include the Target column(s)')
+        #print('        This does not include the Target column(s)')
     else:
         print('No of columns classified %d does not match %d total cols. Continuing...' %(
                    len_sum_all_cols, orig_cols_total))

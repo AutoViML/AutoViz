@@ -36,7 +36,7 @@ import re
 import pdb
 import pprint
 import matplotlib
-matplotlib.style.use('seaborn')
+matplotlib.style.use('fivethirtyeight')
 from itertools import cycle, combinations
 from collections import defaultdict
 import copy
@@ -58,9 +58,9 @@ import os
 import hvplot.pandas
 import holoviews as hv
 from holoviews import opts
-hv.notebook_extension('bokeh')
-#hv.extension('bokeh', 'matplotlib')
-hv.extension('bokeh')
+#hv.notebook_extension('bokeh')
+hv.extension('bokeh', 'matplotlib')
+#hv.extension('bokeh')
 import panel as pn
 import panel.widgets as pnw
 import holoviews.plotting.bokeh
@@ -155,8 +155,8 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
     #################   This is where the differentiated HoloViews code begins ####
     ls_objects = []
     imgdata_list = list()
-    height_size = 300
-    width_size = 400
+    height_size = 400
+    width_size = 500
     ##########    Now start drawing the Bokeh Plots ###############################
     if len(nums) > 0:
         drawobj1 = draw_scatters(dfin,nums,chart_format,problem_type,
@@ -174,11 +174,11 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
         pdf1 = pd.DataFrame(dfin[dep].value_counts().reset_index())
         pdf2 = pd.DataFrame(dfin[dep].value_counts(1).reset_index())
         drawobj41 = pdf1.hvplot(kind='bar', color='r', title='Distribution of Target variable').opts(
-                        height=height_size, width=width_size)
+                        height=height_size, width=width_size,xrotation=70)
         drawobj42 = pdf2.hvplot(kind='bar', color='g', title='Percent Distribution of Target variable').opts(
                         )
         dmap = hv.DynamicMap((drawobj41+drawobj42).opts(shared_axes=False).opts(title='Histogram and KDE of Target = %s' %dep)).opts(
-                            height=height_size, width=800)
+                            height=height_size, width=width_size)
         dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
         hv_all = pn.pane.HoloViews(dmap)#, sizing_mode="stretch_both")
         if chart_format.lower() in ['server', 'bokeh_server']:
@@ -192,10 +192,10 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
         ls_objects.append(drawobj42)
     else:
         drawobj41 = dfin[dep].hvplot(kind='bar', color='r', title='Histogram of Target variable').opts(
-                        height=height_size,width=width_size,color='lightgreen', )
+                        height=height_size,width=width_size,color='lightgreen', xrotation=70)
         drawobj42 = dfin[dep].hvplot(kind='kde', color='g', title='KDE Plot of Target variable').opts(
                         height=height_size,width=width_size,color='lightblue')
-        dmap = hv.DynamicMap((drawobj41+drawobj42)).opts(title='Histogram and KDE of Target = %s' %dep, width=800)
+        dmap = hv.DynamicMap((drawobj41+drawobj42)).opts(title='Histogram and KDE of Target = %s' %dep, width=width_size)
         dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
         hv_all = pn.pane.HoloViews(dmap)
         if chart_format.lower() in ['server', 'bokeh_server', 'bokeh-server']:
@@ -252,7 +252,7 @@ def draw_cat_vars(dfin, dep, nums, cats, chart_format, problem_type, verbose=0):
         color_list = next(colors)
         #pivotdf = pd.DataFrame(conti_df).set_index(each_cat)
         plot = conti_df.hvplot(kind='bar',stacked=False,use_index=False, color=color_list,
-                              title='Average %s by each %s value' %(num,each_cat))
+                              title='Average %s by each %s value' %(num,each_cat)).opts(xrotation=70)
         return plot
     ### This is where you create the dynamic map and pass it the variable to load the chart!
     dmap = hv.DynamicMap(load_symbol, kdims=['Select_Cat_Variable','Select_Num_Variable']).redim.values(
@@ -535,7 +535,7 @@ def draw_distplot(dft, cats, conti, chart_format,problem_type,dep=None, classes=
                 color_list = next(colors)
                 pivotdf = pd.DataFrame(conti_df.to_records()).set_index(each_cat)
                 plot = pivotdf.hvplot(kind='bar',stacked=False,use_index=False, color=color_list,
-                                      title='Mean Target = %s by each Categorical Variable' %dep)
+                                      title='Mean Target = %s by each Categorical Variable' %dep).opts(xrotation=70)
                 return plot
             #######  This is where you call the widget and pass it the select_variable to draw a Chart #######
             dmap = hv.DynamicMap(select_widget,  kdims=['Select_Cat_Variable']).redim.values(Select_Cat_Variable=cats)
@@ -622,7 +622,7 @@ def draw_distplot(dft, cats, conti, chart_format,problem_type,dep=None, classes=
                 pivotdf = pd.DataFrame(pivot_df.to_records()).set_index(Select_categorical_var)
                 plot = pivotdf.hvplot(kind='bar',stacked=True,use_index=True,
                             title='Target = %s Histogram by each Categorical Variable' %dep).opts(
-                                height=height_size,width=width_size)
+                                height=height_size,width=width_size, xrotation=70)
                 return plot
             #######  This is where you call the widget and pass it the select_variable to draw a Chart #######
             dmap = hv.DynamicMap(select_widget,  kdims=['Select_categorical_var']).redim.values(
@@ -927,8 +927,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         corre = dft_target.corr()
         if timeseries_flag:
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size, colorbar=True, 
-                    cmap=cmap_list,
-                                           rot=70,
+                    cmap=cmap_list, rot=70,
             title='Time Series: Heatmap of all Differenced Continuous vars for target = %s' %dep)
         else:
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size,  colorbar=True,
