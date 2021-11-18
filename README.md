@@ -16,15 +16,15 @@ AutoViz performs automatic visualization of any dataset with one line.
 Give it any input file (CSV, txt or json format) and AutoViz will visualize it.
 
 AutoViz can now create charts in multiple  formats:
-    ####  If chart_format='png' or 'svg' or 'jpg': Matplotlib charts plotted. ####
-    ####  Can be saved locally or displayed in Jupyter Notebooks.             ####
-    ####  This is the default behavior for AutoViz.                          #####
-    ####  If chart_format='bokeh': Bokeh charts are plotted on Jupyter Notebooks##
-    ####  This is the default for AutoViz_Holo.                              #####
-    ####  If chart_format='server', dashboards will pop up for each kind of    ###
-    ####  chart on your browser.                                             #####
-    ####  In both cases, all charts are interactive and you can play with them####
-    ####  In the next version, I will let you save them in HTML.             #####
+- If chart_format='png' or 'svg' or 'jpg': Matplotlib charts plotted.
+    * Can be saved locally or displayed in Jupyter Notebooks.
+    * This is the default behavior for AutoViz.
+- If chart_format='bokeh': Bokeh charts are plotted in Jupyter Notebooks.
+    * This is the default for AutoViz_Holo.
+- If chart_format='server', dashboards will pop up for each kind of chart on your browser.
+
+In both `server` and `bokeh` cases, all charts are interactive and you can
+play with them. In the next version, I will let you save them in HTML.
 
 ## Table of Contents
 
