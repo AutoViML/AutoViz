@@ -162,6 +162,7 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
         drawobj1 = draw_scatters(dfin,nums,chart_format,problem_type,
                       dep, classes, lowess,verbose)
         ls_objects.append(drawobj1)
+        
         if len(nums) >= 2:
             drawobj2 = draw_pair_scatters(dfin, nums, problem_type, chart_format, dep,
                            classes, lowess, verbose)
@@ -191,22 +192,27 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
         ls_objects.append(drawobj41)
         ls_objects.append(drawobj42)
     else:
-        drawobj41 = dfin[dep].hvplot(kind='bar', color='r', title='Histogram of Target variable').opts(
-                        height=height_size,width=width_size,color='lightgreen', xrotation=70)
-        drawobj42 = dfin[dep].hvplot(kind='kde', color='g', title='KDE Plot of Target variable').opts(
-                        height=height_size,width=width_size,color='lightblue')
-        dmap = hv.DynamicMap((drawobj41+drawobj42)).opts(title='Histogram and KDE of Target = %s' %dep, width=width_size)
-        dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
-        hv_all = pn.pane.HoloViews(dmap)
-        if chart_format.lower() in ['server', 'bokeh_server', 'bokeh-server']:
-            ### If you want it on a server, you use drawobj.show()
-            #(drawobj41+drawobj42).show()
-            server = pn.serve(hv_all, start=True, show=True)
-        else:
-            ### This will display it in a Jupyter Notebook.
-            display(hv_all)
-        ls_objects.append(drawobj41)
-        ls_objects.append(drawobj42)
+        if not isinstance(dep, list):
+            ### it means dep is a string ###
+            if dep == '':
+                pass
+            else:
+                drawobj41 = dfin[dep].hvplot(kind='bar', color='r', title='Histogram of Target variable').opts(
+                                height=height_size,width=width_size,color='lightgreen', xrotation=70)
+                drawobj42 = dfin[dep].hvplot(kind='kde', color='g', title='KDE Plot of Target variable').opts(
+                                height=height_size,width=width_size,color='lightblue')
+                dmap = hv.DynamicMap((drawobj41+drawobj42)).opts(title='Histogram and KDE of Target = %s' %dep, width=width_size)
+                dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
+                hv_all = pn.pane.HoloViews(dmap)
+                if chart_format.lower() in ['server', 'bokeh_server', 'bokeh-server']:
+                    ### If you want it on a server, you use drawobj.show()
+                    #(drawobj41+drawobj42).show()
+                    server = pn.serve(hv_all, start=True, show=True)
+                else:
+                    ### This will display it in a Jupyter Notebook.
+                    display(hv_all)
+                ls_objects.append(drawobj41)
+                ls_objects.append(drawobj42)
     if len(nums) > 0:
         drawobj5 = draw_violinplot(dfin, dep, nums, chart_format, problem_type, verbose)
         ls_objects.append(drawobj5)
@@ -380,6 +386,7 @@ def draw_pair_scatters(dfin,nums,problem_type,chart_format, dep=None,
     #### PAIR SCATTER PLOTS ARE NEEDED ONLY FOR CLASSIFICATION PROBLEMS IN NUMERIC VARIABLES
     ### This is where you plot a pair-wise scatter plot of Independent Variables against each other####
     """
+    
     dft = dfin[:]
     image_count = 0
     imgdata_list = list()
@@ -409,6 +416,7 @@ def draw_pair_scatters(dfin,nums,problem_type,chart_format, dep=None,
         #            title='Pair-wise Scatter Plot of two Independent Numeric variables')
         #hv_panel = pn.Row(pn.WidgetBox(x, y, kind),plot)
         ########################   This is the new way of drawing scatter   ###############################
+        
         quantileable = [x for x in nums if len(dft[x].unique()) > 20]
 
         x = pnw.Select(name='X-Axis', value=quantileable[0], options=quantileable)
@@ -520,39 +528,43 @@ def draw_distplot(dft, cats, conti, chart_format,problem_type,dep=None, classes=
             if dft[each_conti].isnull().sum() > 0:
                 dft[each_conti].fillna(0, inplace=True)
         ## In this case, we perform this only if we have Cat variables
-        if len(cats) > 0:
-            colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
-            def select_widget(each_cat):
-                """
-                This program must take in a variable passed from the widget and turn it into a chart.
-                The input is known as each_cat and it is the variable you must use to get the data and build a chart.
-                The output must return a HoloViews Chart.
-                """
-                width_size=15
-                #######  This is where you plot the histogram of categorical variable input as each_cat ####
-                conti_df = dft[[dep,each_cat]].groupby(each_cat).mean().reset_index()
-                row_ticks = dft[dep].unique().tolist()
-                color_list = next(colors)
-                pivotdf = pd.DataFrame(conti_df.to_records()).set_index(each_cat)
-                plot = pivotdf.hvplot(kind='bar',stacked=False,use_index=False, color=color_list,
-                                      title='Mean Target = %s by each Categorical Variable' %dep).opts(xrotation=70)
-                return plot
-            #######  This is where you call the widget and pass it the select_variable to draw a Chart #######
-            dmap = hv.DynamicMap(select_widget,  kdims=['Select_Cat_Variable']).redim.values(Select_Cat_Variable=cats)
-            dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
-            ###########  This is where you put the Panel Together ############
-            hv_panel = pn.panel(dmap)
-            widgets = hv_panel[0]
-            hv_all = pn.Column(pn.Row(*widgets))
-            if verbose == 2:
-                imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
-                image_count += 1
-            if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
-                #server = pn.serve(hv_all, start=True, show=True)
-                hv_all.show()
-            else:
-                display(hv_all)  ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()        
-                #display_obj(hv_all)  ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()
+        if not isinstance(dep, list):
+            ### it means dep is a string ###
+            if dep == '':
+                pass
+            elif len(cats) > 0:
+                colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
+                def select_widget(each_cat):
+                    """
+                    This program must take in a variable passed from the widget and turn it into a chart.
+                    The input is known as each_cat and it is the variable you must use to get the data and build a chart.
+                    The output must return a HoloViews Chart.
+                    """
+                    width_size=15
+                    #######  This is where you plot the histogram of categorical variable input as each_cat ####
+                    conti_df = dft[[dep,each_cat]].groupby(each_cat).mean().reset_index()
+                    row_ticks = dft[dep].unique().tolist()
+                    color_list = next(colors)
+                    pivotdf = pd.DataFrame(conti_df.to_records()).set_index(each_cat)
+                    plot = pivotdf.hvplot(kind='bar',stacked=False,use_index=False, color=color_list,
+                                          title='Mean Target = %s by each Categorical Variable' %dep).opts(xrotation=70)
+                    return plot
+                #######  This is where you call the widget and pass it the select_variable to draw a Chart #######
+                dmap = hv.DynamicMap(select_widget,  kdims=['Select_Cat_Variable']).redim.values(Select_Cat_Variable=cats)
+                dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
+                ###########  This is where you put the Panel Together ############
+                hv_panel = pn.panel(dmap)
+                widgets = hv_panel[0]
+                hv_all = pn.Column(pn.Row(*widgets))
+                if verbose == 2:
+                    imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
+                    image_count += 1
+                if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
+                    #server = pn.serve(hv_all, start=True, show=True)
+                    hv_all.show()
+                else:
+                    display(hv_all)  ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()        
+                    #display_obj(hv_all)  ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()
         if len(conti) > 0:
             try:
                 ######   This is a Very Complex Way to build an ND Overlay Chart with One Variable as a Select Variable #######

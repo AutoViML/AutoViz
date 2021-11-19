@@ -85,6 +85,7 @@ def save_image_data(fig, chart_format, plot_name, depVar, mk_dir, additional='')
 #### This module analyzes a dependent Variable and finds out whether it is a
 #### Regression or Classification type problem
 def analyze_problem_type(train, target, verbose=0) :
+
     target = copy.deepcopy(target)
     cat_limit = 30 ### this determines the number of categories to name integers as classification ##
     float_limit = 15 ### this limits the number of float variable categories for it to become cat var
@@ -1384,13 +1385,16 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
             #dft[depVar] = dft[depVar].factorize()[0]
         elif dft[depVar1].dtype == np.int64:
             classes = dft[depVar1].factorize()[1].tolist()
-        elif dft[depVar].dtype == bool:
+        elif dft[depVar1].dtype == bool:
             classes =  dft[depVar].unique().astype(int).tolist()
         elif dft[depVar1].dtype == float and problem_type.endswith('Classification'):
             classes = dft[depVar1].factorize()[1].tolist()
         else:
             classes = []
+        print('Since AutoViz cannot visualize multiple targets, selecting the first one from list: %s' %depVar1)
+        depVar = copy.deepcopy(depVar1)
     #############  Check if there are too many columns to visualize  ################
+    
     if len(preds) >= max_cols_analyzed:
         #########     In that case, SELECT IMPORTANT FEATURES HERE   ######################
         if problem_type.endswith('Classification') or problem_type == 'Regression':
@@ -1438,10 +1442,11 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
         return dfte
     else:
         #########     If above 1 but below limit, leave features as it is   ######################
-        if depVar != '':
-            dft = dft[preds+[depVar]]
+        if not isinstance(depVar, list):
+            if depVar != '':
+                dft = dft[preds+[depVar]]
         else:
-            dft = dft[preds]
+            dft = dft[preds+depVar]
     ###################   Time to reduce cat vars which have more than 30 categories #############
     #discrete_string_vars += np.array(categorical_vars)[dft[categorical_vars].nunique()>30].tolist()
     #categorical_vars = left_subtract(categorical_vars,np.array(
