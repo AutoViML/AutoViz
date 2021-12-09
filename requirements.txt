@@ -8,7 +8,7 @@ seaborn
 scikit-learn
 statsmodels
 holoviews
-bokeh
+bokeh>=2.4.0
 hvplot
 xgboost
 fsspec>=0.3.3
