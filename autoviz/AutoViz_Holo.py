@@ -149,10 +149,10 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
         mk_dir = os.path.join(".","AutoViz_Plots")
     else:
         mk_dir = copy.deepcopy(save_plot_dir)
-    if verbose == 2 and not os.path.isdir(mk_dir):
+    if chart_format == 'html' and not os.path.isdir(mk_dir):
         os.mkdir(mk_dir)
     mk_dir = os.path.join(mk_dir,target_dir)
-    if verbose == 2 and not os.path.isdir(mk_dir):
+    if chart_format == 'html' and not os.path.isdir(mk_dir):
         os.mkdir(mk_dir)
     ############   Start the clock here and classify variables in data set first ########
     start_time = time.time()
@@ -246,13 +246,13 @@ def draw_cat_vars_hv(dfin, dep, nums, cats, chart_format, problem_type, mk_dir, 
         imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
         image_count += 1
     if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
-        #server = pn.serve(hv_all, start=True, show=True)
+        #server = pn.serve(hv_panel, start=True, show=True)
         hv_panel.show()
     elif chart_format == 'html':
         save_html_data(hv_panel, chart_format, plot_name, mk_dir)
     else:
         display(hv_panel)  ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()        
-    return imgdata_list
+    return hv_panel
 #####################################################################################################
 def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_objects, mk_dir, verbose=0):
     dft = copy.deepcopy(dfin)
@@ -294,7 +294,7 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
                 hv_all = pn.pane.HoloViews(dmap)
                 ls_objects.append(drawobj41)
                 ls_objects.append(drawobj42)
-    ####
+    #### In this case we are using multiple objects in panel ###
     ##### Save all the chart objects here ##############
     if verbose == 2:
         imgdata_list = append_panels(hv_all, imgdata_list, chart_format)
@@ -364,9 +364,10 @@ def draw_scatters_hv(dfin, nums, chart_format, problem_type,
         y = pn.widgets.Select(name='y', options=nums)
         kind = pn.widgets.Select(name='kind', value='scatter', options=['scatter'])
         #######  This is where you call the widget and pass it the hv_plotto draw a Chart #######
-        plot = dft.hvplot(x=dep, y=y, kind=kind, height=height_size, width=width_size, size=bubble_size,
+        hv_plot = dft.hvplot(x=dep, y=y, kind=kind, height=height_size, width=width_size, size=bubble_size,
                         title='Scatter Plot of each independent numeric variable against target variable')
-        hv_all = pn.Row(pn.WidgetBox(y), plot)
+        hv_panel = pn.panel(hv_plot)
+        hv_all = pn.Row(pn.WidgetBox(y), hv_plot)
 
         ##################################################################################################################
         #############   This works well except that the y-axis does not change when you switch y-variable ################
@@ -403,7 +404,7 @@ def draw_scatters_hv(dfin, nums, chart_format, problem_type,
         #hv_all = pn.Column(pn.Row(*widgets))
         ###########  E N D    O F     Y- A X I S    C O D E    ############
         if verbose == 2:
-            imgdata_list = append_panels(hv_all, imgdata_list, chart_format)
+            imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
             image_count += 1
     ####### End of Scatter Plots ######
     if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
@@ -434,7 +435,7 @@ def draw_pair_scatters_hv(dfin,nums,problem_type,chart_format, dep=None,
     cmap_list = ['rainbow', 'viridis', 'plasma', 'inferno', 'magma', 'cividis']
     plot_name = 'pair_scatters'
     ###########################################################################
-    if problem_type == 'Regression' or problem_type == 'Clustering':
+    if problem_type in ['Regression', 'Clustering']:
         ########## This is for Regression problems ##########
         #########  Here we plot a pair-wise scatter plot of Independent Variables ####
         ### Only 1 color is needed since only 2 vars are plotted against each other ##
@@ -876,7 +877,9 @@ def draw_violinplot_hv(dft, dep, nums,chart_format, modeltype='Regression',
             image_count += 1
     ########## End of Violin Plots #########
     return hv_all
-##################################################################################
+###########################################################################################
+##########     Draw date time series variables                    #########################
+###########################################################################################
 def draw_date_vars_hv(df,dep,datevars, num_vars, chart_format, modeltype='Regression',
                         mk_dir='AutoViz_Plots', verbose=0):
     #### Now you want to display 2 variables at a time to see how they change over time
@@ -921,18 +924,18 @@ def draw_date_vars_hv(df,dep,datevars, num_vars, chart_format, modeltype='Regres
     ####### Draw the time series for Regression and DepVar
     if modeltype == 'Regression' or dep == None or dep == '':
         kind = 'line'
-        plot = dft[num_vars+[dep]].hvplot( height=400, width=600,kind=kind,
+        hv_plot = dft[num_vars+[dep]].hvplot( height=400, width=600,kind=kind,
                         title='Time Series Plot of all Numeric variables and Target').opts(legend_position='top_left')
-        hv_panel = pn.Row(pn.WidgetBox( kind), plot)
+        hv_panel = pn.Row(pn.WidgetBox( kind), hv_plot)
         if verbose == 2:
             imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
             image_count += 1
     else:
         ######## This is for Classification problems only
         kind = 'line'
-        plot = dft[num_vars+[dep]].hvplot(groupby=dep, height=400, width=600,kind=kind,
+        hv_plot = dft[num_vars+[dep]].hvplot(groupby=dep, height=400, width=600,kind=kind,
                         title='Time Series Plot of all Numeric variables by Target').opts(legend_position='top_left')
-        hv_panel = pn.Row(pn.WidgetBox( kind), plot)
+        hv_panel = pn.Row(pn.WidgetBox( kind), hv_plot)
         if verbose == 2:
             imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
             image_count += 1
@@ -946,7 +949,9 @@ def draw_date_vars_hv(df,dep,datevars, num_vars, chart_format, modeltype='Regres
         display(hv_panel)  ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()        
         #display_obj(hv_panel)  ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()
     return hv_panel
-##### Draw a Heatmap using Pearson Correlation #########################################
+################################################################################################
+############# Draw a Heatmap using Pearson Correlation #########################################
+################################################################################################
 def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
                             modeltype='Regression',classes=None, mk_dir='AutoViz_Plots', verbose=0):
     dft = copy.deepcopy(dft)
@@ -963,7 +968,7 @@ def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
     else:
         height_size = 800
         width_size = 1200
-    plot_name = 'heatmap'
+    plot_name = 'heatmaps'
     #####  If it is a datetime index we need to calculate heat map on differenced data ###
     if isinstance(dft.index, pd.DatetimeIndex) :
         dft = dft[:]
@@ -982,7 +987,8 @@ def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
             timeseries_flag = False
     # Add a column: the color depends on target variable but you can use whatever function
     imgdata_list = list()
-    if modeltype != 'Regression':
+    ##########    This is where we plot the charts #########################
+    if not modeltype in ['Regression','Clustering']:
         ########## This is for Classification problems only ###########
         if dft[dep].dtype == object or dft[dep].dtype == np.int64:
             dft[dep] = dft[dep].factorize()[0]
@@ -1008,7 +1014,8 @@ def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
                     cmap=cmap_list,
                     rot=70,
             title='Heatmap of all Continuous Variables including target = %s' %dep);
-        hv_panel = heatmap * hv.Labels(heatmap).opts(opts.Labels(text_font_size='7pt'))
+        hv_plot = heatmap * hv.Labels(heatmap).opts(opts.Labels(text_font_size='7pt'))
+        hv_panel = pn.panel(hv_plot)
         if verbose == 2:
             imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
             image_count += 1
@@ -1038,7 +1045,8 @@ def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
                                            rot=70,
             title='Heatmap of all Continuous Variables including target = %s' %dep).opts(
                                     opts.HeatMap(tools=['hover'],  toolbar='above'))
-        hv_panel = heatmap * hv.Labels(heatmap).opts(opts.Labels(text_font_size='7pt'))
+        hv_plot = heatmap * hv.Labels(heatmap).opts(opts.Labels(text_font_size='7pt'))
+        hv_panel = pn.panel(hv_plot)
         if verbose == 2:
             imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
             image_count += 1
@@ -1053,4 +1061,3 @@ def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
         #display_obj(hv_panel)  ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()
     return hv_panel
 #######################################################################################
-###########################################################################################

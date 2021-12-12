@@ -61,9 +61,6 @@ from sklearn.model_selection import train_test_split
 import hvplot.pandas
 import holoviews as hv
 from holoviews import opts
-#hv.notebook_extension('bokeh')
-hv.extension('bokeh', 'matplotlib')
-#hv.extension('bokeh')
 import panel as pn
 import panel.widgets as pnw
 import holoviews.plotting.bokeh
