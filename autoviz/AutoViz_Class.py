@@ -164,6 +164,13 @@ class AutoViz_Class():
         'subheading':[],#"\n".join(subheading)
         'desc': [] #"\n".join(desc)
         }  ######## This is for description and images for date time plots ###
+        self.wordcloud = {
+        'name': 'wordcloud',
+        'heading': 'Word Cloud Plots of NLP or String vars',
+        'plots': [],
+        'subheading':[],#"\n".join(subheading)
+        'desc': [] #"\n".join(desc)
+        }  ######## This is for description and images for date time plots ###
 
 
     def add_plots(self,plotname,X):
@@ -230,10 +237,10 @@ class AutoViz_Class():
             # being displayed with plt.show() calls
             get_ipython().magic('matplotlib inline')
         ####################################################################################
-        if chart_format.lower() in ['bokeh','server','bokeh_server','bokeh-server']:
+        if chart_format.lower() in ['bokeh','server','bokeh_server','bokeh-server', 'html']:
             dft = AutoViz_Holo(filename, sep, depVar, dfte, header, verbose,
                         lowess,chart_format,max_rows_analyzed,
-                            max_cols_analyzed)
+                            max_cols_analyzed, save_plot_dir)
         else:
             dft = self.AutoViz_Main(filename, sep, depVar, dfte, header, verbose,
                         lowess,chart_format,max_rows_analyzed,
@@ -319,9 +326,6 @@ class AutoViz_Class():
                     print('Could not draw Bar Plots')
             else:
                 print ('No Continuous Variables at all in this dataset...')
-            print('Time to run AutoViz (in seconds) = %0.0f' %(time.time()-start_time))
-            if verbose <= 1:
-                print('\n ###################### VISUALIZATION Completed ########################')
         else:
             if problem_type=='Regression':
                 ############## This is a Regression Problem #################
@@ -394,9 +398,6 @@ class AutoViz_Class():
                     print('All Plots done')
                 else:
                     print('All Plots are saved in %s' %mk_dir)
-                print('Time to run AutoViz (in seconds) = %0.0f' %(time.time()-start_time))
-                if verbose <= 1:
-                    print('\n ###################### VISUALIZATION Completed ########################')
             else :
                 ############ This is a Classification Problem ##################
                 try:
@@ -466,8 +467,19 @@ class AutoViz_Class():
                         pass
                 else:
                     print ('No Continuous Variables at all in this dataset...')
-                print('Time to run AutoViz (in seconds) = %0.0f' %(time.time()-start_time))
-                if verbose <= 1:
-                    print ('\n ###################### VISUALIZATION Completed ########################')
+        ###### Now you can check for NLP vars or discrete_string_vars to do wordcloud #######
+        if len(discrete_string_vars) > 0:
+            plotname = 'wordcloud'
+            for each_string_var in discrete_string_vars:
+                try:
+                    svg_data = draw_wordcloud_from_dataframe(dft, each_string_var, chart_format, plotname, 
+                                    depVar, mk_dir, verbose=0)
+                    self.add_plots(plotname,svg_data)
+                except:
+                    print('Could not draw wordcloud plot for %s' %each_string_var)
+        ### Now print the time taken to run charts for AutoViz #############
+        print('Time to run AutoViz = %0.0f seconds ' %(time.time()-start_time))
+        if verbose <= 1:
+            print ('\n ###################### AUTO VISUALIZATION Completed ########################')
         return dft
 #############################################################################################

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="autoviz",
-    version="0.1.24",
+    version="0.1.25",
     author="Ram Seshadri",
     # author_email="author@example.com",
     description="Automatically Visualize any dataset, any size with a single line of code",
@@ -20,15 +20,16 @@ setuptools.setup(
         "xlrd",
         "wordcloud",
         "pandas",
-        "matplotlib",
-        "seaborn",
+        "matplotlib>=3.3.3",
+        "seaborn>=0.11.1",
         "scikit-learn",
         "statsmodels",
-        "holoviews",
-        "hvplot",
-        "bokeh>=2.4.0",
+        "holoviews==1.14.6",
+        "bokeh==2.4.2",
+        "hvplot==0.7.3",
+        "panel==0.12.6",
         "xgboost",
-        "fsspec>=0.3.3"
+        "fsspec==0.8.3",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

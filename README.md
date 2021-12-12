@@ -10,7 +10,7 @@
 [![PyPI Version](https://img.shields.io/pypi/v/autoviz.svg)](https://pypi.org/project/autoviz)
 [![PyPI License](https://img.shields.io/pypi/l/autoviz.svg)](https://github.com/AutoViML/AutoViz/blob/master/LICENSE)
 
-Automatically Visualize any dataset, any size with a single line of code.
+Automatically Visualize any dataset, any size with a single line of code. Now save as HTML files!
 
 AutoViz performs automatic visualization of any dataset with one line.
 Give it any input file (CSV, txt or json format) and AutoViz will visualize it.
@@ -22,9 +22,10 @@ AutoViz can now create charts in multiple  formats:
 - If chart_format='bokeh': Bokeh charts are plotted in Jupyter Notebooks.
     * This is the default for AutoViz_Holo.
 - If chart_format='server', dashboards will pop up for each kind of chart on your browser.
+- If chart_format='html', all charts will be silently saved as HTML files in AutoViz_Plots or any directory you specify.
 
 In both `server` and `bokeh` cases, all charts are interactive and you can
-play with them. In the next version, I will let you save them in HTML.
+play with them. In the case of `html` (HTML) too, the charts are interactive.
 
 ## Table of Contents
 

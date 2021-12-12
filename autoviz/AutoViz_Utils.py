@@ -57,6 +57,17 @@ import xgboost as xgb
 from xgboost.sklearn import XGBClassifier
 from xgboost.sklearn import XGBRegressor
 from sklearn.model_selection import train_test_split
+######## This is where we import HoloViews related libraries  #########
+import hvplot.pandas
+import holoviews as hv
+from holoviews import opts
+#hv.notebook_extension('bokeh')
+hv.extension('bokeh', 'matplotlib')
+#hv.extension('bokeh')
+import panel as pn
+import panel.widgets as pnw
+import holoviews.plotting.bokeh
+
 ######## This is where we store the image data in a dictionary with a list of images #########
 def save_image_data(fig, chart_format, plot_name, depVar, mk_dir, additional=''):
     if not os.path.isdir(mk_dir):
@@ -81,6 +92,16 @@ def save_image_data(fig, chart_format, plot_name, depVar, mk_dir, additional='')
         imgdata.seek(0)
         figdata_png = base64.b64encode(imgdata.getvalue())
         return figdata_png
+
+def save_html_data(hv_all, chart_format, plot_name, mk_dir, additional=''):
+    print('Saving %s in HTML format' %(plot_name+additional))
+    if not os.path.isdir(mk_dir):
+        os.mkdir(mk_dir)
+    if additional == '':
+        filename = os.path.join(mk_dir,plot_name+"."+chart_format)
+    else:
+        filename = os.path.join(mk_dir,plot_name+additional+"."+chart_format)
+    pn.panel(hv_all).save(filename, embed=True) ## it is amazing you can save interactive plots ##
 
 #### This module analyzes a dependent Variable and finds out whether it is a
 #### Regression or Classification type problem
@@ -285,6 +306,7 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
     else:
         ####### This is a Classification Problem #### You need to plot a strip plot ####
         ####### First, Plot each Continuous variable against the Target Variable ###
+        pdb.set_trace()
         if len(dft) < 1000:
             jitter = 0.05
         else:
@@ -774,13 +796,15 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 dft[dep] = dft[dep].factorize()[0]
             for p in ax1.patches:
                 ax1.annotate(str(round(p.get_height(),2)), (round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
+            ax1.set_xticks(dft[dep].unique().tolist())
+            ax1.set_xticklabels(classes, rotation = 45, ha="right", fontsize=9)
             ax1.set_title('Percentage Distribution of Target = %s' %dep, fontsize=10, y=1.05)
             #### Freq Distribution is next ###########################
             dft[dep].value_counts().plot(ax=ax2,kind='bar')
             for p in ax2.patches:
                 ax2.annotate(str(round(p.get_height(),2)), (round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
             ax2.set_xticks(dft[dep].unique().tolist())
-            ax2.set_xticklabels(classes, rotation = 45, ha="right")
+            ax2.set_xticklabels(classes, rotation = 45, ha="right", fontsize=9)
             ax2.set_title('Freq Distribution of Target Variable = %s' %dep,  fontsize=12)
         elif problem_type == 'Regression':
             ############################################################################
@@ -1331,14 +1355,15 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
         int_vars = []
     else:
         continuous_vars = var_df['continuous_vars']
-    preds = [x for x in orig_preds if x not in IDcols+cols_delete+discrete_string_vars]
-    if len(IDcols+cols_delete+discrete_string_vars) == 0:
+    #### from now you can use wordclouds on discrete_string_vars ######################
+    preds = [x for x in orig_preds if x not in IDcols+cols_delete]
+    if len(IDcols+cols_delete) == 0:
         print('        No variables removed since no ID or low-information variables found in data set')
     else:
         print('        %d variables removed since they were ID or low-information variables'
-                                %len(IDcols+cols_delete+discrete_string_vars))
+                                %len(IDcols+cols_delete))
         if verbose >= 1:
-            print('    List of variables removed: %s' %(IDcols+cols_delete+discrete_string_vars))
+            print('    List of variables removed: %s' %(IDcols+cols_delete))
     #############    Sample data if too big and find problem type   #############################
     if dfte.shape[0]>= max_rows_analyzed:
         print('Since Number of Rows in data %d exceeds maximum, randomly sampling %d rows for EDA...' %(len(dfte),max_rows_analyzed))
@@ -1394,7 +1419,6 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
         print('Since AutoViz cannot visualize multiple targets, selecting the first one from list: %s' %depVar1)
         depVar = copy.deepcopy(depVar1)
     #############  Check if there are too many columns to visualize  ################
-    
     if len(preds) >= max_cols_analyzed:
         #########     In that case, SELECT IMPORTANT FEATURES HERE   ######################
         if problem_type.endswith('Classification') or problem_type == 'Regression':
@@ -1471,8 +1495,8 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
         ppt.pprint('   %s' %IDcols)
         print("   Target variable %s ")
         ppt.pprint('   %s' %depVar)
-    elif verbose==1 and len(cols_list) > max_cols_analyzed:
-        print('   Total columns > %d, too numerous to list.' %max_cols_analyzed)
+    elif verbose==1 and len(cols_list) > 30:
+        print('   Total columns > 30, too numerous to print.')
     return dft,depVar,IDcols,bool_vars,categorical_vars,continuous_vars,discrete_string_vars,date_vars,classes,problem_type, cols_list
 ####################################################################
 def marthas_columns(data,verbose=0):
@@ -1550,14 +1574,20 @@ def classify_columns(df_preds, verbose=0):
     var_df['cat'] = 0
     var_df['id_col'] = 0
     discrete_or_nlp_vars = var_df.loc[discrete_or_nlp==1]['index'].values.tolist()
-    if len(var_df.loc[discrete_or_nlp==1]) != 0:
-        for col in discrete_or_nlp_vars:
+    copy_discrete_or_nlp_vars = copy.deepcopy(discrete_or_nlp_vars)
+    if len(discrete_or_nlp_vars) > 0:
+        for col in copy_discrete_or_nlp_vars:
             #### first fill empty or missing vals since it will blowup ###
-            train[col] = train[col].fillna('  ')
+            train[col] = train[col].fillna('emptyspace')
             if train[col].map(lambda x: len(x) if type(x)==str else 0).mean(
-                ) >= max_nlp_char_size and len(train[col].value_counts()
-                        ) <= int(0.9*len(train)) and col not in string_bool_vars:
+                ) >= 50 and len(train[col].value_counts()
+                        ) >= int(0.9*len(train)) and col not in string_bool_vars:
                 var_df.loc[var_df['index']==col,'nlp_strings'] = 1
+            elif train[col].map(lambda x: len(x) if type(x)==str else 0).mean(
+                ) >= max_nlp_char_size and train[col].map(lambda x: len(x) if type(x)==str else 0).mean(
+                ) < 50 and len(train[col].value_counts()
+                        ) <= int(0.9*len(train)) and col not in string_bool_vars:
+                var_df.loc[var_df['index']==col,'discrete_strings'] = 1
             elif len(train[col].value_counts()) > cat_limit and len(train[col].value_counts()
                         ) <= int(0.9*len(train)) and col not in string_bool_vars:
                 var_df.loc[var_df['index']==col,'discrete_strings'] = 1
@@ -2147,11 +2177,11 @@ def return_stop_words():
     stop_words = list(set(STOP_WORDS+add_words))
     return sorted(stop_words)
 
-def draw_wordcloud_from_dataframe(dataframe, column):
+def draw_wordcloud_from_dataframe(dataframe, column, chart_format, plot_name, depVar, mk_dir, verbose=0):
     """
     This handy function draws a dataframe column using Wordcloud library and nltk.
     """
-
+    imgdata_list = []
     replace_spaces = re.compile('[/(){}\[\]\|@,;]')
     remove_special_chars = re.compile('[^0-9a-z #+_]')
     STOPWORDS = return_stop_words()
@@ -2195,9 +2225,17 @@ def draw_wordcloud_from_dataframe(dataframe, column):
                           mask=picture_mask
                 ).generate(text_join)
 
-    plt.figure(figsize = (15, 15), facecolor = None)
+    fig = plt.figure(figsize = (15, 15), facecolor = None)
     plt.imshow(wordcloud)
     plt.axis("off")
-    plt.savefig('wordcloud_'+column+'.png', dpi=300)
-    plt.show();
+    ### This is where you save the fig or show the fig ######
+    image_count = 0
+    if verbose == 2:
+        imgdata_list.append(save_image_data(fig, chart_format,
+                            plot_name, depVar, mk_dir))
+        image_count += 1
+    if verbose <= 1:
+        plt.show();
+    ####### End of Pivot Plotting #############################
+    return imgdata_list
 ################################################################################
