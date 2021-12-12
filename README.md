@@ -1,6 +1,8 @@
 # AutoViz
 
-![banner](logo.JPG)
+Automatically Visualize any dataset, any size with a single line of code. Now you can save these interactive charts as HTML files automatically with the `"html"` setting.
+
+![banner](intro2.gif)
 
 [![Pepy Downloads](https://pepy.tech/badge/autoviz)](https://pepy.tech/project/autoviz)
 [![Pepy Downloads per week](https://pepy.tech/badge/autoviz/week)](https://pepy.tech/project/autoviz)
@@ -10,22 +12,16 @@
 [![PyPI Version](https://img.shields.io/pypi/v/autoviz.svg)](https://pypi.org/project/autoviz)
 [![PyPI License](https://img.shields.io/pypi/l/autoviz.svg)](https://github.com/AutoViML/AutoViz/blob/master/LICENSE)
 
-Automatically Visualize any dataset, any size with a single line of code. Now save as HTML files!
+AutoViz performs automatic visualization of any dataset with one line of code.
+Give it any input file (CSV, txt or json format) of any size and AutoViz will visualize it, provided you set the `max_rows_analyzed` and `max_cols_analyzed` setting within the bounds of your machine's memory limit. 
 
-AutoViz performs automatic visualization of any dataset with one line.
-Give it any input file (CSV, txt or json format) and AutoViz will visualize it.
-
-AutoViz can now create charts in multiple  formats:
-- If chart_format='png' or 'svg' or 'jpg': Matplotlib charts plotted.
-    * Can be saved locally or displayed in Jupyter Notebooks.
+AutoViz can now create charts in multiple  formats using the `chart_format` setting:
+- If `chart_format ='png'` or `'svg'` or `'jpg'`: Matplotlib charts are plotted inline.
+    * Can be saved locally (using `verbose=2` setting) or displayed (`verbose=1`) in Jupyter Notebooks.
     * This is the default behavior for AutoViz.
-- If chart_format='bokeh': Bokeh charts are plotted in Jupyter Notebooks.
-    * This is the default for AutoViz_Holo.
-- If chart_format='server', dashboards will pop up for each kind of chart on your browser.
-- If chart_format='html', all charts will be silently saved as HTML files in AutoViz_Plots or any directory you specify.
-
-In both `server` and `bokeh` cases, all charts are interactive and you can
-play with them. In the case of `html` (HTML) too, the charts are interactive.
+- If `chart_format='bokeh'`: Interactive Bokeh charts are plotted in Jupyter Notebooks.
+- If `chart_format='server'`, dashboards will pop up for each kind of chart on your browser.
+- If `chart_format='html'`, interactive Bokeh charts will be created and silently saved as HTML files under the `AutoViz_Plots` directory (under working folder) or any other directory that you specify using the `save_plot_dir` setting (during input).
 
 ## Table of Contents
 
@@ -102,7 +98,7 @@ AutoViz will do the rest. You will see charts and plots on your screen.
 
 ![var_charts](var_charts.JPG)
 
-AV.AutoViz is the main plotting function in AV.
+`AV.AutoViz` is the main plotting function in AV. Depending on what `chart_format` you choose, AutoViz will automatically call either the `AutoViz_Main` function or `AutoViz_Holo` function. 
 
 **Notes:**
 
@@ -112,12 +108,13 @@ AV.AutoViz is the main plotting function in AV.
 - `verbose` option
   - if 0, display minimal information but displays charts on your notebook
   - if 1, print extra information on the notebook and also display charts
-  - if 2, will not display any charts, it will simply save them in your local machine under AutoViz_Plots directory
+  - if 2, will not display any charts, it will simply save them in your local machine under `AutoViz_Plots` directory under your current working folder.
 
 - `chart_format` option
-  - if 'svg','jpg' or 'png', displays all charts or saves them depending on verbose option.
-  - if 'bokeh', plots interactive charts using Bokeh on your Jupyter Notebook
-  - if 'server', will display charts on your browser with one chart type in each tab
+  - if `'svg','jpg' or 'png'`, displays all charts or saves them depending on verbose option.
+  - if `'bokeh'`, plots interactive charts using Bokeh on your Jupyter Notebook
+  - if `'server'`, will display charts on your browser with one chart type in each tab
+  - if `'html'`, will create bokeh interactive charts and silently save them under `AutoViz_Plots` directory or any directory you specify in the `save_plot_dir` setting.
 
 ![bokeh_charts](bokeh_charts.JPG)
 
@@ -132,10 +129,11 @@ AV.AutoViz is the main plotting function in AV.
 - `header` - the row number of the header row in your file. If it is the first row, then this must be zero.
 - `verbose` - it has 3 acceptable values: 0, 1 or 2. With zero, you get all charts but limited info. With 1 you get all charts and more info. With 2, you will not see any charts but they will be quietly generated and save in your local current directory under the AutoViz_Plots directory which will be created. Make sure you delete this folder periodically, otherwise, you will have lots of charts saved here if you used verbose=2 option a lot.
 - `lowess` - this option is very nice for small datasets where you can see regression lines for each pair of continuous variable against the target variable. Don't use this for large data sets (that is over 100,000 rows)
-- `chart_format` - this can be SVG, PNG, JPG or 'bokeh', 'server'. You will get charts generated and saved in multiple formats if you used verbose=2 option. The latter options are useful for interactive charts.
+- `chart_format` - this can be `'svg', 'png', 'jpg'` or `'bokeh'` or `'server'` or `'html'`. You will get charts generated (inline with `verbose=0` or `1` option). Instead you can silently save them in multiple formats if you used `verbose=2` option. The latter options are useful for interactive charts.
 - `max_rows_analyzed` - limits the max number of rows that is used to display charts. If you have a very large data set with millions of rows, then use this option to limit the amount of time it takes to generate charts. We will take a statistically valid sample.
 - `max_cols_analyzed` - limits the number of continuous vars that can be analyzed
-- `save_plot_dir` - directory you want the plots to be saved. Default is None which means it is saved under the current directory under a sub-folder named `AutoViz_Plots`
+- `save_plot_dir` - directory you want the plots to be saved. Default is None which means it is saved under the current directory under a sub-folder named `AutoViz_Plots`. If the `save_plot_dir` does not exist, it creates it.
+
 ![server_charts](server_charts.JPG)
 
 ## Maintainers
