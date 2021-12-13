@@ -64,7 +64,7 @@ from holoviews import opts
 import panel as pn
 import panel.widgets as pnw
 import holoviews.plotting.bokeh
-
+from bokeh.resources import INLINE
 ######## This is where we store the image data in a dictionary with a list of images #########
 def save_image_data(fig, chart_format, plot_name, depVar, mk_dir, additional=''):
     if not os.path.isdir(mk_dir):
@@ -98,7 +98,10 @@ def save_html_data(hv_all, chart_format, plot_name, mk_dir, additional=''):
         filename = os.path.join(mk_dir,plot_name+"."+chart_format)
     else:
         filename = os.path.join(mk_dir,plot_name+additional+"."+chart_format)
-    pn.panel(hv_all).save(filename, embed=True) ## it is amazing you can save interactive plots ##
+    ## it is amazing you can save interactive plots ##
+    ## You don't need the resources = INLINE since it would consume too much space in HTML plots
+    #pn.panel(hv_all).save(filename, embed=True, resources=INLINE) 
+    pn.panel(hv_all).save(filename, embed=True)
 
 #### This module analyzes a dependent Variable and finds out whether it is a
 #### Regression or Classification type problem
@@ -129,6 +132,8 @@ def analyze_problem_type(train, target, verbose=0) :
             model_class = 'Multi_Classification'
         else:
             model_class = 'Regression'
+    elif train[targ].dtype == bool:
+        model_class = 'Binary_Classification'
     else:
         if len(train[targ].unique()) <= 2:
             model_class = 'Binary_Classification'
@@ -1388,6 +1393,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
             elif dft[depVar].dtype == np.int64:
                 classes = dft[depVar].factorize()[1].tolist()
             elif dft[depVar].dtype == bool:
+                dft[depVar] = dft[depVar].astype(int)
                 classes =  dft[depVar].unique().astype(int).tolist()
             elif dft[depVar].dtype == float and problem_type.endswith('Classification'):
                 classes = dft[depVar].factorize()[1].tolist()

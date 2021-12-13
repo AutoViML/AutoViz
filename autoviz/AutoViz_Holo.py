@@ -170,9 +170,13 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
     width_size = 500
     ##########    Now start drawing the Bokeh Plots ###############################
     if len(nums) > 0:
-        drawobj1 = draw_scatters_hv(dfin,nums,chart_format,problem_type,
-                      dep, classes, lowess, mk_dir, verbose)
-        ls_objects.append(drawobj1)
+        if problem_type == 'Clustering':
+            #### There is no need to do a scatter plot with a dep variable when no dependent variable is given
+            print('No scatter plots with depVar when no depVar is given.')
+        else:
+            drawobj1 = draw_scatters_hv(dfin,nums,chart_format,problem_type,
+                          dep, classes, lowess, mk_dir, verbose)
+            ls_objects.append(drawobj1)
         ### You can draw pair scatters only if there are 2 or more numeric variables ####
         if len(nums) >= 2:
             drawobj2 = draw_pair_scatters_hv(dfin, nums, problem_type, chart_format, dep,
@@ -218,35 +222,53 @@ def draw_cat_vars_hv(dfin, dep, nums, cats, chart_format, problem_type, mk_dir, 
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
     plot_name = 'cat_var_plots'
     #####################################################
-    #######  This is where you call the widget and pass it two select_variables to draw a Bar Chart #######
-    def load_symbol(each_cat, num, **kwargs):
-        """
-        This program must take in a variable passed from the widget and turn it into a chart.
-        The input is known as each_cat and it is the variable you must use to get the data and build a chart.
-        The output must return a HoloViews Chart.
-        """
-        width_size=15
-        #######  This is where you plot the histogram of categorical variable input as each_cat ####
-        conti_df = dft[[num,each_cat]].groupby(each_cat).mean().reset_index()
-        row_ticks = dft[num].unique().tolist()
-        color_list = next(colors)
-        #pivotdf = pd.DataFrame(conti_df).set_index(each_cat)
-        plot = conti_df.hvplot(kind='bar',stacked=False,use_index=False, color=color_list,
-                              title='Average %s by each %s value' %(num,each_cat)).opts(xrotation=70)
-        return plot
-    ### This is where you create the dynamic map and pass it the variable to load the chart!
-    dmap = hv.DynamicMap(load_symbol, kdims=['Select_Cat_Variable','Select_Num_Variable']).redim.values(
-                Select_Cat_Variable=cats, Select_Num_Variable=nums).opts(framewise=True)
-    ###########  This is where you put the Panel Together ############
-    hv_panel = pn.panel(dmap)
-    widgets = hv_panel[0]
-    hv_panel = pn.Column(pn.Row(*widgets))
+    if problem_type == 'Clustering':
+        ### There is no depVar in clustering, so no need to add it to None
+        pass
+    elif problem_type == 'Regression':
+        if isinstance(dep, str):
+            if dep not in nums:
+                nums.append(dep)
+        else:
+            nums += dep
+            nums = find_remove_duplicates(nums)
+    else:
+        if isinstance(dep, str):
+            if dep not in cats:
+                cats.append(dep)
+        else:
+            cats += dep
+            cats = find_remove_duplicates(cats)
+    ### This is where you draw the widgets #####################
+    quantileable = [x for x in nums if len(dft[x].unique()) > 20]
+    cmap_list = ['Blues','rainbow', 'viridis', 'plasma', 'inferno', 'magma', 'cividis']
+
+    x = pnw.Select(name='X-Axis', value=quantileable[0], options=cats)
+    y = pnw.Select(name='Y-Axis', value=quantileable[1], options=quantileable)
+
+    ## you need to decorate this function with depends to make the widgets change axes real time ##
+    @pn.depends(x.param.value, y.param.value) 
+    def create_figure(x, y):
+        opts = dict(cmap=cmap_list[0], line_color='black')
+        #opts['size'] = bubble_size
+        opts['alpha'] = alpha
+        opts['tools'] = ['hover']
+        opts['toolbar'] = 'above'
+        opts['colorbar'] = True
+        conti_df = dft[[x,y]].groupby(x).mean().reset_index()
+        return hv.Bars(conti_df).opts(width=width_size, height=height_size, xrotation=70)
+
+    widgets = pn.WidgetBox(x, y)
+
+    hv_panel = pn.Row(widgets, create_figure).servable('Cross-selector')    
+    #####################################################
     ##### Save all the chart objects here ##############
     if verbose == 2:
         imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
         image_count += 1
     if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
         #server = pn.serve(hv_panel, start=True, show=True)
+        print('%s can be found in URL below:' %plot_name)
         hv_panel.show()
     elif chart_format == 'html':
         save_html_data(hv_panel, chart_format, plot_name, mk_dir)
@@ -302,6 +324,7 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
     if chart_format.lower() in ['server', 'bokeh_server', 'bokeh-server']:
         ### If you want it on a server, you use drawobj.show()
         #(drawobj41+drawobj42).show()
+        print('%s can be found in URL below:' %plot_name)
         server = pn.serve(hv_all, start=True, show=True)
     elif chart_format == 'html':
         save_html_data(hv_all, chart_format, plot_name, mk_dir)
@@ -330,10 +353,7 @@ def draw_scatters_hv(dfin, nums, chart_format, problem_type,
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
     plot_name = 'scatterplots'
     #####################################################
-    if dep == None or dep == '':
-        #### There is no need to do a scatter plot with a dep variable when no dependent variable is given
-        hv_all = ''
-    elif problem_type == 'Regression':
+    if problem_type == 'Regression':
         ####### This is a Regression Problem #### You need to plot a Scatter plot ####
         ####### First, Plot each Continuous variable against the Target Variable ###
         ######   This is a Very Simple Way to build an Scatter Chart with One Variable as a Select Variable #######
@@ -409,6 +429,7 @@ def draw_scatters_hv(dfin, nums, chart_format, problem_type,
     ####### End of Scatter Plots ######
     if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
         #server = pn.serve(hv_all, start=True, show=True)
+        print('%s can be found in URL below:' %plot_name)
         hv_all.show()
     elif chart_format == 'html':
         save_html_data(hv_all, chart_format, plot_name, mk_dir)
@@ -459,7 +480,11 @@ def draw_pair_scatters_hv(dfin,nums,problem_type,chart_format, dep=None,
         x = pnw.Select(name='X-Axis', value=quantileable[0], options=quantileable)
         y = pnw.Select(name='Y-Axis', value=quantileable[1], options=quantileable)
         size = pnw.Select(name='Size', value='None', options=['None'] + quantileable)
-        color = pnw.Select(name='Color', value='None', options=['None', dep])
+        if problem_type == 'Clustering':
+            ### There is no depVar in clustering, so no need to add it to None
+            color = pnw.Select(name='Color', value='None', options=['None'])
+        else:
+            color = pnw.Select(name='Color', value='None', options=['None', dep])
         ## you need to decorate this function with depends to make the widgets change axes real time ##
         @pn.depends(x.param.value, y.param.value, color.param.value) 
         def create_figure(x, y, color):
@@ -536,6 +561,7 @@ def draw_pair_scatters_hv(dfin,nums,problem_type,chart_format, dep=None,
     ####### End of Pair Scatter Plots ######
     if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
         #server = pn.serve(hv_panel, start=True, show=True)
+        print('%s can be found in URL below:' %plot_name)
         hv_panel.show()
     elif chart_format == 'html':
         save_html_data(hv_panel, chart_format, plot_name, mk_dir)
@@ -603,6 +629,7 @@ def draw_distplot_hv(dft, cats, conti, chart_format,problem_type,dep=None,
                     image_count += 1
                 if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
                     #server = pn.serve(hv_all, start=True, show=True)
+                    print('%s can be found in URL below:' %plot_name)
                     hv_all.show()
                 elif chart_format == 'html':
                     save_html_data(hv_all, chart_format, plot_name, mk_dir, additional="_cats")
@@ -641,6 +668,7 @@ def draw_distplot_hv(dft, cats, conti, chart_format,problem_type,dep=None,
             image_count += 1
         if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
             #server = pn.serve(hv_all, start=True, show=True)
+            print('%s can be found in URL below:' %plot_name)
             hv_all.show()
         elif chart_format == 'html':
             save_html_data(hv_all, chart_format, plot_name, mk_dir, additional="_nums")
@@ -694,6 +722,7 @@ def draw_distplot_hv(dft, cats, conti, chart_format,problem_type,dep=None,
                 image_count += 1
             if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
                 #server = pn.serve(hv_all, start=True, show=True)
+                print('%s can be found in URL below:' %plot_name)
                 hv_all.show()
             elif chart_format == 'html':
                 save_html_data(hv_all, chart_format, plot_name, mk_dir, additional="_cats")
@@ -734,6 +763,7 @@ def draw_distplot_hv(dft, cats, conti, chart_format,problem_type,dep=None,
                 image_count += 1
             if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
                 #server = pn.serve(hv_all, start=True, show=True)
+                print('%s can be found in URL below:' %plot_name)
                 hv_all.show()
             elif chart_format == 'html':
                 save_html_data(hv_all, chart_format, plot_name, mk_dir, additional="_nums")
@@ -748,10 +778,8 @@ def draw_violinplot_hv(dft, dep, nums,chart_format, modeltype='Regression',
     dft = copy.deepcopy(dft)
     image_count = 0
     imgdata_list = list()
-    number_in_each_row = 7
-    imgdata_list = list()
-    width_size = 600
-    height_size = 400
+    width_size = 800
+    height_size = 500
     if type(dep) == str:
         nums = [x for x in nums if x not in [dep]]
     else:
@@ -759,10 +787,10 @@ def draw_violinplot_hv(dft, dep, nums,chart_format, modeltype='Regression',
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
     plot_name = 'violinplots'
     #############################################################################
-    if modeltype == 'Regression' or dep == None or dep == '':
-        ###### This is for Regression and Clustering problems only ##########################
-        if modeltype == 'Regression':
-            nums = nums + [dep]
+    if modeltype in ['Regression', 'Clustering']:
+        ### This is for Regression and None Dep variable problems only ##
+        number_in_each_row = 30
+        cmap_list = ["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
         ###### This is for looping over variables 10 at a time only ##########################
         df_p = dft[nums]
         if df_p.shape[1] < number_in_each_row:
@@ -791,30 +819,20 @@ def draw_violinplot_hv(dft, dep, nums,chart_format, modeltype='Regression',
             var_name = 'drawobjv_list['+str(counter)+']'
             drawobj_list.append(var_name)
             drawobjv_list.append(var_name)
-            drawobj = data.hvplot(kind='violin', label='Violin Plot %s (Standard Scaled)' %title_string,)
-                                     #height=height_size,width=width_size)
+            drawobj = data.hvplot(kind='violin', label='Violin Plot %s (Standard Scaled)' %title_string,
+                                   rot=70  #height=height_size,width=width_size
+                                 )
             drawobjv_list[counter] = drawobj
             counter += 1
         ######### After collecting all the drawobjv's put them in a dynamic map and display them ###
         combined_charts = "("+"".join([x+'+' for x in drawobj_list])[:-1]+")"
-        if chart_format.lower() in ['server', 'bokeh_server', 'bokeh-server']:
-            ### If you want it on a server, you use drawobj.show()
-            #(drawobj41+drawobj42).show()
-            dmap = hv.DynamicMap(eval(combined_charts).opts(title='Violin Plots of all Numeric Variables', width=width_size))
-            dmap = pn.pane.HoloViews(dmap, sizing_mode="stretch_both")
-        else:
-            ### This will display it in a Jupyter Notebook.
-            dmap = hv.DynamicMap(eval(combined_charts).opts(title='Violin Plots of all Numeric Variables', width=width_size))
-        ###########  This is where you put the Panel Together ############
-        hv_panel = pn.panel(dmap)
-        widgets = hv_panel[0]
-        hv_all = pn.Column(pn.Row(*widgets))
-        #### This is where we add them to the list ######        
+        hv_all = pn.panel(eval(combined_charts))        #### This is where we add them to the list ######        
         if verbose == 2:
             imgdata_list = append_panels(hv_all, imgdata_list, chart_format)
             image_count += 1
         #### In the case of violin plots, you have to create multiple tabs or plots ###
         if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
+            print('%s can be found in URL below:' %plot_name)
             server = pn.serve(hv_all, start=True, show=True)
             #hv_all.show()  ### for some reason .show errors in violin plots
         elif chart_format == 'html':
@@ -824,6 +842,7 @@ def draw_violinplot_hv(dft, dep, nums,chart_format, modeltype='Regression',
             #display_obj(hv_all)  ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()
     else:
         #### This is for Classification problems ###################
+        number_in_each_row = 30
         df_p = dft[nums]
         if df_p.shape[1] < number_in_each_row:
             iter_limit = number_in_each_row
@@ -865,6 +884,7 @@ def draw_violinplot_hv(dft, dep, nums,chart_format, modeltype='Regression',
         hv_all = pn.panel(eval(combined_charts))
         if chart_format.lower() in ['server', 'bokeh_server', 'bokeh-server']:
             ### If you want it on a server, you use drawobj.show()
+            print('%s can be found in URL below:' %plot_name)
             server = pn.serve(hv_all, start=True, show=True)
         elif chart_format == 'html':
             save_html_data(hv_all, chart_format, plot_name, mk_dir)
@@ -942,6 +962,7 @@ def draw_date_vars_hv(df,dep,datevars, num_vars, chart_format, modeltype='Regres
     ############# End of Date vars plotting #########################
     if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
         #server = pn.serve(hv_panel, start=True, show=True)
+        print('%s can be found in URL below:' %plot_name)
         hv_panel.show()
     elif chart_format == 'html':
         save_html_data(hv_panel, chart_format, plot_name, mk_dir)
@@ -1013,7 +1034,7 @@ def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size,  colorbar=True,
                     cmap=cmap_list,
                     rot=70,
-            title='Heatmap of all Continuous Variables including target = %s' %dep);
+            title='Heatmap of all Continuous Variables including target');
         hv_plot = heatmap * hv.Labels(heatmap).opts(opts.Labels(text_font_size='7pt'))
         hv_panel = pn.panel(hv_plot)
         if verbose == 2:
@@ -1037,13 +1058,13 @@ def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size, colorbar=True, 
                     cmap=cmap_list,
                                            rot=70,
-                title='Time Series Data: Heatmap of Differenced Continuous vars including target = %s' %dep).opts(
+                title='Time Series Data: Heatmap of Differenced Continuous vars including target').opts(
                         opts.HeatMap(tools=['hover'], toolbar='above'))
         else:
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size, colorbar=True, 
                     cmap=cmap_list,
                                            rot=70,
-            title='Heatmap of all Continuous Variables including target = %s' %dep).opts(
+            title='Heatmap of all Continuous Variables including target').opts(
                                     opts.HeatMap(tools=['hover'],  toolbar='above'))
         hv_plot = heatmap * hv.Labels(heatmap).opts(opts.Labels(text_font_size='7pt'))
         hv_panel = pn.panel(hv_plot)
@@ -1052,6 +1073,7 @@ def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
             image_count += 1
     ############# End of Heat Maps ##############
     if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
+        print('%s can be found in URL below:' %plot_name)
         server = pn.serve(hv_panel, start=True, show=True)
         #hv_panel.show() ### dont use show for just heatmap there is some problem with it
     elif chart_format == 'html':
