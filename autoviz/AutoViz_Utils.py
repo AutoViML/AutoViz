@@ -308,7 +308,6 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
     else:
         ####### This is a Classification Problem #### You need to plot a strip plot ####
         ####### First, Plot each Continuous variable against the Target Variable ###
-        pdb.set_trace()
         if len(dft) < 1000:
             jitter = 0.05
         else:
