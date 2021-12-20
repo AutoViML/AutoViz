@@ -2,6 +2,8 @@
 
 Automatically Visualize any dataset, any size with a single line of code. Now you can save these interactive charts as HTML files automatically with the `"html"` setting.
 
+```Alert! Starting with version 0.1.30, AutoViz has now moved to a containerized application that runs silently without displaying charts in verbose = 0 or verbose = 1 mode. If you are displaying charts in a Jupyter Notebook, you must use %matplotlib inline command to make charts visible. Please note this important change in behavior.```
+
 See Colab notebook for example: [AutoViz Demo with HTML setting](https://colab.research.google.com/drive/1r5QqESRZDY98FFfDOgVtMAVA_oaGtqqx?usp=sharing)
 ![banner](intro2.gif)
 

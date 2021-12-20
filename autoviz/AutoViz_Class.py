@@ -232,10 +232,6 @@ class AutoViz_Class():
         ####  it will simply save them.                                          #####
         ##############################################################################
         """
-        if verbose <= 1:
-            # ipython inline magic shouldn't be needed because all plots are
-            # being displayed with plt.show() calls
-            get_ipython().magic('matplotlib inline')
         ####################################################################################
         if chart_format.lower() in ['bokeh','server','bokeh_server','bokeh-server', 'html']:
             dft = AutoViz_Holo(filename, sep, depVar, dfte, header, verbose,

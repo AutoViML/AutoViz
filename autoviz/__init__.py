@@ -3,9 +3,9 @@ from .__version__ import __version__, __holo_version__
 if __name__ == "__main__":
     module_type = 'Running'
 else:
-    module_type = 'Imported'
+    module_type = 'Alert! from'
 version_number = __version__
-print("""%s AutoViz_Class version: %s. Now you can save all charts in html format:
+print("""%s autoviz version %s, after importing, you must %%matplotlib inline to display charts in Jupyter Notebooks.
     AV = AutoViz_Class()
     AV.AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0, lowess=False,
                chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30, save_plot_dir=None)""" %(module_type, version_number))

@@ -441,10 +441,6 @@ def plot_fast_average_num_by_cat(dft, cats, num_vars, verbose=0,kind="bar"):
     """
     Great way to plot continuous variables fast grouped by a categorical variable. Just sent them in and it will take care of the rest!
     """
-    #if verbose <= 1:
-        # ipython inline magic shouldn't be needed because all plots are
-        # being displayed with plt.show() calls
-        #get_ipython().magic('matplotlib inline')
     chunksize = 20
     stringlimit = 20
     col = 2
