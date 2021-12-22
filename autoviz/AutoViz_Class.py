@@ -454,7 +454,7 @@ class AutoViz_Class():
                         print('Could not draw Pivot Charts against Dependent Variable')
                     try:
                         svg_data = draw_barplots(dft,find_remove_duplicates(cats+bool_vars),continuous_vars,problem_type,
-                                        verbose,chart_format,depVar, classes, mk_dir)
+                                        verbose,chart_format, depVar, classes, mk_dir)
                         self.add_plots('bar_plot',svg_data)
                         pass
                     except:
@@ -468,8 +468,8 @@ class AutoViz_Class():
             plotname = 'wordcloud'
             for each_string_var in discrete_string_vars:
                 try:
-                    svg_data = draw_wordcloud_from_dataframe(dft, each_string_var, chart_format, plotname, 
-                                    depVar, mk_dir, verbose=0)
+                    svg_data = draw_word_clouds(dft, each_string_var, chart_format, plotname, 
+                                    depVar, problem_type, classes, mk_dir, verbose=0)
                     self.add_plots(plotname,svg_data)
                 except:
                     print('Could not draw wordcloud plot for %s' %each_string_var)

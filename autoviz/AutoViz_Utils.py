@@ -2179,12 +2179,16 @@ def draw_wordcloud_from_dataframe(dataframe, column, chart_format, plot_name, de
     """
     This handy function draws a dataframe column using Wordcloud library and nltk.
     """
+def draw_wordcloud_from_dataframe(dataframe, column, chart_format, 
+                                plot_name, depVar, mk_dir, verbose=0):
+    """
+    This handy function draws a dataframe column using Wordcloud library and nltk.
+    """
     imgdata_list = []
     replace_spaces = re.compile('[/(){}\[\]\|@,;]')
     remove_special_chars = re.compile('[^0-9a-z #+_]')
     STOPWORDS = return_stop_words()
     remove_ip_addr = re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b')
-
     def clean_text(text):
         """
         cleans text fast.
@@ -2215,25 +2219,72 @@ def draw_wordcloud_from_dataframe(dataframe, column, chart_format, plot_name, de
 
     picture_mask = plt.imread('test.png')
 
-    wordcloud = WordCloud(
+    wordcloud1 = WordCloud(
                           stopwords=STOPWORDS,
                           background_color='white',
                           width=1800,
                           height=1400,
                           mask=picture_mask
                 ).generate(text_join)
-
-    fig = plt.figure(figsize = (15, 15), facecolor = None)
-    plt.imshow(wordcloud)
-    plt.axis("off")
-    ### This is where you save the fig or show the fig ######
-    image_count = 0
-    if verbose == 2:
-        imgdata_list.append(save_image_data(fig, chart_format,
-                            plot_name, depVar, mk_dir))
-        image_count += 1
-    if verbose <= 1:
-        plt.show();
-    ####### End of Pivot Plotting #############################
-    return imgdata_list
+    return wordcloud1
 ################################################################################
+def draw_word_clouds(dft, each_string_var, chart_format, plotname, 
+                        dep, problem_type, classes, mk_dir, verbose=0):
+    dft = dft[:]
+    width_size = 15
+    height_size = 5
+    image_count = 0
+    if problem_type == 'Regression' or problem_type == 'Clustering':
+        ########## This is for Regression and Clustering problems only #####
+        num_plots = 1
+        fig = plt.figure(figsize=(min(num_plots*width_size,20),min(num_plots*height_size,20)))
+        cols = 2
+        rows = int(num_plots/cols + 0.5)
+        plotc = 1
+        while plotc <= num_plots:
+            plt.subplot(rows, cols, plotc)
+            ax1 = plt.gca()
+            wc1 = draw_wordcloud_from_dataframe(dft, each_string_var, chart_format,
+                    plotname, dep, mk_dir, verbose)
+            plotc += 1
+        ax1.imshow(wc1)
+        ax1.set_title('Wordcloud for %s' %each_string_var)
+        image_count = 0
+        if verbose == 2:
+            imgdata_list.append(save_image_data(fig, chart_format,
+                                plot_name, depVar, mk_dir))
+            image_count += 1
+        if verbose <= 1:
+            plt.show();
+    else:
+        ########## This is for Classification problems only ###########
+        num_plots = len(classes)
+        target_vars = dft[dep].unique()
+        fig = plt.figure(figsize=(min(num_plots*width_size,20),min(num_plots*height_size,20)))
+        cols = 2
+        rows = int(num_plots/cols + 0.5)
+        plotc = 1
+        while plotc <= num_plots:
+            plt.subplot(rows, cols, plotc)
+            ax1 = plt.gca()
+            dft_target = dft.loc[(dft[dep] == target_vars[plotc-1])][each_string_var]
+            if isinstance(dft_target,pd.Series):
+                wc1 = draw_wordcloud_from_dataframe(pd.DataFrame(dft_target), each_string_var, chart_format,
+                    plotname, dep, mk_dir, verbose)
+            else:
+                wc1 = draw_wordcloud_from_dataframe(dft_target, each_string_var, chart_format,
+                    plotname, dep, mk_dir, verbose)
+            ax1.imshow(wc1)
+            ax1.set_title('Wordcloud for %s, target=%s' %(each_string_var, target_vars[plotc-1]), fontsize=20)
+            plotc += 1
+        fig.tight_layout();
+        ### This is where you save the fig or show the fig ######
+        image_count = 0
+        if verbose == 2:
+            imgdata_list.append(save_image_data(fig, chart_format,
+                                plot_name, depVar, mk_dir))
+            image_count += 1
+        if verbose <= 1:
+            plt.show();
+    ####### End of Word Clouds #############################
+
