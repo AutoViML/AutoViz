@@ -2175,12 +2175,8 @@ def return_stop_words():
     stop_words = list(set(STOP_WORDS+add_words))
     return sorted(stop_words)
 
-def draw_wordcloud_from_dataframe(dataframe, column, chart_format, plot_name, depVar, mk_dir, verbose=0):
-    """
-    This handy function draws a dataframe column using Wordcloud library and nltk.
-    """
 def draw_wordcloud_from_dataframe(dataframe, column, chart_format, 
-                                plot_name, depVar, mk_dir, verbose=0):
+                                depVar, mk_dir, verbose=0):
     """
     This handy function draws a dataframe column using Wordcloud library and nltk.
     """
@@ -2217,14 +2213,14 @@ def draw_wordcloud_from_dataframe(dataframe, column, chart_format,
 
     text_join = ' '.join(top_words)
 
-    picture_mask = plt.imread('test.png')
+    #picture_mask = plt.imread('test.png')
 
     wordcloud1 = WordCloud(
                           stopwords=STOPWORDS,
                           background_color='white',
                           width=1800,
                           height=1400,
-                          mask=picture_mask
+                          #mask=picture_mask
                 ).generate(text_join)
     return wordcloud1
 ################################################################################
@@ -2234,6 +2230,7 @@ def draw_word_clouds(dft, each_string_var, chart_format, plotname,
     width_size = 15
     height_size = 5
     image_count = 0
+    imgdata_list = []
     if problem_type == 'Regression' or problem_type == 'Clustering':
         ########## This is for Regression and Clustering problems only #####
         num_plots = 1
@@ -2245,14 +2242,15 @@ def draw_word_clouds(dft, each_string_var, chart_format, plotname,
             plt.subplot(rows, cols, plotc)
             ax1 = plt.gca()
             wc1 = draw_wordcloud_from_dataframe(dft, each_string_var, chart_format,
-                    plotname, dep, mk_dir, verbose)
+                    dep, mk_dir, verbose)
             plotc += 1
-        ax1.imshow(wc1)
-        ax1.set_title('Wordcloud for %s' %each_string_var)
+            ax1.axis("off")
+            ax1.imshow(wc1)
+            ax1.set_title('Wordcloud for %s' %each_string_var)
         image_count = 0
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                                plot_name, depVar, mk_dir))
+                                plotname, depVar, mk_dir))
             image_count += 1
         if verbose <= 1:
             plt.show();
@@ -2267,13 +2265,14 @@ def draw_word_clouds(dft, each_string_var, chart_format, plotname,
         while plotc <= num_plots:
             plt.subplot(rows, cols, plotc)
             ax1 = plt.gca()
+            ax1.axis("off")
             dft_target = dft.loc[(dft[dep] == target_vars[plotc-1])][each_string_var]
             if isinstance(dft_target,pd.Series):
                 wc1 = draw_wordcloud_from_dataframe(pd.DataFrame(dft_target), each_string_var, chart_format,
-                    plotname, dep, mk_dir, verbose)
+                        dep, mk_dir, verbose)
             else:
                 wc1 = draw_wordcloud_from_dataframe(dft_target, each_string_var, chart_format,
-                    plotname, dep, mk_dir, verbose)
+                        dep, mk_dir, verbose)
             ax1.imshow(wc1)
             ax1.set_title('Wordcloud for %s, target=%s' %(each_string_var, target_vars[plotc-1]), fontsize=20)
             plotc += 1
@@ -2282,7 +2281,7 @@ def draw_word_clouds(dft, each_string_var, chart_format, plotname,
         image_count = 0
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                                plot_name, depVar, mk_dir))
+                                plotname, depVar, mk_dir))
             image_count += 1
         if verbose <= 1:
             plt.show();
