@@ -172,11 +172,11 @@ def return_stop_words():
     from nltk.corpus import stopwords
     STOP_WORDS = ['it', "this", "that", "to", 'its', 'am', 'is', 'are', 'was', 'were', 'a',
                 'an', 'the', 'and', 'or', 'of', 'at', 'by', 'for', 'with', 'about', 'between',
-                 'into','above', 'below', 'from', 'up', 'down', 'in', 'out', 'on', 'over',
-                  'under', 'again', 'further', 'then', 'once', 'all', 'any', 'both', 'each',
+                 'into','above', 'below', 'from', 'up', 'down', 'in', 'out', 'on', 'over','will','shall','could',
+                  'under', 'again', 'further', 'then', 'once', 'all', 'any', 'both', 'each','would',
                    'few', 'more', 'most', 'other', 'some', 'such', 'only', 'own', 'same', 'so',
                     'than', 'too', 'very', 's', 't', 'can', 'just', 'd', 'll', 'm', 'o', 're',
-                    've', 'y', 'ain', 'ma','them','themselves','they','he','she','ex']
+                    've', 'y', 'ain', 'ma','them','themselves','they','he','she','ex','become','their']
     add_words = ["s", "m",'you', 'not',  'get', 'no', 'via', 'one', 'still', 'us', 'u','hey','hi','oh','jeez',
                 'the', 'a', 'in', 'to', 'of', 'i', 'and', 'is', 'for', 'on', 'it', 'got','aww','awww',
                 'not', 'my', 'that', 'by', 'with', 'are', 'at', 'this', 'from', 'be', 'have', 'was',

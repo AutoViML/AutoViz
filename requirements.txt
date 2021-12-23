@@ -3,6 +3,8 @@ jupyter
 xlrd
 wordcloud
 pandas
+nltk
+textblob
 matplotlib>=3.3.3
 seaborn>=0.11.1
 scikit-learn

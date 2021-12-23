@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="autoviz",
-    version="0.1.32",
+    version="0.1.33",
     author="Ram Seshadri",
     # author_email="author@example.com",
     description="Automatically Visualize any dataset, any size with a single line of code",
@@ -24,6 +24,8 @@ setuptools.setup(
         "seaborn>=0.11.1",
         "scikit-learn",
         "statsmodels",
+        "nltk",
+        "textblob",
         "holoviews==1.14.6",
         "bokeh==2.4.2",
         "hvplot==0.7.3",
