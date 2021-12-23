@@ -11,7 +11,7 @@ print("""%s autoviz version %s, after importing, you must %%matplotlib inline to
                chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30, save_plot_dir=None)""" %(module_type, version_number))
 print("Note: verbose=0 or 1 generates charts and displays them in your local Jupyter notebook.")
 print("      verbose=2 does not display plots but saves them in AutoViz_Plots folder in local machine.")
-print("Note: chart_format='bokeh' generates and displays charts in your local Jupyter notebook.")
+print("Updated: chart_format='bokeh' generates and displays charts in your local Jupyter notebook.")
 print("      chart_format='server' generates and displays charts in the browser - one tab for each chart.")
 print("      chart_format='html' silently saves charts HTML format - they are also interactive!")
 ###########################################################################################

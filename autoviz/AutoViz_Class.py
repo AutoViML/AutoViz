@@ -60,6 +60,7 @@ from sklearn.model_selection import train_test_split
 ##########################################################################################
 from autoviz.AutoViz_Holo import AutoViz_Holo
 from autoviz.AutoViz_Utils import *
+from autoviz.AutoViz_NLP import draw_word_clouds
 #####################################################
 class AutoViz_Class():
     """

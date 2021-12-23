@@ -2,9 +2,27 @@
 
 Automatically Visualize any dataset, any size with a single line of code. Now you can save these interactive charts as HTML files automatically with the `"html"` setting.
 
-```Alert! Starting with version 0.1.30, AutoViz has now moved to a containerized application that runs silently without displaying charts in verbose = 0 or verbose = 1 mode. If you are displaying charts in a Jupyter Notebook, you must use %matplotlib inline command to make charts visible. Please note this important change in behavior.```
+### Dec-23-2021 Update: AutoViz now does Wordclouds! #autoviz #wordcloud
+AutoViz can now create Wordclouds automatically for your NLP variables in data. It detects NLP variables automatically and creates wordclouds for them. See Colab notebook for example: [AutoViz Demo with HTML setting](https://colab.research.google.com/drive/1r5QqESRZDY98FFfDOgVtMAVA_oaGtqqx?usp=sharing)
 
-See Colab notebook for example: [AutoViz Demo with HTML setting](https://colab.research.google.com/drive/1r5QqESRZDY98FFfDOgVtMAVA_oaGtqqx?usp=sharing)
+<img align="center" src="https://i.postimg.cc/DyT466xP/wordclouds.png">
+
+### Dec 21, 2021: AutoViz now runs on Docker containers as part of MLOps pipelines. Check out Orchest.io
+We are excited to announce that AutoViz and Deep_AutoViML are now available as containerized applications on Docker. This means that you can build data pipelines using a fantastic tool like [orchest.io](orchest.io) to build MLOps pipelines visually. Here are two sample pipelines we have created:
+
+<b>AutoViz pipeline</b>: https://lnkd.in/g5uC-z66
+<b>Deep_AutoViML pipeline</b>: https://lnkd.in/gdnWTqCG
+
+You can find more examples and a wonderful video on [orchest's web site](https://github.com/orchest/orchest-examples)
+![banner](https://github.com/rsesha/autoviz_pipeline/blob/main/autoviz_orchest.png)
+
+### Dec-17-2021 AutoViz now uses HoloViews to display dashboards with Bokeh and save them as Dynamic HTML for web serving #HTML #Bokeh #Holoviews
+Now you can use AutoViz to create Interactive Bokeh charts and dashboards (see below) either in Jupyter Notebooks or in the browser. Use chart_format as follows:
+- `chart_format='bokeh'`: interactive Bokeh dashboards are plotted in Jupyter Notebooks.
+- `chart_format='server'`, dashboards will pop up for each kind of chart on your web browser.
+- `chart_format='html'`, interactive Bokeh charts will be silently saved as Dynamic HTML files under `AutoViz_Plots` directory
+<img align="center" src="https://i.postimg.cc/MTCZ6GzQ/Auto-Viz-HTML-dashboards.png" />
+
 ![banner](intro2.gif)
 
 [![Pepy Downloads](https://pepy.tech/badge/autoviz)](https://pepy.tech/project/autoviz)
