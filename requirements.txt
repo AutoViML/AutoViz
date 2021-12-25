@@ -4,6 +4,7 @@ xlrd
 wordcloud
 pandas
 nltk
+emoji
 textblob
 matplotlib>=3.3.3
 seaborn>=0.11.1
