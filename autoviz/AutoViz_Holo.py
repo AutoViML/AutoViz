@@ -5,7 +5,6 @@ import pandas as pd
 from autoviz.AutoViz_Utils import *
 ##############   make sure you use: conda install -c pyviz hvplot ###############
 import hvplot.pandas  # noqa
-import hvplot.dask  # noqa
 import copy
 import pdb
 ####################################################################################
