@@ -236,6 +236,8 @@ def draw_cat_vars_hv(dfin, dep, nums, cats, chart_format, problem_type, mk_dir, 
             cats = find_remove_duplicates(cats)
     ### This is where you draw the widgets #####################
     quantileable = [x for x in nums if len(dft[x].unique()) > 20]
+    if len(quantileable) <= 1:
+        quantileable = [x for x in nums if len(dft[x].unique()) > 2]
     cmap_list = ['Blues','rainbow', 'viridis', 'plasma', 'inferno', 'magma', 'cividis']
 
     x = pnw.Select(name='X-Axis', value=quantileable[0], options=cats)
@@ -251,7 +253,8 @@ def draw_cat_vars_hv(dfin, dep, nums, cats, chart_format, problem_type, mk_dir, 
         opts['toolbar'] = 'above'
         opts['colorbar'] = True
         conti_df = dft[[x,y]].groupby(x).mean().reset_index()
-        return hv.Bars(conti_df).opts(width=width_size, height=height_size, xrotation=70)
+        return hv.Bars(conti_df).opts(width=width_size, height=height_size, 
+                xrotation=70, title='Average of each numeric var by categorical var')
 
     widgets = pn.WidgetBox(x, y)
 
@@ -438,6 +441,7 @@ def draw_pair_scatters_hv(dfin,nums,problem_type,chart_format, dep=None,
     #### PAIR SCATTER PLOTS ARE NEEDED ONLY FOR CLASSIFICATION PROBLEMS IN NUMERIC VARIABLES
     ### This is where you plot a pair-wise scatter plot of Independent Variables against each other####
     """
+
     dft = dfin[:]
     image_count = 0
     imgdata_list = list()
@@ -471,7 +475,9 @@ def draw_pair_scatters_hv(dfin,nums,problem_type,chart_format, dep=None,
         ########################   This is the new way of drawing scatter   ###############################
         
         quantileable = [x for x in nums if len(dft[x].unique()) > 20]
-
+        if len(quantileable) <= 1:
+            quantileable = [x for x in nums if len(dft[x].unique()) > 2]
+        
         x = pnw.Select(name='X-Axis', value=quantileable[0], options=quantileable)
         y = pnw.Select(name='Y-Axis', value=quantileable[1], options=quantileable)
         size = pnw.Select(name='Size', value='None', options=['None'] + quantileable)
@@ -519,6 +525,8 @@ def draw_pair_scatters_hv(dfin,nums,problem_type,chart_format, dep=None,
         ########## This is for Classification problems ##########
         #########  This is the new way to plot a pair-wise scatter plot ####
         quantileable = [x for x in nums if len(dft[x].unique()) > 20]
+        if len(quantileable) <= 1:
+            quantileable = [x for x in nums if len(dft[x].unique()) > 2]
 
         x = pnw.Select(name='X-Axis', value=quantileable[0], options=quantileable)
         y = pnw.Select(name='Y-Axis', value=quantileable[1], options=quantileable)
@@ -895,66 +903,63 @@ def draw_violinplot_hv(dft, dep, nums,chart_format, modeltype='Regression',
 ###########################################################################################
 ##########     Draw date time series variables                    #########################
 ###########################################################################################
-def draw_date_vars_hv(df,dep,datevars, num_vars, chart_format, modeltype='Regression',
+def draw_date_vars_hv(df,dep,datevars, nums, chart_format, modeltype='Regression',
                         mk_dir='AutoViz_Plots', verbose=0):
     #### Now you want to display 2 variables at a time to see how they change over time
     ### Don't change the number of cols since you will have to change rows formula as well
     df = copy.deepcopy(df)
     imgdata_list = list()
     image_count = 0
-    N = len(num_vars)
-    dft = df.set_index(pd.to_datetime(df.pop(datevars[0])))
+    N = len(nums)
+    cols = 2
+    width_size = 600
+    height_size = 400
+    jitter = 0.05
+    alpha = 0.5
+    size = 5
+    transparent = 0.5
+    colortext = 'brycgkbyrcmgkbyrcmgkbyrcmgkbyr'
+    colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
     plot_name = 'timeseries_plots'
-    ###########  This is where we do time series plots ########################
-    if N < 2:
-        var1 = num_vars[0]
-        width_size = 5
-        height_size = 5
-        fig = plt.figure(figsize=(width_size,height_size))
-        dft[var1].plot(title=var1, label=var1)
-        fig.suptitle('Time Series Plot of %s' %var1, fontsize=20,y=1.08)
-        if verbose == 2:
-            imgdata_list.append(save_image_data_hv(fig, image_count, chart_format))
-            image_count += 1
-        return imgdata_list
-    if isinstance(dft.index, pd.DatetimeIndex) :
-        dft =  dft[:]
-        pass
+    #####################################################
+    ###### Draw the time series for Regression and DepVar
+    #####################################################
+    if modeltype == 'Regression':
+        if isinstance(dep, str):
+            if dep not in nums:
+                nums.append(dep)
+        else:
+            nums += dep
+            nums = find_remove_duplicates(nums)
     else:
-        dft = dft[:]
-        try:
-            col = datevars[0]
-            if dft[col].map(lambda x: 0 if len(str(x)) == 4 else 1).sum() == 0:
-                if dft[col].min() > 1900 or dft[col].max() < 2100:
-                    dft[col] = dft[col].map(lambda x: '01-01-'+str(x) if len(str(x)) == 4 else x)
-                    dft.index = pd.to_datetime(dft.pop(col), infer_datetime_format=True)
-                else:
-                    print('%s could not be indexed. Could not draw date_vars.' %col)
-                    return imgdata_list
-            else:
-                dft.index = pd.to_datetime(dft.pop(col), infer_datetime_format=True)
-        except:
-            print('%s could not be indexed. Could not draw date_vars.' %col)
-            return imgdata_list
-    ####### Draw the time series for Regression and DepVar
-    if modeltype == 'Regression' or dep == None or dep == '':
-        kind = 'line'
-        hv_plot = dft[num_vars+[dep]].hvplot( height=400, width=600,kind=kind,
-                        title='Time Series Plot of all Numeric variables and Target').opts(legend_position='top_left')
-        hv_panel = pn.Row(pn.WidgetBox( kind), hv_plot)
-        if verbose == 2:
-            imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
-            image_count += 1
-    else:
-        ######## This is for Classification problems only
-        kind = 'line'
-        hv_plot = dft[num_vars+[dep]].hvplot(groupby=dep, height=400, width=600,kind=kind,
-                        title='Time Series Plot of all Numeric variables by Target').opts(legend_position='top_left')
-        hv_panel = pn.Row(pn.WidgetBox( kind), hv_plot)
-        if verbose == 2:
-            imgdata_list = append_panels(hv_panel, imgdata_list, chart_format)
-            image_count += 1
-    ############# End of Date vars plotting #########################
+            nums = find_remove_duplicates(nums)
+    ### This is where you draw the widgets #####################
+    quantileable = nums[:]
+    cmap_list = ['Blues','rainbow', 'viridis', 'plasma', 'inferno', 'magma', 'cividis']
+
+    x = pnw.Select(name='X-Axis', value=datevars[0], options=datevars)
+    y = pnw.Select(name='Y-Axis', value=quantileable[0], options=quantileable)
+
+    ## you need to decorate this function with depends to make the widgets change axes real time ##
+    @pn.depends(x.param.value, y.param.value) 
+    def create_figure(x, y):
+        opts = dict(cmap=cmap_list[0], line_color='black')
+        #opts['size'] = bubble_size
+        opts['alpha'] = alpha
+        opts['tools'] = ['hover']
+        opts['toolbar'] = 'above'
+        opts['colorbar'] = True
+        dft = df.set_index(df[x])
+        conti_df = df[[x,y]].set_index(df[x]).drop(x, axis=1)
+        return hv.Curve(conti_df).opts(
+            line_width=1, line_color=next(colors),line_dash='dotted', line_alpha=0.5).opts(
+            width=width_size, height=height_size,title='Time Series plots of Numeric vars')
+
+    widgets = pn.WidgetBox(x, y)
+
+    hv_panel = pn.Row(widgets, create_figure).servable('Cross-selector')    
+    #####################################################
+    ##### Save all the chart objects here ##############
     if chart_format in ['server', 'bokeh_server', 'bokeh-server']:
         #server = pn.serve(hv_panel, start=True, show=True)
         print('%s can be found in URL below:' %plot_name)
@@ -962,8 +967,8 @@ def draw_date_vars_hv(df,dep,datevars, num_vars, chart_format, modeltype='Regres
     elif chart_format == 'html':
         save_html_data(hv_panel, chart_format, plot_name, mk_dir)
     else:
-        display(hv_panel)  ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()        
-        #display_obj(hv_panel)  ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()
+        ### This will display it in a Jupyter Notebook. If you want it on a server, you use drawobj.show()        
+        display(hv_panel)  
     return hv_panel
 ################################################################################################
 ############# Draw a Heatmap using Pearson Correlation #########################################
