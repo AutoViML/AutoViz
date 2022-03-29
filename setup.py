@@ -33,6 +33,7 @@ setuptools.setup(
         "panel==0.12.6",
         "xgboost",
         "fsspec==0.8.3",
+        "typing-extensions>=4.1.1",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

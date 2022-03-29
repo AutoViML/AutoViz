@@ -239,9 +239,9 @@ def draw_cat_vars_hv(dfin, dep, nums, cats, chart_format, problem_type, mk_dir, 
     if len(quantileable) <= 1:
         quantileable = [x for x in nums if len(dft[x].unique()) > 2]
     cmap_list = ['Blues','rainbow', 'viridis', 'plasma', 'inferno', 'magma', 'cividis']
-
-    x = pnw.Select(name='X-Axis', value=quantileable[0], options=cats)
-    y = pnw.Select(name='Y-Axis', value=quantileable[1], options=quantileable)
+    ### The X axis should be cat vars and the Y axis should be numeric vars ######
+    x = pnw.Select(name='X-Axis', value=cats[0], options=cats)
+    y = pnw.Select(name='Y-Axis', value=quantileable[0], options=quantileable)
 
     ## you need to decorate this function with depends to make the widgets change axes real time ##
     @pn.depends(x.param.value, y.param.value) 

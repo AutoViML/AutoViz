@@ -1287,7 +1287,7 @@ def load_file_dataframe(dataname, sep=",", header=0, verbose=0, nrows=None,parse
         if codex_flag:
             for code in codex:
                 try:
-                    dfte = pd.read_csv(dataname, sep=sep, header=header, encoding=None, nrows=nrows,
+                    dfte = pd.read_csv(dataname, sep=sep, header=header, encoding=code, nrows=nrows,
                                     skiprows=skip_function, parse_dates=parse_dates)
                 except:
                     print('    pandas %s encoder does not work for this file. Continuing...' %code)
@@ -1546,12 +1546,16 @@ def classify_columns(df_preds, verbose=0):
     sum_all_cols = dict()
     orig_cols_total = train.shape[1]
     #Types of columns
+    cols_delete = []
     cols_delete = [col for col in list(train) if (len(train[col].value_counts()) == 1
                                        ) | (train[col].isnull().sum()/len(train) >= 0.90)]
+    inf_cols = EDA_find_columns_with_infinity(train)
+    cols_delete += inf_cols
     train = train[left_subtract(list(train),cols_delete)]
     var_df = pd.Series(dict(train.dtypes)).reset_index(drop=False).rename(
                         columns={0:'type_of_column'})
     sum_all_cols['cols_delete'] = cols_delete
+    
     var_df['bool'] = var_df.apply(lambda x: 1 if x['type_of_column'] in ['bool','object']
                         and len(train[x['index']].value_counts()) == 2 else 0, axis=1)
     string_bool_vars = list(var_df[(var_df['bool'] ==1)]['index'])
@@ -1745,6 +1749,27 @@ def classify_columns(df_preds, verbose=0):
             print(' Missing columns = %s' %left_subtract(list(train),flat_list))
     return sum_all_cols
 #################################################################################
+def EDA_find_columns_with_infinity(df):
+    """
+    This function finds all columns in a dataframe that have inifinite values (np.inf or -np.inf)
+    It returns a list of column names. If the list is empty, it means no columns were found.
+    """
+    add_cols = []
+    sum_cols = 0
+    for col in df.columns:
+        inf_sum1 = 0 
+        inf_sum2 = 0
+        inf_sum1 = len(df[df[col]==np.inf])
+        inf_sum2 = len(df[df[col]==-np.inf])
+        if (inf_sum1 > 0) or (inf_sum2 > 0):
+            add_cols.append(col)
+            sum_cols += inf_sum1
+            sum_cols += inf_sum2
+    if sum_cols > 0:
+        print('    there are %d rows and %d columns with infinity in them...' %(sum_cols,len(add_cols)))
+        print("    after removing columns with infinity, shape of dataset = (%d, %d)" %(df.shape[0],(df.shape[1]-len(add_cols))))
+    return add_cols
+#######################################################################################
 from collections import Counter
 import time
 from sklearn.feature_selection import chi2, mutual_info_regression, mutual_info_classif
