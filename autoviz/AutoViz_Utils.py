@@ -1549,7 +1549,7 @@ def classify_columns(df_preds, verbose=0):
     cols_delete = []
     cols_delete = [col for col in list(train) if (len(train[col].value_counts()) == 1
                                        ) | (train[col].isnull().sum()/len(train) >= 0.90)]
-    inf_cols = EDA_find_columns_with_infinity(train)
+    inf_cols = EDA_find_remove_columns_with_infinity(train)
     cols_delete += inf_cols
     train = train[left_subtract(list(train),cols_delete)]
     var_df = pd.Series(dict(train.dtypes)).reset_index(drop=False).rename(
@@ -1749,26 +1749,30 @@ def classify_columns(df_preds, verbose=0):
             print(' Missing columns = %s' %left_subtract(list(train),flat_list))
     return sum_all_cols
 #################################################################################
-def EDA_find_columns_with_infinity(df):
+import copy
+def EDA_find_remove_columns_with_infinity(df, remove=False):
     """
     This function finds all columns in a dataframe that have inifinite values (np.inf or -np.inf)
     It returns a list of column names. If the list is empty, it means no columns were found.
+    If remove flag is set, then it returns a smaller dataframe with inf columns removed.
     """
-    add_cols = []
-    sum_cols = 0
-    for col in df.columns:
-        inf_sum1 = 0 
-        inf_sum2 = 0
-        inf_sum1 = len(df[df[col]==np.inf])
-        inf_sum2 = len(df[df[col]==-np.inf])
-        if (inf_sum1 > 0) or (inf_sum2 > 0):
-            add_cols.append(col)
-            sum_cols += inf_sum1
-            sum_cols += inf_sum2
-    if sum_cols > 0:
-        print('    there are %d rows and %d columns with infinity in them...' %(sum_cols,len(add_cols)))
-        print("    after removing columns with infinity, shape of dataset = (%d, %d)" %(df.shape[0],(df.shape[1]-len(add_cols))))
-    return add_cols
+    nums = df.select_dtypes(include='number').columns.tolist()
+    dfx = df[nums]
+    sum_rows = np.isinf(dfx).values.sum()
+    add_cols =  list(dfx.columns.to_series()[np.isinf(dfx).any()])
+    if sum_rows > 0:
+        print('    there are %d rows and %d columns with infinity in them...' %(sum_rows,len(add_cols)))
+        if remove:
+            ### here you need to use df since the whole dataset is involved ###
+            nocols = [x for x in df.columns if x not in add_cols]
+            print("    Shape of dataset before %s and after %s removing columns with infinity" %(df.shape,(df[nocols].shape,)))
+            return df[nocols]
+        else:
+            ## this will be a list of columns with infinity ####
+            return add_cols
+    else:
+        ## this will be an empty list if there are no columns with infinity
+        return add_cols
 #######################################################################################
 from collections import Counter
 import time
