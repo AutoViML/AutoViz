@@ -64,6 +64,7 @@ from holoviews import opts
 import panel as pn
 import panel.widgets as pnw
 import holoviews.plotting.bokeh
+from .classify_method import classify_columns
 from bokeh.resources import INLINE
 ######## This is where we store the image data in a dictionary with a list of images #########
 def save_image_data(fig, chart_format, plot_name, depVar, mk_dir, additional=''):
@@ -105,43 +106,41 @@ def save_html_data(hv_all, chart_format, plot_name, mk_dir, additional=''):
 
 #### This module analyzes a dependent Variable and finds out whether it is a
 #### Regression or Classification type problem
-def analyze_problem_type(train, target, verbose=0) :
-
+def analyze_problem_type(train, target, verbose=0) : 
+    train = copy.deepcopy(train)
     target = copy.deepcopy(target)
     cat_limit = 30 ### this determines the number of categories to name integers as classification ##
     float_limit = 15 ### this limits the number of float variable categories for it to become cat var
     
     if isinstance(target, str):
         target = [target]
-    if len(target) == 1:
-        targ = target[0]
-    else:
-        targ = target[0]
+    ### we can analyze only the first target in a multi-label to detect problem type ##
+    targ = target[0]
     ####  This is where you detect what kind of problem it is #################
-    if  train[targ].dtype in ['int64', 'int32','int16']:
+    if  train[targ].dtype in [np.int64,np.int32,np.int16,np.int8]:
         if len(train[targ].unique()) <= 2:
             model_class = 'Binary_Classification'
-        elif len(train[targ].unique()) > 2 and len(train[targ].unique()) <= cat_limit:
+        elif len(train[targ].unique().tolist()) > 2 and len(train[targ].unique().tolist()) <= cat_limit:
             model_class = 'Multi_Classification'
         else:
             model_class = 'Regression'
     elif  train[targ].dtype in ['float16','float32','float64']:
         if len(train[targ].unique()) <= 2:
             model_class = 'Binary_Classification'
-        elif len(train[targ].unique()) > 2 and len(train[targ].unique()) <= float_limit:
+        elif len(train[targ].unique().tolist()) > 2 and len(train[targ].unique().tolist()) <= float_limit:
             model_class = 'Multi_Classification'
         else:
             model_class = 'Regression'
     elif train[targ].dtype == bool:
         model_class = 'Binary_Classification'
     else:
-        if len(train[targ].unique()) <= 2:
+        if len(train[targ].unique().tolist()) <= 2:
             model_class = 'Binary_Classification'
         else:
             model_class = 'Multi_Classification'
     ########### print this for the start of next step ###########
     if verbose <= 2:
-        print('''\n################ %s VISUALIZATION Started #####################''' %model_class)
+        print('''\n################ %s problem #####################''' %model_class)
     return model_class
 #################################################################################
 # Pivot Tables are generally meant for Categorical Variables on the axes
@@ -149,9 +148,11 @@ def analyze_problem_type(train, target, verbose=0) :
 # Let's do some pivot tables to capture some meaningful insights
 import random
 def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='', classes=None, mk_dir=None):
+    #### Finally I have fixed the bugs in pivot tables due to "category" dtypes in data ##############
     plot_name = 'Bar_Plots_Pivots'
+    cats = copy.deepcopy(cats)
     cats = list(set(cats))
-    dft = dft[:]
+    dft = copy.deepcopy(dft)
     cols = 2
     cmap = plt.get_cmap('jet')
     #### For some reason, the cmap colors are not working #########################
@@ -189,14 +190,29 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
         dicti = {}
         counter = 1
         cols = 2
+        ### first make sure there are enough plots to plot #####
+        copy_combos = copy.deepcopy(combos)
+        countplots = 0
+        for var1, var2 in copy_combos:
+            if dft[depVar].dtype == object:
+                data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2, aggfunc='count',fill_value=0)
+            elif dft[depVar].dtype == 'category':
+                data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2, aggfunc='count',fill_value=0)
+            else:                
+                data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2)
+            if data.shape[1] > 0:
+                countplots += 1
+        if countplots != noplots:
+            noplots = copy.deepcopy(countplots)
+        ######  we want to now figure out rows and columns ####
         if noplots%cols == 0:
             if noplots == 0:
                 rows = 1
             else:
-                rows = noplots/cols
+                rows = int((noplots/cols)+0.5)
         else:
-            rows = (noplots/cols)+1
-        #fig = plt.figure(figsize=(min(20,N*10),rows*5))
+            rows = int((noplots/cols)+0.5)
+        ### Now let us draw the pivot charts ############
         fig = plt.figure()
         if cols < 2:
             fig.set_size_inches(min(15,8),rows*height_size)
@@ -206,6 +222,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
             fig.set_size_inches(min(cols*10,20),rows*height_size)
             fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
             fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
+        ### we start to draw the pivot tables here #########
         for (var1, var2) in combos:
             color1 = random.choice(colormaps)
             data = pd.DataFrame(dicti)
@@ -216,7 +233,12 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
             nocats1 = min(categorylimit,dft[var2].nunique())
             if dft[depVar].dtype==object or dft[depVar].dtype==bool:
                 dft[depVar] = dft[depVar].factorize()[0]
-            data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2).head(nocats)
+            if dft[depVar].dtype == object:
+                data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2, aggfunc='count',fill_value=0).head(nocats)
+            elif dft[depVar].dtype == 'category':
+                data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2, aggfunc='count',fill_value=0).head(nocats)
+            else:                
+                data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2).head(nocats)
             data = data[data.columns[:nocats1]] #### make sure you don't print more than 10 rows of data
             data.plot(kind='bar',ax=ax1,colormap=color1)
             ax1.set_xlabel(var1)
@@ -630,6 +652,7 @@ from scipy.stats import probplot,skew
 def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=None, classes=None, mk_dir=None):
     cats = find_remove_duplicates(cat_bools) ### first make sure there are no duplicates in this ###
     copy_cats = copy.deepcopy(cats)
+    conti = copy.deepcopy(conti)
     plot_name = 'Dist_Plots'
     #### Since we are making changes to dft and classes, we will be making copies of it here
     conti = list(set(conti))
@@ -640,7 +663,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
     width_size = 15  #### this is to control the width of chart as well as number of categories to display
     height_size = 5
     gap = 0.4 #### This controls the space between rows  ######
-    if dep==None or dep=='' or problem_type == 'Regression':
+    if dep is None or dep=='' or problem_type == 'Regression':
         image_count = 0
         transparent = 0.7
         ######### This is for cases where there is No Target or Dependent Variable ########
@@ -693,9 +716,16 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 color2 = next(colors)
                 ax1 = plt.subplot(rows, cols, k+1)
                 kwds = {"rotation": 45, "ha":"right"}
-                labels = dft[each_cat].value_counts()[:width_size].index.tolist()
-                dft[each_cat].value_counts()[:width_size].plot(kind='bar', color=color2,
+                ### In some small datasets, we get floats as categories since there are so few categories.
+                if dft[each_cat].dtype in ['float16','float32','float64']:
+                    ### In those cases, we must remove the width_size since it thinks they are an index and errors.
+                    dft[each_cat].value_counts().plot(kind='bar', color=color2,
                                             ax=ax1,label='%s' %each_cat)
+                    labels = dft[each_cat].value_counts().index.tolist()
+                else:
+                    dft[each_cat].value_counts()[:width_size].plot(kind='bar', color=color2,
+                                            ax=ax1,label='%s' %each_cat)
+                    labels = dft[each_cat].value_counts()[:width_size].index.tolist()
                 ax1.set_xticklabels(labels,**kwds);
                 ax1.set_title('Distribution of %s (top %d categories only)' %(each_cat,width_size))
             fig.tight_layout();
@@ -709,7 +739,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 plt.show();
     else:
         ######### This is for Classification problems only ########
-        #### Now you can draw both object and numeric variables using same conti_
+        #### Now you can draw both object and numeric variables using same conti variable
         conti = conti + cats
         cols = 2
         image_count = 0
@@ -726,12 +756,37 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             classes = [str(x) for x in classes]
         label_limit = len(target_vars)
         legend_flag = 1
+        
         for each_conti,k in zip(conti,range(len(conti))):
             if dft[each_conti].isnull().sum() > 0:
-                dft[each_conti].fillna(0, inplace=True)
+                if dft[each_conti].dtype == 'category':
+                    ls = dft[each_conti].unique().astype(str)
+                    dft[each_conti] = dft[each_conti].astype(pd.CategoricalDtype(ls))
+                    ### Remember that fillna only works at dataframe level! ###
+                    dft[[each_conti]] = dft[[each_conti]].fillna("nan").astype('category')
+                elif dft[each_conti].dtype == 'object':
+                    ### Remember that fillna only works at dataframe level! ###
+                    dft[[each_conti]] = dft[[each_conti]].fillna("nan")
+                else:
+                    dft[[each_conti]] = dft[[each_conti]].fillna(0)
             plt.subplot(rows, cols, k+1)
             ax1 = plt.gca()
             if dft[each_conti].dtype==object:
+                kwds = {"rotation": 45, "ha":"right"}
+                labels = dft[each_conti].value_counts()[:width_size].index.tolist()
+                conti_df = dft[[dep,each_conti]].groupby([dep,each_conti]).size().nlargest(width_size).reset_index(name='Values')
+                pivot_df = conti_df.pivot(index=each_conti, columns=dep, values='Values')
+                row_ticks = dft[dep].unique().tolist()
+                color_list = []
+                for i in range(len(row_ticks)):
+                    color_list.append(next(colors))
+                #print('color list = %s' %color_list)
+                pivot_df.loc[:,row_ticks].plot.bar(stacked=True, color=color_list, ax=ax1)
+                #dft[each_conti].value_counts()[:width_size].plot(kind='bar',ax=ax1,
+                #                    label=class_label)
+                #ax1.set_xticklabels(labels,**kwds);
+                ax1.set_title('Distribution of %s (top %d categories only)' %(each_conti,width_size))
+            elif dft[each_conti].dtype=='category':
                 kwds = {"rotation": 45, "ha":"right"}
                 labels = dft[each_conti].value_counts()[:width_size].index.tolist()
                 conti_df = dft[[dep,each_conti]].groupby([dep,each_conti]).size().nlargest(width_size).reset_index(name='Values')
@@ -793,14 +848,20 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 dft[dep] = dft[dep].factorize()[0]
             for p in ax1.patches:
                 ax1.annotate(str(round(p.get_height(),2)), (round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
-            ax1.set_xticks(dft[dep].unique().tolist())
+            #### Do not change the next 2 lines even though they may appear redundant. Otherwise it will error!
+            if dft[dep].dtype != 'category':
+                if dft[dep].dtype != object:
+                    ax1.set_xticks(dft[dep].unique().tolist())
             ax1.set_xticklabels(classes, rotation = 45, ha="right", fontsize=9)
             ax1.set_title('Percentage Distribution of Target = %s' %dep, fontsize=10, y=1.05)
             #### Freq Distribution is next ###########################
             dft[dep].value_counts().plot(ax=ax2,kind='bar')
             for p in ax2.patches:
                 ax2.annotate(str(round(p.get_height(),2)), (round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
-            ax2.set_xticks(dft[dep].unique().tolist())
+            #### Do not change the next 2 lines even though they may appear redundant. Otherwise it will error!
+            if dft[dep].dtype != 'category':
+                if dft[dep].dtype != object:
+                    ax2.set_xticks(dft[dep].unique().tolist())
             ax2.set_xticklabels(classes, rotation = 45, ha="right", fontsize=9)
             ax2.set_title('Freq Distribution of Target Variable = %s' %dep,  fontsize=12)
         elif problem_type == 'Regression':
@@ -913,6 +974,7 @@ import copy
 def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='Regression', mk_dir=None):
     dfx = copy.deepcopy(dfx) ## use this to preserve the original dataframe
     df =  copy.deepcopy(dfx) #### use this for making it into a datetime index etc...
+    ##### Fixed problems with number of plots no_plots. It now works well for regressions!
     plot_name = 'Time_Series_Plots'
     #### Now you want to display 2 variables at a time to see how they change over time
     ### Don't change the number of cols since you will have to change rows formula as well
@@ -961,7 +1023,8 @@ def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='
     cols = 2
     if modeltype == 'Regression':
         gap=0.5
-        rows = int(len(num_vars)/cols+0.99)
+        no_plots = df.groupby(ts_column).mean().shape[1]
+        rows = int((no_plots/cols)+0.99)
         fig,ax = plt.subplots(figsize=(width_size,rows*height_size))
         fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows
         df.groupby(ts_column).mean().plot(subplots=True,ax=ax,layout=(rows,cols))
@@ -1142,7 +1205,8 @@ def start_classifying_vars(dfin, verbose):
                             item_mode = dfin[col].mode()[0]
                         except:
                             print('''Statistics package not installed in your Python3. Get it installed''')
-                    dfin[col].fillna(item_mode,inplace=True)
+                    ### Remember that fillna only works at dataframe level! ###
+                    dfin[[col]] = dfin[[col]].fillna(item_mode)
                     continue
                 elif len(dfin.groupby(col)) < 20 and len(dfin.groupby(col)) > 1:
                     categorical_vars.append(dfin[col].name)
@@ -1187,7 +1251,8 @@ def start_classifying_vars(dfin, verbose):
                             item_mode = dfin[col].mode()[0]
                         except:
                             print('''Statistics package not installed in your Python3. Get it installed''')
-                    dfin[col].fillna(item_mode,inplace=True)
+                    ### Remember that fillna only works at dataframe level! ###
+                    dfin[[col]] = dfin[[col]].fillna(item_mode)
                     continue
                 else:
                     if len(dfin[col].value_counts()) <= 25 and len(dfin) >= 250:
@@ -1368,6 +1433,11 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
     else:
         dft = copy.deepcopy(dfte)
     ###### This is where you find what type the dependent variable is ########
+    if isinstance(depVar, list):
+        # If depVar is a list, just select the first one in the list to visualize!
+        depVar = depVar[0]
+        print('Since AutoViz cannot visualize multi-label targets, selecting %s from target list' %depVar[0])
+    ### Now we analyze depVar as usual - Do not change the next line to elif! ###
     if type(depVar) == str:
         if depVar == '':
             cols_list = list(dft)
@@ -1382,40 +1452,28 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
                 return dfte
             cols_list = list_difference(list(dft),depVar)
             if dft[depVar].dtype == object:
-                classes = dft[depVar].factorize()[1].tolist()
+                classes = dft[depVar].unique().tolist()
                 #### You dont have to convert it since most charts can take string vars as target ####
                 #dft[depVar] = dft[depVar].factorize()[0]
-            elif dft[depVar].dtype == np.int64:
-                classes = dft[depVar].factorize()[1].tolist()
+            elif dft[depVar].dtype == 'category':
+                #### You dont have to convert it since most charts can take string vars as target ####
+                classes = dft[depVar].unique().tolist()
+            elif dft[depVar].dtype in [np.int64, np.int32, np.int16, np.int8]:
+                classes = dft[depVar].unique().tolist()
             elif dft[depVar].dtype == bool:
                 dft[depVar] = dft[depVar].astype(int)
                 classes =  dft[depVar].unique().astype(int).tolist()
             elif dft[depVar].dtype == float and problem_type.endswith('Classification'):
                 classes = dft[depVar].factorize()[1].tolist()
             else:
-                classes = []
+                classes = dft[depVar].factorize()[1].tolist()
     elif depVar == None:
             cols_list = list(dft)
             problem_type = 'Clustering'
             classes = []
     else:
-        depVar1 = depVar[0]
-        problem_type = analyze_problem_type(dft, depVar1)
-        cols_list = list_difference(list(dft), depVar1)
-        if dft[depVar1].dtype == object:
-            classes = dft[depVar1].factorize()[1].tolist()
-            #### You dont have to convert it since most charts can take string vars as target ####
-            #dft[depVar] = dft[depVar].factorize()[0]
-        elif dft[depVar1].dtype == np.int64:
-            classes = dft[depVar1].factorize()[1].tolist()
-        elif dft[depVar1].dtype == bool:
-            classes =  dft[depVar].unique().astype(int).tolist()
-        elif dft[depVar1].dtype == float and problem_type.endswith('Classification'):
-            classes = dft[depVar1].factorize()[1].tolist()
-        else:
-            classes = []
-        print('Since AutoViz cannot visualize multiple targets, selecting the first one from list: %s' %depVar1)
-        depVar = copy.deepcopy(depVar1)
+        print('Cannot find target variable to visualize. Returning...')
+        return dft
     #############  Check if there are too many columns to visualize  ################
     if len(preds) >= max_cols_analyzed:
         #########     In that case, SELECT IMPORTANT FEATURES HERE   ######################
@@ -1517,237 +1575,7 @@ def marthas_columns(data,verbose=0):
                         data[col].value_counts().head(2).to_dict()
                     ))
             print('--------------------------------------------------------------------')
-################################################
-################################################################################
-######### NEW And FAST WAY to CLASSIFY COLUMNS IN A DATA SET #######
-################################################################################
-def classify_columns(df_preds, verbose=0):
-    """
-    This actually does Exploratory data analysis - it means this function performs EDA
-    ######################################################################################
-    Takes a dataframe containing only predictors to be classified into various types.
-    DO NOT SEND IN A TARGET COLUMN since it will try to include that into various columns.
-    Returns a data frame containing columns and the class it belongs to such as numeric,
-    categorical, date or id column, boolean, nlp, discrete_string and cols to delete...
-    ####### Returns a dictionary with 10 kinds of vars like the following: # continuous_vars,int_vars
-    # cat_vars,factor_vars, bool_vars,discrete_string_vars,nlp_vars,date_vars,id_vars,cols_delete
-    """
-    train = copy.deepcopy(df_preds)
-    #### If there are 30 chars are more in a discrete_string_var, it is then considered an NLP variable
-    max_nlp_char_size = 30
-    max_cols_to_print = 30
-    print('############## C L A S S I F Y I N G  V A R I A B L E S  ####################')
-    print('Classifying variables in data set...')
-    #### Cat_Limit defines the max number of categories a column can have to be called a categorical colum
-    cat_limit = 35
-    float_limit = 15 #### Make this limit low so that float variables below this limit become cat vars ###
-    def add(a,b):
-        return a+b
-    sum_all_cols = dict()
-    orig_cols_total = train.shape[1]
-    #Types of columns
-    cols_delete = []
-    cols_delete = [col for col in list(train) if (len(train[col].value_counts()) == 1
-                                       ) | (train[col].isnull().sum()/len(train) >= 0.90)]
-    inf_cols = EDA_find_remove_columns_with_infinity(train)
-    cols_delete += inf_cols
-    train = train[left_subtract(list(train),cols_delete)]
-    var_df = pd.Series(dict(train.dtypes)).reset_index(drop=False).rename(
-                        columns={0:'type_of_column'})
-    sum_all_cols['cols_delete'] = cols_delete
-    
-    var_df['bool'] = var_df.apply(lambda x: 1 if x['type_of_column'] in ['bool','object']
-                        and len(train[x['index']].value_counts()) == 2 else 0, axis=1)
-    string_bool_vars = list(var_df[(var_df['bool'] ==1)]['index'])
-    sum_all_cols['string_bool_vars'] = string_bool_vars
-    var_df['num_bool'] = var_df.apply(lambda x: 1 if x['type_of_column'] in [np.uint8,
-                            np.uint16, np.uint32, np.uint64,
-                            'int8','int16','int32','int64',
-                            'float16','float32','float64'] and len(
-                        train[x['index']].value_counts()) == 2 else 0, axis=1)
-    num_bool_vars = list(var_df[(var_df['num_bool'] ==1)]['index'])
-    sum_all_cols['num_bool_vars'] = num_bool_vars
-    ######   This is where we take all Object vars and split them into diff kinds ###
-    discrete_or_nlp = var_df.apply(lambda x: 1 if x['type_of_column'] in ['object']  and x[
-        'index'] not in string_bool_vars+cols_delete else 0,axis=1)
-    ######### This is where we figure out whether a string var is nlp or discrete_string var ###
-    var_df['nlp_strings'] = 0
-    var_df['discrete_strings'] = 0
-    var_df['cat'] = 0
-    var_df['id_col'] = 0
-    discrete_or_nlp_vars = var_df.loc[discrete_or_nlp==1]['index'].values.tolist()
-    copy_discrete_or_nlp_vars = copy.deepcopy(discrete_or_nlp_vars)
-    if len(discrete_or_nlp_vars) > 0:
-        for col in copy_discrete_or_nlp_vars:
-            #### first fill empty or missing vals since it will blowup ###
-            train[col] = train[col].fillna('emptyspace')
-            if train[col].map(lambda x: len(x) if type(x)==str else 0).mean(
-                ) >= 50 and len(train[col].value_counts()
-                        ) >= int(0.9*len(train)) and col not in string_bool_vars:
-                var_df.loc[var_df['index']==col,'nlp_strings'] = 1
-            elif train[col].map(lambda x: len(x) if type(x)==str else 0).mean(
-                ) >= max_nlp_char_size and train[col].map(lambda x: len(x) if type(x)==str else 0).mean(
-                ) < 50 and len(train[col].value_counts()
-                        ) <= int(0.9*len(train)) and col not in string_bool_vars:
-                var_df.loc[var_df['index']==col,'discrete_strings'] = 1
-            elif len(train[col].value_counts()) > cat_limit and len(train[col].value_counts()
-                        ) <= int(0.9*len(train)) and col not in string_bool_vars:
-                var_df.loc[var_df['index']==col,'discrete_strings'] = 1
-            elif len(train[col].value_counts()) > cat_limit and len(train[col].value_counts()
-                        ) == len(train) and col not in string_bool_vars:
-                var_df.loc[var_df['index']==col,'id_col'] = 1
-            else:
-                var_df.loc[var_df['index']==col,'cat'] = 1
-    nlp_vars = list(var_df[(var_df['nlp_strings'] ==1)]['index'])
-    sum_all_cols['nlp_vars'] = nlp_vars
-    discrete_string_vars = list(var_df[(var_df['discrete_strings'] ==1) ]['index'])
-    sum_all_cols['discrete_string_vars'] = discrete_string_vars
-    ###### This happens only if a string column happens to be an ID column #######
-    #### DO NOT Add this to ID_VARS yet. It will be done later.. Dont change it easily...
-    #### Category DTYPE vars are very special = they can be left as is and not disturbed in Python. ###
-    var_df['dcat'] = var_df.apply(lambda x: 1 if str(x['type_of_column'])=='category' else 0,
-                            axis=1)
-    factor_vars = list(var_df[(var_df['dcat'] ==1)]['index'])
-    sum_all_cols['factor_vars'] = factor_vars
-    ########################################################################
-    date_or_id = var_df.apply(lambda x: 1 if x['type_of_column'] in [np.uint8,
-                         np.uint16, np.uint32, np.uint64,
-                         'int8','int16',
-                        'int32','int64']  and x[
-        'index'] not in string_bool_vars+num_bool_vars+discrete_string_vars+nlp_vars else 0,
-                                        axis=1)
-    ######### This is where we figure out whether a numeric col is date or id variable ###
-    var_df['int'] = 0
-    var_df['date_time'] = 0
-    ### if a particular column is date-time type, now set it as a date time variable ##
-    var_df['date_time'] = var_df.apply(lambda x: 1 if x['type_of_column'] in ['<M8[ns]','datetime64[ns]']  and x[
-        'index'] not in string_bool_vars+num_bool_vars+discrete_string_vars+nlp_vars else 0,
-                                        axis=1)
-    ### this is where we save them as date time variables ###
-    if len(var_df.loc[date_or_id==1]) != 0:
-        for col in var_df.loc[date_or_id==1]['index'].values.tolist():
-            if len(train[col].value_counts()) == len(train):
-                if train[col].min() < 1900 or train[col].max() > 2050:
-                    var_df.loc[var_df['index']==col,'id_col'] = 1
-                else:
-                    try:
-                        pd.to_datetime(train[col],infer_datetime_format=True)
-                        var_df.loc[var_df['index']==col,'date_time'] = 1
-                    except:
-                        var_df.loc[var_df['index']==col,'id_col'] = 1
-            else:
-                if train[col].min() < 1900 or train[col].max() > 2050:
-                    if col not in num_bool_vars:
-                        var_df.loc[var_df['index']==col,'int'] = 1
-                else:
-                    try:
-                        pd.to_datetime(train[col],infer_datetime_format=True)
-                        var_df.loc[var_df['index']==col,'date_time'] = 1
-                    except:
-                        if col not in num_bool_vars:
-                            var_df.loc[var_df['index']==col,'int'] = 1
-    else:
-        pass
-    int_vars = list(var_df[(var_df['int'] ==1)]['index'])
-    date_vars = list(var_df[(var_df['date_time'] == 1)]['index'])
-    id_vars = list(var_df[(var_df['id_col'] == 1)]['index'])
-    sum_all_cols['int_vars'] = int_vars
-    copy_date_vars = copy.deepcopy(date_vars)
-    for date_var in copy_date_vars:
-        #### This test is to make sure sure date vars are actually date vars
-        try:
-            pd.to_datetime(train[date_var],infer_datetime_format=True)
-        except:
-            ##### if not a date var, then just add it to delete it from processing
-            cols_delete.append(date_var)
-            date_vars.remove(date_var)
-    sum_all_cols['date_vars'] = date_vars
-    sum_all_cols['id_vars'] = id_vars
-    sum_all_cols['cols_delete'] = cols_delete
-    ## This is an EXTREMELY complicated logic for cat vars. Don't change it unless you test it many times!
-    var_df['numeric'] = 0
-    float_or_cat = var_df.apply(lambda x: 1 if x['type_of_column'] in ['float16',
-                            'float32','float64'] else 0,
-                                        axis=1)
-    if len(var_df.loc[float_or_cat == 1]) > 0:
-        for col in var_df.loc[float_or_cat == 1]['index'].values.tolist():
-            if len(train[col].value_counts()) > 2 and len(train[col].value_counts()
-                ) <= float_limit and len(train[col].value_counts()) <= len(train):
-                var_df.loc[var_df['index']==col,'cat'] = 1
-            else:
-                if col not in num_bool_vars:
-                    var_df.loc[var_df['index']==col,'numeric'] = 1
-    cat_vars = list(var_df[(var_df['cat'] ==1)]['index'])
-    continuous_vars = list(var_df[(var_df['numeric'] ==1)]['index'])
-    ########  V E R Y    I M P O R T A N T   ###################################################
-    ##### There are a couple of extra tests you need to do to remove abberations in cat_vars ###
-    cat_vars_copy = copy.deepcopy(cat_vars)
-    for cat in cat_vars_copy:
-        if df_preds[cat].dtype==float:
-            continuous_vars.append(cat)
-            cat_vars.remove(cat)
-            var_df.loc[var_df['index']==cat,'cat'] = 0
-            var_df.loc[var_df['index']==cat,'numeric'] = 1
-        elif len(df_preds[cat].value_counts()) == df_preds.shape[0]:
-            id_vars.append(cat)
-            cat_vars.remove(cat)
-            var_df.loc[var_df['index']==cat,'cat'] = 0
-            var_df.loc[var_df['index']==cat,'id_col'] = 1
-    sum_all_cols['cat_vars'] = cat_vars
-    sum_all_cols['continuous_vars'] = continuous_vars
-    sum_all_cols['id_vars'] = id_vars
-    ###### This is where you consoldate the numbers ###########
-    var_dict_sum = dict(zip(var_df.values[:,0], var_df.values[:,2:].sum(1)))
-    for col, sumval in var_dict_sum.items():
-        if sumval == 0:
-            print('%s of type=%s is not classified' %(col,train[col].dtype))
-        elif sumval > 1:
-            print('%s of type=%s is classified into more then one type' %(col,train[col].dtype))
-        else:
-            pass
-    ###############  This is where you print all the types of variables ##############
-    ####### Returns 8 vars in the following order: continuous_vars,int_vars,cat_vars,
-    ###  string_bool_vars,discrete_string_vars,nlp_vars,date_or_id_vars,cols_delete
-    if verbose == 1:
-        print("    Number of Numeric Columns = ", len(continuous_vars))
-        print("    Number of Integer-Categorical Columns = ", len(int_vars))
-        print("    Number of String-Categorical Columns = ", len(cat_vars))
-        print("    Number of Factor-Categorical Columns = ", len(factor_vars))
-        print("    Number of String-Boolean Columns = ", len(string_bool_vars))
-        print("    Number of Numeric-Boolean Columns = ", len(num_bool_vars))
-        print("    Number of Discrete String Columns = ", len(discrete_string_vars))
-        print("    Number of NLP String Columns = ", len(nlp_vars))
-        print("    Number of Date Time Columns = ", len(date_vars))
-        print("    Number of ID Columns = ", len(id_vars))
-        print("    Number of Columns to Delete = ", len(cols_delete))
-    if verbose == 2:
-        marthas_columns(df_preds,verbose=1)
-        print("    Numeric Columns: %s" %continuous_vars[:max_cols_to_print])
-        print("    Integer-Categorical Columns: %s" %int_vars[:max_cols_to_print])
-        print("    String-Categorical Columns: %s" %cat_vars[:max_cols_to_print])
-        print("    Factor-Categorical Columns: %s" %factor_vars[:max_cols_to_print])
-        print("    String-Boolean Columns: %s" %string_bool_vars[:max_cols_to_print])
-        print("    Numeric-Boolean Columns: %s" %num_bool_vars[:max_cols_to_print])
-        print("    Discrete String Columns: %s" %discrete_string_vars[:max_cols_to_print])
-        print("    NLP text Columns: %s" %nlp_vars[:max_cols_to_print])
-        print("    Date Time Columns: %s" %date_vars[:max_cols_to_print])
-        print("    ID Columns: %s" %id_vars[:max_cols_to_print])
-        print("    Columns that will not be considered in modeling: %s" %cols_delete[:max_cols_to_print])
-    ##### now collect all the column types and column names into a single dictionary to return!
-    len_sum_all_cols = reduce(add,[len(v) for v in sum_all_cols.values()])
-    if len_sum_all_cols == orig_cols_total:
-        print('    %d Predictors classified...' %orig_cols_total)
-        #print('        This does not include the Target column(s)')
-    else:
-        print('No of columns classified %d does not match %d total cols. Continuing...' %(
-                   len_sum_all_cols, orig_cols_total))
-        ls = sum_all_cols.values()
-        flat_list = [item for sublist in ls for item in sublist]
-        if len(left_subtract(list(train),flat_list)) == 0:
-            print(' Missing columns = None')
-        else:
-            print(' Missing columns = %s' %left_subtract(list(train),flat_list))
-    return sum_all_cols
+
 #################################################################################
 import copy
 def EDA_find_remove_columns_with_infinity(df, remove=False):
@@ -1914,7 +1742,8 @@ def convert_train_test_cat_col_to_numeric(start_train, start_test, col):
     start_train = copy.deepcopy(start_train)
     start_test = copy.deepcopy(start_test)
     if start_train[col].isnull().sum() > 0:
-        start_train[col] = start_train[col].fillna("NA")
+        ### Remember that fillna only works at dataframe level! ###
+        start_train[[col]] = start_train[[col]].fillna("NA")
     train_categs = list(pd.unique(start_train[col].values))
     if not isinstance(start_test,str) :
         test_categs = list(pd.unique(start_test[col].values))
@@ -1925,7 +1754,7 @@ def convert_train_test_cat_col_to_numeric(start_train, start_test, col):
     start_train[col] = start_train[col].map(dict_all)
     if not isinstance(start_test,str) :
         if start_test[col].isnull().sum() > 0:
-            start_test[col] = start_test[col].fillna("NA")
+            start_test[[col]] = start_test[[col]].fillna("NA")
         start_test[col] = start_test[col].map(dict_all)
     return start_train, start_test
 ###############################################################################

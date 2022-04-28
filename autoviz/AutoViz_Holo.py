@@ -597,7 +597,8 @@ def draw_distplot_hv(dft, cats, conti, chart_format,problem_type,dep=None,
         ### Be very careful with the next 2 lines: we want to fill NA with 0 in numeric vars
         for each_conti,k in zip(conti,range(len(conti))):
             if dft[each_conti].isnull().sum() > 0:
-                dft[each_conti].fillna(0, inplace=True)
+                ### Remember that fillna only works at dataframe level! ###
+                dft[[each_conti]] = dft[[each_conti]].fillna(0)
         ## In this case, we perform this only if we have Cat variables
         if not isinstance(dep, list):
             ### it means dep is a string ###
@@ -691,7 +692,8 @@ def draw_distplot_hv(dft, cats, conti, chart_format,problem_type,dep=None,
             classes = [str(x) for x in classes]
         for each_conti,k in zip(conti,range(len(conti))):
             if dft[each_conti].isnull().sum() > 0:
-                dft[each_conti].fillna(0, inplace=True)
+                ## fillna only works on a dataframe level - it also doesnt do inplace! ###
+                dft[[each_conti]] = dft[[each_conti]].fillna(0)
         if len(cats) > 0:
             def select_widget(Select_categorical_var):
                 """

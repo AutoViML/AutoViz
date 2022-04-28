@@ -5,9 +5,9 @@ if __name__ == "__main__":
 else:
     module_type = 'Alert! from'
 version_number = __version__
-print("""%s version %s. After importing, you must do '%%matplotlib inline' to display charts in Jupyter Notebooks.
+print("""%s version %s, fter importing, you must do '%%matplotlib inline' to display charts in Jupyter Notebooks.
     AV = AutoViz_Class()
-    AV.AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0, lowess=False,
+    dfte = AV.AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=0, lowess=False,
                chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30, save_plot_dir=None)""" %(module_type, version_number))
 print("Note: verbose=0 or 1 generates charts and displays them in your local Jupyter notebook.")
 print("      verbose=2 does not display plots but saves them in AutoViz_Plots folder in local machine.")

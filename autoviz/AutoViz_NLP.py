@@ -585,7 +585,8 @@ def draw_wordcloud_from_dataframe(dataframe, column, chart_format,
     """
     imgdata_list = []
 
-    X_train = dataframe[column].fillna("missing")
+    ### Remember that fillna only works at dataframe level! ##
+    X_train = dataframe[[column]].fillna("missing")
     X_train = X_train.map(clean_steps)
     X_train = X_train.map(clean_text)
 
