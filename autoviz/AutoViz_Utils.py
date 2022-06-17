@@ -196,7 +196,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
         for var1, var2 in copy_combos:
             if dft[depVar].dtype == object:
                 data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2, aggfunc='count',fill_value=0)
-            elif dft[depVar].dtype == 'category':
+            elif str(dft[depVar].dtype) in ['category']:
                 data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2, aggfunc='count',fill_value=0)
             else:                
                 data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2)
@@ -235,7 +235,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
                 dft[depVar] = dft[depVar].factorize()[0]
             if dft[depVar].dtype == object:
                 data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2, aggfunc='count',fill_value=0).head(nocats)
-            elif dft[depVar].dtype == 'category':
+            elif str(dft[depVar].dtype) in ['category']:
                 data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2, aggfunc='count',fill_value=0).head(nocats)
             else:                
                 data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2).head(nocats)
@@ -243,7 +243,7 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
             data.plot(kind='bar',ax=ax1,colormap=color1)
             ax1.set_xlabel(var1)
             ax1.set_ylabel(depVar)
-            if dft[var1].dtype == object or str(dft[var1].dtype) == 'category':
+            if dft[var1].dtype == object or str(dft[depVar].dtype) in ['category']:
                 labels = data.index.str[:stringlimit].tolist()
             else:
                 labels = data.index.tolist()
@@ -501,7 +501,7 @@ def plot_fast_average_num_by_cat(dft, cats, num_vars, verbose=0,kind="bar"):
                     data = dft.groupby(cat)[each_conti].mean().sort_index(
                             ascending=True).head(chunksize)
                     data.plot(kind=kind,ax=ax1,color=color3)
-                if dft[cat].dtype == object or str(dft[cat].dtype) == 'category':
+                if dft[cat].dtype == object or str(dft[cat].dtype) in ['category']:
                     labels = data.index.str[:stringlimit].tolist()
                 else:
                     labels = data.index.tolist()
@@ -759,7 +759,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
         
         for each_conti,k in zip(conti,range(len(conti))):
             if dft[each_conti].isnull().sum() > 0:
-                if dft[each_conti].dtype == 'category':
+                if str(dft[each_conti].dtype) in ['category']:
                     ls = dft[each_conti].unique().astype(str)
                     dft[each_conti] = dft[each_conti].astype(pd.CategoricalDtype(ls))
                     ### Remember that fillna only works at dataframe level! ###
@@ -786,7 +786,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 #                    label=class_label)
                 #ax1.set_xticklabels(labels,**kwds);
                 ax1.set_title('Distribution of %s (top %d categories only)' %(each_conti,width_size))
-            elif dft[each_conti].dtype=='category':
+            elif str(dft[each_conti].dtype) in ['category']:
                 kwds = {"rotation": 45, "ha":"right"}
                 labels = dft[each_conti].value_counts()[:width_size].index.tolist()
                 conti_df = dft[[dep,each_conti]].groupby([dep,each_conti]).size().nlargest(width_size).reset_index(name='Values')
@@ -849,7 +849,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             for p in ax1.patches:
                 ax1.annotate(str(round(p.get_height(),2)), (round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
             #### Do not change the next 2 lines even though they may appear redundant. Otherwise it will error!
-            if dft[dep].dtype != 'category':
+            if not str(dft[dep].dtype) in ['category']:
                 if dft[dep].dtype != object:
                     ax1.set_xticks(dft[dep].unique().tolist())
             ax1.set_xticklabels(classes, rotation = 45, ha="right", fontsize=9)
@@ -859,7 +859,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             for p in ax2.patches:
                 ax2.annotate(str(round(p.get_height(),2)), (round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
             #### Do not change the next 2 lines even though they may appear redundant. Otherwise it will error!
-            if dft[dep].dtype != 'category':
+            if not str(dft[dep].dtype) in ['category']:
                 if dft[dep].dtype != object:
                     ax2.set_xticks(dft[dep].unique().tolist())
             ax2.set_xticklabels(classes, rotation = 45, ha="right", fontsize=9)
@@ -972,6 +972,7 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression', 
 #### Drawing Date Variables is very important in Time Series data
 import copy
 def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='Regression', mk_dir=None):
+    
     dfx = copy.deepcopy(dfx) ## use this to preserve the original dataframe
     df =  copy.deepcopy(dfx) #### use this for making it into a datetime index etc...
     ##### Fixed problems with number of plots no_plots. It now works well for regressions!
@@ -989,14 +990,20 @@ def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='
     else:
         width_size = 15
         height_size = 5
+    
     if isinstance(df.index, pd.DatetimeIndex) :
         pass
     elif len(datevars) > 0:
         try:
             ts_column = datevars[0]
             ### if we have already found that it was a date time var, then leave it as it is. Thats good enough!
-            date_items = df[ts_column].apply(str).apply(len).values
-            date_4_digit = all(date_items[0] == item for item in date_items) ### this checks for 4 digits date
+            date_items = df[ts_column].apply(str).apply(len)
+            try:
+                date_4_digit = (date_items==4).all() | (date_items==6).all()
+            except:
+                date_4_digit = False
+            ### remove the next line it is not working well for non-4 digit dates
+            #date_4_digit = all(date_items[0] == item for item in date_items) ### this checks for 4 digits date
             #### In some cases, date time variable is a year like 1999 (4-digit), this must be translated correctly
             if date_4_digit:
                 if date_items[0] == 4:
@@ -1004,7 +1011,7 @@ def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='
                     df[ts_column] = df[ts_column].map(lambda x: pd.to_datetime(x,format='%Y', errors='coerce')).values
                 else:
                     ### if it is not a year alone, then convert it into a date time variable
-                    if df[col].min() > 1900 or df[col].max() < 2100:
+                    if df[ts_column].min() > 1900 or df[ts_column].max() < 2100:
                         df[ts_column] = df[ts_column].map(lambda x: '0101'+str(x) if len(str(x)) == 4 else x)
                         df[ts_column] = pd.to_datetime(df[ts_column], format='%m%d%Y', errors='coerce')
                     else:
@@ -1018,6 +1025,7 @@ def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='
             print('%s could not be indexed. Could not draw date_vars.' %col)
             return imgdata_list
     ####### Draw the time series for Regression and DepVar
+    
     width_size = 15
     height_size = 4
     cols = 2
@@ -1327,6 +1335,7 @@ def find_remove_duplicates(values):
     return output
 #################################################################################
 def load_file_dataframe(dataname, sep=",", header=0, verbose=0, nrows=None,parse_dates=False):
+
     start_time = time.time()
     ###########################  This is where we load file or data frame ###############
     if isinstance(dataname,str):
@@ -1391,6 +1400,7 @@ import copy
 def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
                         depVar='',dfte=None, header=0,verbose=0):
     corr_limit = 0.7  ### This limit represents correlation above this, vars will be removed
+    
     start_time=time.time()
     if filename:
         dataname = copy.deepcopy(filename)
@@ -1402,7 +1412,11 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
                     nrows=max_rows_analyzed, parse_dates=parse_dates)
     orig_preds = [x for x in list(dfte) if x not in [depVar]]
     #################    CLASSIFY  COLUMNS   HERE    ######################
-    var_df = classify_columns(dfte[orig_preds], verbose)
+    if len(dfte) >= 100000:
+        dft_small = dfte.sample(n=10000, random_state=99)
+    else:
+        dfte_small = copy.deepcopy(dfte)
+    var_df = classify_columns(dfte_small[orig_preds], verbose)
     #####       Classify Columns   ################
     IDcols = var_df['id_vars']
     discrete_string_vars = var_df['nlp_vars']+var_df['discrete_string_vars']
@@ -1411,10 +1425,14 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
     int_vars = var_df['int_vars']
     categorical_vars = var_df['cat_vars'] + var_df['factor_vars'] + int_vars + bool_vars
     date_vars = var_df['date_vars']
+    
     if len(var_df['continuous_vars'])==0 and len(int_vars)>0:
         continuous_vars = var_df['int_vars']
         categorical_vars = list_difference(categorical_vars, int_vars)
         int_vars = []
+    elif len(var_df['continuous_vars'])==0 and len(int_vars)==0:
+        print('Cannot visualize this dataset since no numeric or integer vars in data...returning')
+        return dataname
     else:
         continuous_vars = var_df['continuous_vars']
     #### from now you can use wordclouds on discrete_string_vars ######################
@@ -1425,7 +1443,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
         print('        %d variables removed since they were ID or low-information variables'
                                 %len(IDcols+cols_delete))
         if verbose >= 1:
-            print('    List of variables removed: %s' %(IDcols+cols_delete))
+            print('        List of variables removed: %s' %(IDcols+cols_delete))
     #############    Sample data if too big and find problem type   #############################
     if dfte.shape[0]>= max_rows_analyzed:
         print('Since Number of Rows in data %d exceeds maximum, randomly sampling %d rows for EDA...' %(len(dfte),max_rows_analyzed))
@@ -1455,7 +1473,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
                 classes = dft[depVar].unique().tolist()
                 #### You dont have to convert it since most charts can take string vars as target ####
                 #dft[depVar] = dft[depVar].factorize()[0]
-            elif dft[depVar].dtype == 'category':
+            elif str(dft[depVar].dtype) in ['category']:
                 #### You dont have to convert it since most charts can take string vars as target ####
                 classes = dft[depVar].unique().tolist()
             elif dft[depVar].dtype in [np.int64, np.int32, np.int16, np.int8]:
