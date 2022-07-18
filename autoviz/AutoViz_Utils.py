@@ -1410,10 +1410,11 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
         parse_dates = False
     dfte = load_file_dataframe(dataname, sep=sep, header=header, verbose=verbose, 
                     nrows=max_rows_analyzed, parse_dates=parse_dates)
+    
     orig_preds = [x for x in list(dfte) if x not in [depVar]]
     #################    CLASSIFY  COLUMNS   HERE    ######################
     if len(dfte) >= 100000:
-        dft_small = dfte.sample(n=10000, random_state=99)
+        dfte_small = dfte.sample(n=10000, random_state=99)
     else:
         dfte_small = copy.deepcopy(dfte)
     var_df = classify_columns(dfte_small[orig_preds], verbose)
