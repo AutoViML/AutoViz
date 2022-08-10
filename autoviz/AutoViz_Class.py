@@ -402,10 +402,6 @@ class AutoViz_Class():
                         print('Could not draw Bar Charts')
                 else:
                     print ('No Continuous Variables at all in this dataset...')
-                if verbose <= 1:
-                    print('All Plots done')
-                else:
-                    print('All Plots are saved in %s' %mk_dir)
             else :
                 ############ This is a Classification Problem ##################
                 try:
@@ -486,6 +482,10 @@ class AutoViz_Class():
                 except:
                     print('Could not draw wordcloud plot for %s' %each_string_var)
         ### Now print the time taken to run charts for AutoViz #############
+        if verbose <= 1:
+            print('All Plots done')
+        else:
+            print('All Plots are saved in %s' %mk_dir)
         print('Time to run AutoViz = %0.0f seconds ' %(time.time()-start_time))
         if verbose <= 1:
             print ('\n ###################### AUTO VISUALIZATION Completed ########################')

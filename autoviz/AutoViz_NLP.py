@@ -584,12 +584,14 @@ def draw_wordcloud_from_dataframe(dataframe, column, chart_format,
     This handy function draws a dataframe column using Wordcloud library and nltk.
     """
     imgdata_list = []
-
+    
     ### Remember that fillna only works at dataframe level! ##
     X_train = dataframe[[column]].fillna("missing")
-    X_train = X_train.map(clean_steps)
+    ### Map function only works on Series, so you should use this ###
+    X_train = X_train[column].map(clean_steps)
+    ### next time, you get back a series, so just use it as is ###
     X_train = X_train.map(clean_text)
-
+    
     # Dictionary of all words from train corpus with their counts.
 
     ### Fantastic way to count words using one line of code #############
@@ -623,10 +625,11 @@ def find_remove_duplicates(values):
 def draw_word_clouds(dft, each_string_var, chart_format, plotname, 
                         dep, problem_type, classes, mk_dir, verbose=0):
     dft = dft[:]
-    width_size = 15
-    height_size = 5
+    width_size = 20
+    height_size = 10
     image_count = 0
     imgdata_list = []
+    
     if problem_type == 'Regression' or problem_type == 'Clustering':
         ########## This is for Regression and Clustering problems only #####
         num_plots = 1
