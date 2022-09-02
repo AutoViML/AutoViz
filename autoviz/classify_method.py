@@ -14,6 +14,7 @@ def warn(*args, **kwargs):
 warnings.warn = warn
 import logging
 ####################################################################################
+from IPython.display import display
 import pdb
 from functools import reduce
 import copy
@@ -275,7 +276,7 @@ def classify_columns(df_preds, verbose=0):
     ###############  This is where you print all the types of variables ##############
     ####### Returns 8 vars in the following order: continuous_vars,int_vars,cat_vars,
     ###  string_bool_vars,discrete_string_vars,nlp_vars,date_or_id_vars,cols_delete
-    if verbose == 1:
+    if verbose == 0:
         print("    Number of Numeric Columns = ", len(continuous_vars))
         print("    Number of Integer-Categorical Columns = ", len(int_vars))
         print("    Number of String-Categorical Columns = ", len(cat_vars))
@@ -287,6 +288,10 @@ def classify_columns(df_preds, verbose=0):
         print("    Number of Date Time Columns = ", len(date_vars))
         print("    Number of ID Columns = ", len(id_vars))
         print("    Number of Columns to Delete = ", len(cols_delete))
+    if verbose >= 1:
+        dfx = data_suggestions(df_preds)
+        ax = dfx.head().style.background_gradient(cmap='Reds').set_properties(**{'font-family': 'Segoe UI'}).hide(axis='index')
+        display(ax);
     if verbose == 2:
         print('  Printing upto %d columns max in each category:' %max_cols_to_print)
         print("    Numeric Columns : %s" %continuous_vars[:max_cols_to_print])
@@ -317,3 +322,42 @@ def classify_columns(df_preds, verbose=0):
             print(' Missing columns = %s' %left_subtract(list(train),flat_list))
     return sum_all_cols
 ####################################################################################
+def data_suggestions(data):
+    """
+    Modified by Ram Seshadri. Original idea for data suggestions module was a Kaggler. 
+    Many thanks to: https://www.kaggle.com/code/itkin16/catboost-on-gpu-baseline
+    """
+    maxx = []
+    minn = []
+    for i in data.columns:
+        minn.append(data[i].value_counts().min())
+
+    df = pd.DataFrame(
+        {
+         'column': list(data),
+        'nunique': data.nunique(),
+         'NuniquePercent': (100*(data.nunique()/len(data))),
+         'dtype':data.dtypes,
+         'Nulls' : data.isna().sum(),
+         'Nullpercent' : 100*(data.isna().sum()/len(data)),
+         'Value counts Min':minn 
+        },
+        columns = ['column','nunique', 'dtype','Nulls','Nullpercent', 'NuniquePercent',
+                       'Value counts Min']).sort_values(by ='nunique',ascending = False)
+    newcol = 'Data cleaning improvement suggestions'
+    mixed_cols = [col for col in data.columns if len(data[col].apply(type).value_counts()) > 1]
+    df[newcol] = ''
+    mask1 = df['Value counts Min']/df['nunique'] <= 0.05
+    df.loc[mask1,newcol] += 'combine rare categories'
+    mask2 = df['Nulls'] > 0
+    df.loc[mask2,newcol] += ', fill missing values'
+    mask3 = df['nunique'] == 1
+    df.loc[mask3,newcol] += ', invariant column: drop'
+    mask4 = df['NuniquePercent'] == 100
+    df.loc[mask4,newcol] += ', possible ID column: drop'
+    mask5 = df['Nullpercent'] >= 90
+    df.loc[mask5,newcol] += ', very high null percent: drop'
+    for x in mixed_cols:
+        df.loc[x,newcol] += ', fix mixed data types'
+    return df
+###################################################################################

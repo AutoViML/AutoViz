@@ -1584,7 +1584,7 @@ def marthas_columns(data,verbose=0):
     if data.shape[1] > 30:
         print('Too many columns to print')
     else:
-        if verbose==1:
+        if verbose>=3:
             print('Data Set columns info:')
             for col in data.columns:
                 print('* %s: %d nulls, %d unique vals, most common: %s' % (
