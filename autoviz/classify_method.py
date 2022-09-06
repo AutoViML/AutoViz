@@ -291,7 +291,7 @@ def classify_columns(df_preds, verbose=0):
     if verbose >= 1:
         dfx = data_suggestions(df_preds)
         all_rows = dfx.shape[0]
-        ax = dfx.head(all_rows).style.background_gradient(cmap='Reds').set_properties(**{'font-family': 'Segoe UI'}).hide(axis='index')
+        ax = dfx.head(all_rows).style.background_gradient(cmap='Reds').set_properties(**{'font-family': 'Segoe UI'})#.hide(axis='index')
         display(ax);
     if verbose == 2:
         print('  Printing upto %d columns max in each category:' %max_cols_to_print)
@@ -345,7 +345,7 @@ def data_suggestions(data):
     nulls = data.isna().sum()
     df = pd.DataFrame(
         {
-         'column': list(data),
+         #'column': list(data),
         'nunique': nunik,
          'NuniquePercent': (100*(nunik/length)),
          'dtype': data.dtypes,
@@ -353,7 +353,7 @@ def data_suggestions(data):
          'Nullpercent' : 100*(nulls/length),
          'Value counts Min':minn 
         },
-        columns = ['column','nunique', 'dtype','Nulls','Nullpercent', 'NuniquePercent',
+        columns = ['nunique', 'dtype','Nulls','Nullpercent', 'NuniquePercent',
                        'Value counts Min']).sort_values(by ='nunique',ascending = False)
     newcol = 'Data cleaning improvement suggestions'
     mixed_cols = [col for col in data.columns if len(data[col].apply(type).value_counts()) > 1]
