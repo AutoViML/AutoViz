@@ -340,15 +340,17 @@ def data_suggestions(data):
             minn.append(0)
         else:
             minn.append(data[i].value_counts().min())
-
+    length = len(data)
+    nunik = data.nunique()
+    nulls = data.isna().sum()
     df = pd.DataFrame(
         {
          'column': list(data),
-        'nunique': data.nunique(),
-         'NuniquePercent': (100*(data.nunique()/len(data))),
-         'dtype':data.dtypes,
-         'Nulls' : data.isna().sum(),
-         'Nullpercent' : 100*(data.isna().sum()/len(data)),
+        'nunique': nunik,
+         'NuniquePercent': (100*(nunik/length)),
+         'dtype': data.dtypes,
+         'Nulls' : nulls,
+         'Nullpercent' : 100*(nulls/length),
          'Value counts Min':minn 
         },
         columns = ['column','nunique', 'dtype','Nulls','Nullpercent', 'NuniquePercent',
@@ -356,18 +358,24 @@ def data_suggestions(data):
     newcol = 'Data cleaning improvement suggestions'
     mixed_cols = [col for col in data.columns if len(data[col].apply(type).value_counts()) > 1]
     df[newcol] = ''
+    df['first_comma'] = ''
     if len(cat_cols) > 0:
         mask0 = df['dtype'] == 'object'
         mask1 = df['Value counts Min']/df['nunique'] <= 0.05
-        df.loc[mask0&mask1,newcol] += 'combine rare categories'
+        df.loc[mask0&mask1,newcol] += df.loc[mask0&mask1,'first_comma'] + 'combine rare categories'
+        df.loc[mask0&mask1,'first_comma'] = ', '
     mask2 = df['Nulls'] > 0
-    df.loc[mask2,newcol] += ', fill missing values'
+    df.loc[mask2,newcol] += df.loc[mask2,'first_comma'] + 'fill missing values'
+    df.loc[mask2,'first_comma'] = ", "
     mask3 = df['nunique'] == 1
-    df.loc[mask3,newcol] += ', invariant column: drop'
+    df.loc[mask3,newcol] += df.loc[mask3,'first_comma'] + 'invariant column: drop'
+    df.loc[mask3,'first_comma'] = ", "
     mask4 = df['NuniquePercent'] == 100
-    df.loc[mask4,newcol] += ', possible ID column: drop'
+    df.loc[mask4,newcol] += df.loc[mask4,'first_comma'] + 'possible ID column: drop'
+    df.loc[mask4,'first_comma'] = ", "
     mask5 = df['Nullpercent'] >= 90
-    df.loc[mask5,newcol] += ', very high null percent: drop'
+    df.loc[mask5,newcol] += df.loc[mask5,'first_comma'] + 'very high null percent: drop'
+    df.loc[mask5,'first_comma'] = ", "
     #### check for infinite values here #####
     num_cols = data.select_dtypes(include='float').columns.tolist()
     inf_cols1 = np.array(num_cols)[[(data.loc[(data[col] == np.inf)]).shape[0]>0 for col in num_cols]].tolist()
@@ -376,10 +384,13 @@ def data_suggestions(data):
     ### Check for infinite values in columns #####
     if len(inf_cols) > 0:
         for x in inf_cols:
-            df.loc[x,newcol] += ', infinite values: drop'
+            df.loc[x,newcol] += df.loc[x,'first_comma'] + 'infinite values: drop'
+            df.loc[x,'first_comma'] = ", "
     ##### Do the same for mixed dtype columns - they must be fixed! ##
     if len(mixed_cols) > 0:
         for x in mixed_cols:
-            df.loc[x,newcol] += ', fix mixed data types'
+            df.loc[x,newcol] += df.loc[x,'first_comma'] + 'fix mixed data types'
+            df.loc[x,'first_comma'] = ", "
+    df.drop('first_comma', axis=1, inplace=True)
     return df
 ###################################################################################
