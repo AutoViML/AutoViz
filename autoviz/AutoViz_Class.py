@@ -61,6 +61,7 @@ from sklearn.model_selection import train_test_split
 from autoviz.AutoViz_Holo import AutoViz_Holo
 from autoviz.AutoViz_Utils import *
 from autoviz.AutoViz_NLP import draw_word_clouds
+from autoviz.classify_method import data_suggestions
 #####################################################
 class AutoViz_Class():
     """
@@ -198,6 +199,19 @@ class AutoViz_Class():
             pass
         else:
             getattr(self,plotname)["subheading"].append(X)
+
+    def give_data_suggestions(self, X):
+        """
+        This is a simple program to give data cleaning and improvement suggestions in class AV. 
+        Make sure you send in a dataframe. Otherwise, this will give an error.
+        """
+        if isinstance(X, pd.DataFrame):
+            dfx = data_suggestions(X)
+            all_rows = dfx.shape[0]
+            ax = dfx.head(all_rows).style.background_gradient(cmap='Reds').set_properties(**{'font-family': 'Segoe UI'})
+            display(ax);
+        else:
+            print("Input must be a dataframe. Please check input and try again.")
 
     def AutoViz(self, filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
                             lowess=False,chart_format='svg',max_rows_analyzed=150000,
