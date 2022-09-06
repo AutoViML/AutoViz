@@ -2,7 +2,6 @@
 
 Automatically Visualize any dataset, any size with a single line of code. Now you can save these interactive charts as HTML files automatically with the `"html"` setting.
 
-
 ### Sep-2022 Update: AutoViz now provides data cleansing suggestions! #autoviz #datacleaning
 From version 0.1.50 onwards, if you set `verbose=1` AutoViz now automatically analyzes your dataset and provides suggestions for how to clean your  variables in your data set. It detects missing values, rare categories, infinite values, mixed data types, and so much more. This will help you speed up your data cleansing activities. If you have suggestions to add more data cleaning activities please add an `Issue` in our GitHub and we will gladly consider it. Here is an example of how it looks:<br>
 <img align="center" src="https://i.ibb.co/NKf1gdg/autoviz-data-cleaning.png">

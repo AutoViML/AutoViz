@@ -582,8 +582,6 @@ def draw_wordcloud_from_dataframe(dataframe, column, chart_format,
     This handy function draws a dataframe column using Wordcloud library and nltk.
     """
     imgdata_list = []
-    import nltk
-    nltk.download('popular')
     
     ### Remember that fillna only works at dataframe level! ##
     X_train = dataframe[[column]].fillna("missing")
@@ -629,7 +627,7 @@ def draw_word_clouds(dft, each_string_var, chart_format, plotname,
     height_size = 10
     image_count = 0
     imgdata_list = []
-    
+
     if problem_type == 'Regression' or problem_type == 'Clustering':
         ########## This is for Regression and Clustering problems only #####
         num_plots = 1

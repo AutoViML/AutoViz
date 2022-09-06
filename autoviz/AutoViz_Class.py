@@ -488,6 +488,8 @@ class AutoViz_Class():
         ###### Now you can check for NLP vars or discrete_string_vars to do wordcloud #######
         if len(discrete_string_vars) > 0:
             plotname = 'wordcloud'
+            import nltk
+            nltk.download('popular')
             for each_string_var in discrete_string_vars:
                 try:
                     svg_data = draw_word_clouds(dft, each_string_var, chart_format, plotname, 
