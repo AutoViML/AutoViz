@@ -9,8 +9,6 @@ import pdb
 import nltk
 pd.set_option('display.max_colwidth',5000)
 # --------------------------------------------------------------------------------
-import nltk
-#nltk.download('popular')
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from operator import itemgetter
 import copy
@@ -584,6 +582,8 @@ def draw_wordcloud_from_dataframe(dataframe, column, chart_format,
     This handy function draws a dataframe column using Wordcloud library and nltk.
     """
     imgdata_list = []
+    import nltk
+    nltk.download('popular')
     
     ### Remember that fillna only works at dataframe level! ##
     X_train = dataframe[[column]].fillna("missing")

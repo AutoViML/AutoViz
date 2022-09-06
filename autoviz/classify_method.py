@@ -290,7 +290,8 @@ def classify_columns(df_preds, verbose=0):
         print("    Number of Columns to Delete = ", len(cols_delete))
     if verbose >= 1:
         dfx = data_suggestions(df_preds)
-        ax = dfx.head().style.background_gradient(cmap='Reds').set_properties(**{'font-family': 'Segoe UI'}).hide(axis='index')
+        all_rows = dfx.shape[0]
+        ax = dfx.head(all_rows).style.background_gradient(cmap='Reds').set_properties(**{'font-family': 'Segoe UI'}).hide(axis='index')
         display(ax);
     if verbose == 2:
         print('  Printing upto %d columns max in each category:' %max_cols_to_print)
@@ -329,8 +330,16 @@ def data_suggestions(data):
     """
     maxx = []
     minn = []
+    cat_cols1 = data.select_dtypes(include='object').columns.tolist()
+    cat_cols2 = data.select_dtypes(include='category').columns.tolist()
+    cat_cols = list(set(cat_cols1+cat_cols2))
+
     for i in data.columns:
-        minn.append(data[i].value_counts().min())
+        if i not in cat_cols:
+            ### for float and integer, no need to calculate this ##
+            minn.append(0)
+        else:
+            minn.append(data[i].value_counts().min())
 
     df = pd.DataFrame(
         {
@@ -347,8 +356,10 @@ def data_suggestions(data):
     newcol = 'Data cleaning improvement suggestions'
     mixed_cols = [col for col in data.columns if len(data[col].apply(type).value_counts()) > 1]
     df[newcol] = ''
-    mask1 = df['Value counts Min']/df['nunique'] <= 0.05
-    df.loc[mask1,newcol] += 'combine rare categories'
+    if len(cat_cols) > 0:
+        mask0 = df['dtype'] == 'object'
+        mask1 = df['Value counts Min']/df['nunique'] <= 0.05
+        df.loc[mask0&mask1,newcol] += 'combine rare categories'
     mask2 = df['Nulls'] > 0
     df.loc[mask2,newcol] += ', fill missing values'
     mask3 = df['nunique'] == 1
@@ -357,7 +368,18 @@ def data_suggestions(data):
     df.loc[mask4,newcol] += ', possible ID column: drop'
     mask5 = df['Nullpercent'] >= 90
     df.loc[mask5,newcol] += ', very high null percent: drop'
-    for x in mixed_cols:
-        df.loc[x,newcol] += ', fix mixed data types'
+    #### check for infinite values here #####
+    num_cols = data.select_dtypes(include='float').columns.tolist()
+    inf_cols1 = np.array(num_cols)[[(data.loc[(data[col] == np.inf)]).shape[0]>0 for col in num_cols]].tolist()
+    inf_cols2 = np.array(num_cols)[[(data.loc[(data[col] == -np.inf)]).shape[0]>0 for col in num_cols]].tolist()
+    inf_cols = list(set(inf_cols1+inf_cols2))
+    ### Check for infinite values in columns #####
+    if len(inf_cols) > 0:
+        for x in inf_cols:
+            df.loc[x,newcol] += ', infinite values: drop'
+    ##### Do the same for mixed dtype columns - they must be fixed! ##
+    if len(mixed_cols) > 0:
+        for x in mixed_cols:
+            df.loc[x,newcol] += ', fix mixed data types'
     return df
 ###################################################################################
