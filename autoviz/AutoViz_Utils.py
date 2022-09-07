@@ -685,7 +685,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             for each_conti in conti:
                 color1 = next(colors)
                 ax1 = plt.subplot(rows, cols, k)
-                sns.distplot(dft[each_conti],kde=False, ax=ax1, color=color1)
+                sns.histplot(dft[each_conti],kde=False, ax=ax1, color=color1)
                 k += 1
                 ax2 = plt.subplot(rows, cols, k)
                 sns.boxplot(dft[each_conti], ax=ax2, color=color1)
@@ -805,7 +805,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 for target_var, color2, class_label in zip(target_vars,colors,classes):
                     try:
                         if legend_flag <= label_limit:
-                            sns.distplot(dft.loc[dft[dep]==target_var][each_conti],
+                            sns.histplot(dft.loc[dft[dep]==target_var][each_conti],
                                 hist=False, kde=True,
                             #dft.ix[dft[dep]==target_var][each_conti].hist(
                                 bins=binsize, ax= ax1,
@@ -813,7 +813,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                             ax1.set_title('Distribution of %s' %each_conti)
                             legend_flag += 1
                         else:
-                            sns.distplot(dft.loc[dft[dep]==target_var][each_conti],bins=binsize, ax= ax1,
+                            sns.histplot(dft.loc[dft[dep]==target_var][each_conti],bins=binsize, ax= ax1,
                             label=target_var, hist=False, kde=True,
                             color=color2)
                             legend_flag += 1

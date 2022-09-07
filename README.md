@@ -6,11 +6,11 @@ Automatically Visualize any dataset, any size with a single line of code. Now yo
 From version 0.1.50 onwards, if you set `verbose=1` AutoViz now automatically analyzes your dataset and provides suggestions for how to clean your  variables in your data set. It detects missing values, rare categories, infinite values, mixed data types, and so much more. This will help you speed up your data cleansing activities. If you have suggestions to add more data cleaning activities please add an `Issue` in our GitHub and we will gladly consider it. Here is an example of how it looks:<br>
 <img align="center" src="https://i.ibb.co/NKf1gdg/autoviz-data-cleaning.png">
 
-Please ensure you upgrade autoviz to the latest version by:
+In order to get this latest function, you must upgrade autoviz to the latest version by:<br>
 ```pip install autoviz --upgrade```
 
-You can also get data suggestions without using verbose=1 by simply calling:<br>
-```AV.give_data_suggestions(df)``` after you define the AutoViz class. `df` is the dataframe.
+In the same version, you can also get data suggestions without using `verbose=1` by simply calling:<br>
+```AV.get_data_suggestions(df)``` after you define the AutoViz class. `df` refers to the dataframe.
 
 ### Dec-23-2021 Update: AutoViz now does Wordclouds! #autoviz #wordcloud
 AutoViz can now create Wordclouds automatically for your NLP variables in data. It detects NLP variables automatically and creates wordclouds for them. See Colab notebook for example: [AutoViz Demo with HTML setting](https://colab.research.google.com/drive/1r5QqESRZDY98FFfDOgVtMAVA_oaGtqqx?usp=sharing)

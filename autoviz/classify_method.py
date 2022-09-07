@@ -323,6 +323,7 @@ def classify_columns(df_preds, verbose=0):
             print(' Missing columns = %s' %left_subtract(list(train),flat_list))
     return sum_all_cols
 ####################################################################################
+from scipy.stats import probplot,skew
 def data_suggestions(data):
     """
     Modified by Ram Seshadri. Original idea for data suggestions module was a Kaggler. 
@@ -333,6 +334,7 @@ def data_suggestions(data):
     cat_cols1 = data.select_dtypes(include='object').columns.tolist()
     cat_cols2 = data.select_dtypes(include='category').columns.tolist()
     cat_cols = list(set(cat_cols1+cat_cols2))
+    num_cols = data.select_dtypes(include='float').columns.tolist()
 
     for i in data.columns:
         if i not in cat_cols:
@@ -368,16 +370,15 @@ def data_suggestions(data):
     df.loc[mask2,newcol] += df.loc[mask2,'first_comma'] + 'fill missing values'
     df.loc[mask2,'first_comma'] = ", "
     mask3 = df['nunique'] == 1
-    df.loc[mask3,newcol] += df.loc[mask3,'first_comma'] + 'invariant column: drop'
+    df.loc[mask3,newcol] += df.loc[mask3,'first_comma'] + 'invariant values: drop column'
     df.loc[mask3,'first_comma'] = ", "
     mask4 = df['NuniquePercent'] == 100
     df.loc[mask4,newcol] += df.loc[mask4,'first_comma'] + 'possible ID column: drop'
     df.loc[mask4,'first_comma'] = ", "
     mask5 = df['Nullpercent'] >= 90
-    df.loc[mask5,newcol] += df.loc[mask5,'first_comma'] + 'very high null percent: drop'
+    df.loc[mask5,newcol] += df.loc[mask5,'first_comma'] + 'very high %nulls: drop column'
     df.loc[mask5,'first_comma'] = ", "
     #### check for infinite values here #####
-    num_cols = data.select_dtypes(include='float').columns.tolist()
     inf_cols1 = np.array(num_cols)[[(data.loc[(data[col] == np.inf)]).shape[0]>0 for col in num_cols]].tolist()
     inf_cols2 = np.array(num_cols)[[(data.loc[(data[col] == -np.inf)]).shape[0]>0 for col in num_cols]].tolist()
     inf_cols = list(set(inf_cols1+inf_cols2))
@@ -385,6 +386,20 @@ def data_suggestions(data):
     if len(inf_cols) > 0:
         for x in inf_cols:
             df.loc[x,newcol] += df.loc[x,'first_comma'] + 'infinite values: drop'
+            df.loc[x,'first_comma'] = ", "
+    #### Check for skewed float columns #######
+    skew_cols1 = np.array(num_cols)[[(np.abs(np.round(data[col].skew(), 1)) > 1
+                    ) & (np.abs(np.round(data[col].skew(), 1)) <= 5) for col in num_cols]].tolist()
+    skew_cols2 = np.array(num_cols)[[(np.abs(np.round(data[col].skew(), 1)) > 5) for col in num_cols]].tolist()
+    skew_cols = list(set(skew_cols1+skew_cols2))
+    ### Check for skewed values in columns #####
+    if len(skew_cols1) > 0:
+        for x in skew_cols1:
+            df.loc[x,newcol] += df.loc[x,'first_comma'] + 'skewed column: cap or drop possible outliers'
+            df.loc[x,'first_comma'] = ", "
+    if len(skew_cols2) > 0:
+        for x in skew_cols2:
+            df.loc[x,newcol] += df.loc[x,'first_comma'] + 'highly skewed column: cap outliers or do box-cox transform'
             df.loc[x,'first_comma'] = ", "
     ##### Do the same for mixed dtype columns - they must be fixed! ##
     if len(mixed_cols) > 0:

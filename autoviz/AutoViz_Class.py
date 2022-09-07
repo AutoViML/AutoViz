@@ -205,6 +205,13 @@ class AutoViz_Class():
         This is a simple program to give data cleaning and improvement suggestions in class AV. 
         Make sure you send in a dataframe. Otherwise, this will give an error.
         """
+        return self.get_data_suggestions(X)
+
+    def get_data_suggestions(self, X):
+        """
+        This is a simple program to give data cleaning and improvement suggestions in class AV. 
+        Make sure you send in a dataframe. Otherwise, this will give an error.
+        """
         if isinstance(X, pd.DataFrame):
             dfx = data_suggestions(X)
             all_rows = dfx.shape[0]
@@ -378,7 +385,7 @@ class AutoViz_Class():
                     else:
                         print('No continuous var in data set: hence no distribution plots')
                 except:
-                    print('Could not draw Distribution Plots')
+                    print('Could not draw some Distribution Plots')
                 try:
                     svg_data = draw_violinplot(dft,depVar,continuous_vars,verbose,chart_format,problem_type, mk_dir)
                     self.add_plots('violin_plot',svg_data)
@@ -392,28 +399,28 @@ class AutoViz_Class():
                                             problem_type, classes, mk_dir)
                     self.add_plots('heat_map',svg_data)
                 except:
-                    print('Could not draw Heat Maps')
+                    print('Could not draw some Heat Maps')
                 if date_vars != [] and len(continuous_vars) > 0:
                     try:
                         svg_data = draw_date_vars(
                             dft,depVar,date_vars,continuous_vars,verbose,chart_format,problem_type, mk_dir)
                         self.add_plots('date_plot',svg_data)
                     except:
-                        print('Could not draw Time Series plots')
+                        print('Could not draw some Time Series plots')
                 if len(continuous_vars) > 0:
                     try:
                         svg_data = draw_pivot_tables(dft,find_remove_duplicates(cats+bool_vars),
                                     continuous_vars,problem_type,verbose,chart_format,depVar,classes, mk_dir)
                         self.add_plots('pivot_plot',svg_data)
                     except:
-                        print('Could not draw Pivot Charts against Dependent Variable')
+                        print('Could not draw some Pivot Charts against Dependent Variable')
                     try:
                         svg_data = draw_barplots(dft,cats,continuous_vars,problem_type,verbose,
                                                     chart_format,depVar,classes, mk_dir)
                         self.add_plots('bar_plot',svg_data)
                         #self.add_plots('bar_plot',None)
                     except:
-                        print('Could not draw Bar Charts')
+                        print('Could not draw some Bar Charts')
                 else:
                     print ('No Continuous Variables at all in this dataset...')
             else :
@@ -426,13 +433,13 @@ class AutoViz_Class():
                     print(e)
                     traceback.print_exc()
                     print("Exception Drawing Scatter Plots")
-                    print('Could not draw Scatter Plots')
+                    print('Could not draw some Scatter Plots')
                 try:
                     svg_data = draw_pair_scatters(dft,continuous_vars,
                                                   problem_type,verbose,chart_format,depVar,classes,lowess, mk_dir)
                     self.add_plots('pair_scatter',svg_data)
                 except:
-                    print('Could not draw Pair Scatter Plots')
+                    print('Could not draw some Pair Scatter Plots')
                 try:
                     if type(depVar) == str:
                         othernums = [x for x in continuous_vars if x not in [depVar]]
@@ -445,12 +452,12 @@ class AutoViz_Class():
                     else:
                         print('No continuous var in data set: hence no distribution plots')
                 except:
-                    print('Could not draw Distribution Plots')
+                    print('Could not draw some Distribution Plots')
                 try:
                     svg_data = draw_violinplot(dft,depVar,continuous_vars,verbose,chart_format,problem_type, mk_dir)
                     self.add_plots('violin_plot',svg_data)
                 except:
-                    print('Could not draw Violin Plots')
+                    print('Could not draw some Violin Plots')
                 try:
                     numeric_cols = [x for x in dft.select_dtypes(include='number').columns.tolist() if x not in [depVar]]
                     numeric_cols = list_difference(numeric_cols, date_vars)
@@ -459,21 +466,21 @@ class AutoViz_Class():
                                             classes, mk_dir)
                     self.add_plots('heat_map',svg_data)
                 except:
-                    print('Could not draw Heat Maps')
+                    print('Could not draw some Heat Maps')
                 if date_vars != [] and len(continuous_vars) > 0:
                     try:
                         svg_data = draw_date_vars(dft,depVar,date_vars,
                                                   continuous_vars,verbose,chart_format,problem_type, mk_dir)
                         self.add_plots('date_plot',svg_data)
                     except:
-                        print('Could not draw Time Series plots')
+                        print('Could not draw some Time Series plots')
                 if len(continuous_vars) > 0:
                     try:
                         svg_data = draw_pivot_tables(
                             dft,find_remove_duplicates(cats+bool_vars),continuous_vars,problem_type,verbose,chart_format,depVar,classes, mk_dir)
                         self.add_plots('pivot_plot',svg_data)
                     except:
-                        print('Could not draw Pivot Charts against Dependent Variable')
+                        print('Could not draw some Pivot Charts against Dependent Variable')
                     try:
                         svg_data = draw_barplots(dft,find_remove_duplicates(cats+bool_vars),continuous_vars,problem_type,
                                         verbose,chart_format, depVar, classes, mk_dir)
@@ -481,7 +488,7 @@ class AutoViz_Class():
                         pass
                     except:
                         if verbose <= 1:
-                            print('Could not draw Bar Charts')
+                            print('Could not draw some Bar Charts')
                         pass
                 else:
                     print ('No Continuous Variables at all in this dataset...')
