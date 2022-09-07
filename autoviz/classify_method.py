@@ -293,7 +293,7 @@ def classify_columns(df_preds, verbose=0):
         all_rows = dfx.shape[0]
         ax = dfx.head(all_rows).style.background_gradient(cmap='Reds').set_properties(**{'font-family': 'Segoe UI'})#.hide(axis='index')
         display(ax);
-    if verbose == 2:
+    if verbose >= 2:
         print('  Printing upto %d columns max in each category:' %max_cols_to_print)
         print("    Numeric Columns : %s" %continuous_vars[:max_cols_to_print])
         print("    Integer-Categorical Columns: %s" %int_vars[:max_cols_to_print])
@@ -348,35 +348,35 @@ def data_suggestions(data):
     df = pd.DataFrame(
         {
          #'column': list(data),
-        'nunique': nunik,
+        'Nuniques': nunik,
          'NuniquePercent': (100*(nunik/length)),
          'dtype': data.dtypes,
          'Nulls' : nulls,
          'Nullpercent' : 100*(nulls/length),
          'Value counts Min':minn 
         },
-        columns = ['nunique', 'dtype','Nulls','Nullpercent', 'NuniquePercent',
-                       'Value counts Min']).sort_values(by ='nunique',ascending = False)
+        columns = ['Nuniques', 'dtype','Nulls','Nullpercent', 'NuniquePercent',
+                       'Value counts Min']).sort_values(by ='Nuniques',ascending = False)
     newcol = 'Data cleaning improvement suggestions'
     mixed_cols = [col for col in data.columns if len(data[col].apply(type).value_counts()) > 1]
     df[newcol] = ''
     df['first_comma'] = ''
     if len(cat_cols) > 0:
         mask0 = df['dtype'] == 'object'
-        mask1 = df['Value counts Min']/df['nunique'] <= 0.05
+        mask1 = df['Value counts Min']/df['Nuniques'] <= 0.05
         df.loc[mask0&mask1,newcol] += df.loc[mask0&mask1,'first_comma'] + 'combine rare categories'
         df.loc[mask0&mask1,'first_comma'] = ', '
     mask2 = df['Nulls'] > 0
     df.loc[mask2,newcol] += df.loc[mask2,'first_comma'] + 'fill missing values'
     df.loc[mask2,'first_comma'] = ", "
-    mask3 = df['nunique'] == 1
+    mask3 = df['Nuniques'] == 1
     df.loc[mask3,newcol] += df.loc[mask3,'first_comma'] + 'invariant values: drop column'
     df.loc[mask3,'first_comma'] = ", "
     mask4 = df['NuniquePercent'] == 100
     df.loc[mask4,newcol] += df.loc[mask4,'first_comma'] + 'possible ID column: drop'
     df.loc[mask4,'first_comma'] = ", "
     mask5 = df['Nullpercent'] >= 90
-    df.loc[mask5,newcol] += df.loc[mask5,'first_comma'] + 'very high %nulls: drop column'
+    df.loc[mask5,newcol] += df.loc[mask5,'first_comma'] + 'very high nulls percent: drop column'
     df.loc[mask5,'first_comma'] = ", "
     #### check for infinite values here #####
     inf_cols1 = np.array(num_cols)[[(data.loc[(data[col] == np.inf)]).shape[0]>0 for col in num_cols]].tolist()
@@ -399,7 +399,7 @@ def data_suggestions(data):
             df.loc[x,'first_comma'] = ", "
     if len(skew_cols2) > 0:
         for x in skew_cols2:
-            df.loc[x,newcol] += df.loc[x,'first_comma'] + 'highly skewed column: cap outliers or do box-cox transform'
+            df.loc[x,newcol] += df.loc[x,'first_comma'] + 'highly skewed column: remove outliers or do box-cox transform'
             df.loc[x,'first_comma'] = ", "
     ##### Do the same for mixed dtype columns - they must be fixed! ##
     if len(mixed_cols) > 0:

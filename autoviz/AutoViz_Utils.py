@@ -674,7 +674,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 conti += [dep]
         ### Be very careful with the next line. we have used the plural "subplots" ##
         ## In this case, you have ax as an array and you have to use (row,col) to get each ax!
-        ########## This is where you insert the logic for displots ##############
+        ########## This is where you insert the logic for distplots ##############
         sns.color_palette("Set1")
         ##### First draw all the numeric variables in row after row #############
         if not len(conti) == 0:
@@ -682,10 +682,16 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             rows = len(conti)
             fig, axes = plt.subplots(rows, cols, figsize=(width_size,rows*height_size))
             k = 1
+            binsize = 30
             for each_conti in conti:
                 color1 = next(colors)
                 ax1 = plt.subplot(rows, cols, k)
-                sns.histplot(dft[each_conti],kde=False, ax=ax1, color=color1)
+                dft[each_conti].hist(
+                    bins=binsize, 
+                #sns.histplot(dft[each_conti],
+                    #kde=False,
+                #    kde=True, stat="density", linewidth=0,
+                    ax=ax1, color=color1)
                 k += 1
                 ax2 = plt.subplot(rows, cols, k)
                 sns.boxplot(dft[each_conti], ax=ax2, color=color1)
@@ -719,11 +725,13 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 ### In some small datasets, we get floats as categories since there are so few categories.
                 if dft[each_cat].dtype in ['float16','float32','float64']:
                     ### In those cases, we must remove the width_size since it thinks they are an index and errors.
-                    dft[each_cat].value_counts().plot(kind='bar', color=color2,
+                    dft[each_cat].value_counts().plot(kind='bar', 
+                                            #color=color2,
                                             ax=ax1,label='%s' %each_cat)
                     labels = dft[each_cat].value_counts().index.tolist()
                 else:
-                    dft[each_cat].value_counts()[:width_size].plot(kind='bar', color=color2,
+                    dft[each_cat].value_counts()[:width_size].plot(kind='bar', 
+                                            #color=color2,
                                             ax=ax1,label='%s' %each_cat)
                     labels = dft[each_cat].value_counts()[:width_size].index.tolist()
                 ax1.set_xticklabels(labels,**kwds);
@@ -781,7 +789,9 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 for i in range(len(row_ticks)):
                     color_list.append(next(colors))
                 #print('color list = %s' %color_list)
-                pivot_df.loc[:,row_ticks].plot.bar(stacked=True, color=color_list, ax=ax1)
+                pivot_df.loc[:,row_ticks].plot.bar(stacked=True, 
+                    #color=color_list, 
+                    ax=ax1)
                 #dft[each_conti].value_counts()[:width_size].plot(kind='bar',ax=ax1,
                 #                    label=class_label)
                 #ax1.set_xticklabels(labels,**kwds);
@@ -796,7 +806,9 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 for i in range(len(row_ticks)):
                     color_list.append(next(colors))
                 #print('color list = %s' %color_list)
-                pivot_df.loc[:,row_ticks].plot.bar(stacked=True, color=color_list, ax=ax1)
+                pivot_df.loc[:,row_ticks].plot.bar(stacked=True, 
+                    #color=color_list,
+                    ax=ax1)
                 #dft[each_conti].value_counts()[:width_size].plot(kind='bar',ax=ax1,
                 #                    label=class_label)
                 #ax1.set_xticklabels(labels,**kwds);
@@ -805,17 +817,24 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 for target_var, color2, class_label in zip(target_vars,colors,classes):
                     try:
                         if legend_flag <= label_limit:
-                            sns.histplot(dft.loc[dft[dep]==target_var][each_conti],
-                                hist=False, kde=True,
-                            #dft.ix[dft[dep]==target_var][each_conti].hist(
+                            #sns.histplot(dft.loc[dft[dep]==target_var][each_conti],
+                            #    hist=False, kde=True, stat="density",
+                            dft.loc[dft[dep]==target_var][each_conti].hist(
                                 bins=binsize, ax= ax1,
-                                label=target_var, color=color2)
+                                label=target_var, 
+                                #color=color2
+                                )
                             ax1.set_title('Distribution of %s' %each_conti)
                             legend_flag += 1
                         else:
-                            sns.histplot(dft.loc[dft[dep]==target_var][each_conti],bins=binsize, ax= ax1,
-                            label=target_var, hist=False, kde=True,
-                            color=color2)
+                            #sns.histplot(dft.loc[dft[dep]==target_var][each_conti],
+                            #hist=False, kde=True, stat="density",
+                            dft.loc[dft[dep]==target_var][each_conti].hist(
+                                #kde=True, stat="density", linewidth=0,
+                                bins=binsize, ax= ax1,
+                                label=target_var, 
+                                #color=color2
+                                )
                             legend_flag += 1
                             ax1.set_title('Normed Histogram of %s' %each_conti)
                     except:
@@ -1552,8 +1571,8 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
     #    categorical_vars)[dft[categorical_vars].nunique()>30].tolist())
     #############   Next you can print them if verbose is set to print #########
     ppt = pprint.PrettyPrinter(indent=4)
-    if verbose==1 and len(cols_list) <= max_cols_analyzed:
-        marthas_columns(dft,verbose)
+    if verbose>=2 and len(cols_list) <= max_cols_analyzed:
+        #marthas_columns(dft,verbose)
         print("   Columns to delete:")
         ppt.pprint('   %s' %cols_delete)
         print("   Boolean variables %s ")

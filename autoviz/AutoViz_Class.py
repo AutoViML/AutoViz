@@ -220,7 +220,7 @@ class AutoViz_Class():
         else:
             print("Input must be a dataframe. Please check input and try again.")
 
-    def AutoViz(self, filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
+    def AutoViz(self, filename, sep=',', depVar='', dfte=None, header=0, verbose=1,
                             lowess=False,chart_format='svg',max_rows_analyzed=150000,
                                 max_cols_analyzed=30, save_plot_dir=None):
         """
