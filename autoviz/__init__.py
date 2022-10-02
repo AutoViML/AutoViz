@@ -1,5 +1,7 @@
 name = "autoviz"
 from .__version__ import __version__, __holo_version__
+from .AutoViz_Class import AutoViz_Class
+from .classify_method import data_cleaning_suggestions
 if __name__ == "__main__":
     module_type = 'Running'
 else:
@@ -16,4 +18,3 @@ print("        chart_format='bokeh' displays charts in your local Jupyter notebo
 print("        chart_format='server' displays charts in your browser: one tab for each chart type")
 print("        chart_format='html' silently saves interactive HTML files in your local machine")
 ###########################################################################################
-

@@ -3,14 +3,17 @@
 Automatically Visualize any dataset, any size with a single line of code. Now you can save these interactive charts as HTML files automatically with the `"html"` setting.
 
 ### Sep-2022 Update: AutoViz now provides data cleansing suggestions! #autoviz #datacleaning
-From version 0.1.50 onwards, if you set `verbose=1` AutoViz now automatically analyzes your dataset and provides suggestions for how to clean your  variables in your data set. It detects missing values, rare categories, infinite values, mixed data types, and so much more. This will help you speed up your data cleansing activities. If you have suggestions to add more data cleaning activities please add an `Issue` in our GitHub and we will gladly consider it. Here is an example of how it looks:<br>
+From version 0.1.50 onwards, AutoViz now automatically analyzes your dataset and provides suggestions for how to clean your  data set. It detects missing values, identifies rare categories, finds infinite values, detects mixed data types, and so much more. This will help you tremendously speed up your data cleaning activities. If you have suggestions to add more data cleaning steps please file an `Issue` in our GitHub and we will gladly consider it. Here is an example of how data cleaning suggestions look:<br>
 <img align="center" src="https://i.ibb.co/NKf1gdg/autoviz-data-cleaning.png">
 
 In order to get this latest function, you must upgrade autoviz to the latest version by:<br>
+
 ```pip install autoviz --upgrade```
 
-In the same version, you can also get data suggestions without using `verbose=1` by simply calling:<br>
-```AV.get_data_suggestions(df)``` after you define the AutoViz class. `df` refers to the dataframe.
+In the same version, you can also get data suggestions by using `verbose=1` or by simply importing:<br>
+
+```from autoviz import data_cleaning_suggestions
+data_cleaning_suggestions(df)```
 
 ### Dec-23-2021 Update: AutoViz now does Wordclouds! #autoviz #wordcloud
 AutoViz can now create Wordclouds automatically for your NLP variables in data. It detects NLP variables automatically and creates wordclouds for them. See Colab notebook for example: [AutoViz Demo with HTML setting](https://colab.research.google.com/drive/1r5QqESRZDY98FFfDOgVtMAVA_oaGtqqx?usp=sharing)
@@ -44,7 +47,7 @@ Now you can use AutoViz to create Interactive Bokeh charts and dashboards (see b
 [![PyPI License](https://img.shields.io/pypi/l/autoviz.svg)](https://github.com/AutoViML/AutoViz/blob/master/LICENSE)
 
 AutoViz performs automatic visualization of any dataset with one line of code.
-Give it any input file (CSV, txt or json format) of any size and AutoViz will visualize it, provided you set the `max_rows_analyzed` and `max_cols_analyzed` setting within the bounds of your machine's memory limit. 
+Give it any input file (CSV, txt or json format) of any size and AutoViz will visualize it, provided you set the `max_rows_analyzed` and `max_cols_analyzed` setting within the bounds of your machine's memory limit.
 
 AutoViz can now create charts in multiple  formats using the `chart_format` setting:
 - If `chart_format ='png'` or `'svg'` or `'jpg'`: Matplotlib charts are plotted inline.
@@ -129,7 +132,7 @@ AutoViz will do the rest. You will see charts and plots on your screen.
 
 ![var_charts](var_charts.JPG)
 
-`AV.AutoViz` is the main plotting function in AV. Depending on what `chart_format` you choose, AutoViz will automatically call either the `AutoViz_Main` function or `AutoViz_Holo` function. 
+`AV.AutoViz` is the main plotting function in AV. Depending on what `chart_format` you choose, AutoViz will automatically call either the `AutoViz_Main` function or `AutoViz_Holo` function.
 
 **Notes:**
 
