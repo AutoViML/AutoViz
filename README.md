@@ -6,14 +6,15 @@ Automatically Visualize any dataset, any size with a single line of code. Now yo
 From version 0.1.50 onwards, AutoViz now automatically analyzes your dataset and provides suggestions for how to clean your  data set. It detects missing values, identifies rare categories, finds infinite values, detects mixed data types, and so much more. This will help you tremendously speed up your data cleaning activities. If you have suggestions to add more data cleaning steps please file an `Issue` in our GitHub and we will gladly consider it. Here is an example of how data cleaning suggestions look:<br>
 <img align="center" src="https://i.ibb.co/NKf1gdg/autoviz-data-cleaning.png">
 
-In order to get this latest function, you must upgrade autoviz to the latest version by:<br>
-
-```pip install autoviz --upgrade
+In order to get this latest function, you must upgrade autoviz to the latest version by:
+```
+pip install autoviz --upgrade
 ```
 
 In the same version, you can also get data suggestions by using `verbose=1` or by simply importing:<br>
 
-```from autoviz import data_cleaning_suggestions
+```
+from autoviz import data_cleaning_suggestions
 data_cleaning_suggestions(df)
 ```
 
