@@ -11,7 +11,7 @@ In order to get this latest function, you must upgrade autoviz to the latest ver
 pip install autoviz --upgrade
 ```
 
-In the same version, you can also get data suggestions by using `verbose=1` or by simply importing:<br>
+In the same version, you can also get data suggestions by using `AV.AutoViz(......, verbose=1)` or by simply importing it:<br>
 
 ```
 from autoviz import data_cleaning_suggestions
