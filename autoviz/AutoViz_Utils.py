@@ -170,13 +170,14 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
     noplots = copy.deepcopy(N)
     #### You can set the number of subplots per row and the number of categories to display here cols = 2
     displaylimit = 20
-    categorylimit = 10
+    categorylimit = 5
     imgdata_list = []
     width_size = 15
     height_size = 5
     stringlimit = 20
     combos = combinations(cats, 2)
     N = len(cats)
+    sns.set_palette("Set1")
     if N <= 1:
         ### if there are not many categorical variables, there is nothing to plot
         return imgdata_list
@@ -213,48 +214,48 @@ def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='',
         else:
             rows = int((noplots/cols)+0.5)
         ### Now let us draw the pivot charts ############
-        fig = plt.figure()
-        if cols < 2:
-            fig.set_size_inches(min(15,8),rows*height_size)
-            fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
-            fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
-        else:
-            fig.set_size_inches(min(cols*10,20),rows*height_size)
-            fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
-            fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
-        ### we start to draw the pivot tables here #########
-        for (var1, var2) in combos:
-            color1 = random.choice(colormaps)
-            data = pd.DataFrame(dicti)
-            x=dft[var1]
-            y=dft[var2]
-            ax1 = fig.add_subplot(rows,cols,counter)
-            nocats = min(categorylimit,dft[var1].nunique())
-            nocats1 = min(categorylimit,dft[var2].nunique())
-            if dft[depVar].dtype==object or dft[depVar].dtype==bool:
-                dft[depVar] = dft[depVar].factorize()[0]
-            if dft[depVar].dtype == object:
-                data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2, aggfunc='count',fill_value=0).head(nocats)
-            elif str(dft[depVar].dtype) in ['category']:
-                data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2, aggfunc='count',fill_value=0).head(nocats)
-            else:                
-                data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2).head(nocats)
-            data = data[data.columns[:nocats1]] #### make sure you don't print more than 10 rows of data
-            data.plot(kind='bar',ax=ax1,colormap=color1)
-            ax1.set_xlabel(var1)
-            ax1.set_ylabel(depVar)
-            if dft[var1].dtype == object or str(dft[depVar].dtype) in ['category']:
-                labels = data.index.str[:stringlimit].tolist()
+        if countplots > 0:
+            fig = plt.figure()
+            if cols < 2:
+                fig.set_size_inches(min(15,8),rows*height_size)
+                fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
+                fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
             else:
-                labels = data.index.tolist()
-            ax1.set_xticklabels(labels,fontdict={'fontsize':10}, rotation = 45, ha="right")
-            ax1.legend(fontsize="medium")
-            ax1.set_title('%s (Mean) by %s and %s' %(depVar,var1,var2),fontsize=12)
-            counter += 1
-        fig.tight_layout()
-        fig.suptitle('Pivot Tables of each Continuous var by 2 Categoricals', fontsize=15,y=1.01);
-    else:
-        print('No pivot tables plotted since no dependent variable given as input')
+                fig.set_size_inches(min(cols*10,20),rows*height_size)
+                fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
+                fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
+            ### we start to draw the pivot tables here #########
+            for (var1, var2) in combos:
+                #color1 = random.choice(colormaps)
+                color1 = "Set1"
+                data = pd.DataFrame(dicti)
+                x=dft[var1]
+                y=dft[var2]
+                ax1 = fig.add_subplot(rows,cols,counter)
+                nocats = min(categorylimit,dft[var1].nunique())
+                nocats1 = min(categorylimit,dft[var2].nunique())
+                if dft[depVar].dtype==object or dft[depVar].dtype==bool:
+                    dft[depVar] = dft[depVar].factorize()[0]
+                if dft[depVar].dtype == object:
+                    data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2, aggfunc='count',fill_value=0).head(nocats)
+                elif str(dft[depVar].dtype) in ['category']:
+                    data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2, aggfunc='count',fill_value=0).head(nocats)
+                else:                
+                    data = pd.pivot_table(dft,values=depVar,index=var1, columns=var2).head(nocats)
+                data = data[data.columns[:nocats1]] #### make sure you don't print more than 10 rows of data
+                data.plot(kind='bar',ax=ax1,colormap=color1)
+                ax1.set_xlabel(var1)
+                ax1.set_ylabel(depVar)
+                if dft[var1].dtype == object or str(dft[depVar].dtype) in ['category']:
+                    labels = data.index.str[:stringlimit].tolist()
+                else:
+                    labels = data.index.tolist()
+                ax1.set_xticklabels(labels,fontdict={'fontsize':10}, rotation = 45, ha="right")
+                ax1.legend(fontsize="medium")
+                ax1.set_title('%s (Mean) by %s and %s' %(depVar,var1,var2),fontsize=12)
+                counter += 1
+            fig.tight_layout()
+            fig.suptitle('Target (average) by two Categorical vars (top 5 categories)', fontsize=15,y=1.01);
     image_count = 0
     if verbose == 2:
         imgdata_list.append(save_image_data(fig, chart_format,
@@ -298,6 +299,7 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
     cols = 2
     width_size = 15
     height_size = 4
+    sns.set_palette("Set1")
     if dep == None or dep == '':
         ### when there is no dependent variable, you can't plot anything in scatters here ###
         return None
@@ -675,7 +677,8 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
         ### Be very careful with the next line. we have used the plural "subplots" ##
         ## In this case, you have ax as an array and you have to use (row,col) to get each ax!
         ########## This is where you insert the logic for distplots ##############
-        sns.color_palette("Set1")
+        #sns.color_palette("Set1")
+        sns.set_palette("Set1")
         ##### First draw all the numeric variables in row after row #############
         if not len(conti) == 0:
             cols = 3
@@ -748,6 +751,8 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
     else:
         ######### This is for Classification problems only ########
         #### Now you can draw both object and numeric variables using same conti variable
+        #sns.color_palette("Set1")
+        sns.set_palette("Set1")
         conti = conti + cats
         cols = 2
         image_count = 0
@@ -764,7 +769,11 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             classes = [str(x) for x in classes]
         label_limit = len(target_vars)
         legend_flag = 1
-        
+        row_ticks = dft[dep].unique().tolist()
+        ######## This is where each of the distribution plots for all kinds of vars is plotted ##       
+        color_list = []
+        for i in range(len(row_ticks)):
+            color_list.append(next(colors))
         for each_conti,k in zip(conti,range(len(conti))):
             if dft[each_conti].isnull().sum() > 0:
                 if str(dft[each_conti].dtype) in ['category']:
@@ -784,13 +793,9 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 labels = dft[each_conti].value_counts()[:width_size].index.tolist()
                 conti_df = dft[[dep,each_conti]].groupby([dep,each_conti]).size().nlargest(width_size).reset_index(name='Values')
                 pivot_df = conti_df.pivot(index=each_conti, columns=dep, values='Values')
-                row_ticks = dft[dep].unique().tolist()
-                color_list = []
-                for i in range(len(row_ticks)):
-                    color_list.append(next(colors))
                 #print('color list = %s' %color_list)
                 pivot_df.loc[:,row_ticks].plot.bar(stacked=True, 
-                    #color=color_list, 
+                    color=color_list, 
                     ax=ax1)
                 #dft[each_conti].value_counts()[:width_size].plot(kind='bar',ax=ax1,
                 #                    label=class_label)
@@ -801,39 +806,37 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 labels = dft[each_conti].value_counts()[:width_size].index.tolist()
                 conti_df = dft[[dep,each_conti]].groupby([dep,each_conti]).size().nlargest(width_size).reset_index(name='Values')
                 pivot_df = conti_df.pivot(index=each_conti, columns=dep, values='Values')
-                row_ticks = dft[dep].unique().tolist()
-                color_list = []
-                for i in range(len(row_ticks)):
-                    color_list.append(next(colors))
                 #print('color list = %s' %color_list)
                 pivot_df.loc[:,row_ticks].plot.bar(stacked=True, 
-                    #color=color_list,
+                    color=color_list,
                     ax=ax1)
                 #dft[each_conti].value_counts()[:width_size].plot(kind='bar',ax=ax1,
                 #                    label=class_label)
                 #ax1.set_xticklabels(labels,**kwds);
                 ax1.set_title('Distribution of %s (top %d categories only)' %(each_conti,width_size))
             else:
-                for target_var, color2, class_label in zip(target_vars,colors,classes):
+                for target_var, color2, class_label in zip(target_vars,color_list,classes):
                     try:
                         if legend_flag <= label_limit:
-                            #sns.histplot(dft.loc[dft[dep]==target_var][each_conti],
-                            #    hist=False, kde=True, stat="density",
-                            dft.loc[dft[dep]==target_var][each_conti].hist(
-                                bins=binsize, ax= ax1,
+                            sns.histplot(dft.loc[dft[dep]==target_var][each_conti],
+                                #hist=False, 
+                                kde=True, stat="density",
+                            #dft.loc[dft[dep]==target_var][each_conti].hist(
+                            #    bins=binsize, ax= ax1,
                                 label=target_var, 
-                                #color=color2
+                                color=color2,
                                 )
                             ax1.set_title('Distribution of %s' %each_conti)
                             legend_flag += 1
                         else:
-                            #sns.histplot(dft.loc[dft[dep]==target_var][each_conti],
-                            #hist=False, kde=True, stat="density",
-                            dft.loc[dft[dep]==target_var][each_conti].hist(
+                            sns.kdeplot(dft.loc[dft[dep]==target_var][each_conti],
+                                #hist=False, 
+                                #kde=True, stat="density",
+                            #dft.loc[dft[dep]==target_var][each_conti].hist(
                                 #kde=True, stat="density", linewidth=0,
-                                bins=binsize, ax= ax1,
+                            #    bins=binsize, ax= ax1,
                                 label=target_var, 
-                                #color=color2
+                                color=color2,
                                 )
                             legend_flag += 1
                             ax1.set_title('Normed Histogram of %s' %each_conti)
@@ -862,7 +865,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             #fig.subplots_adjust(hspace=0.3) ### This controls the space betwen rows
             #fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
             ###### Precentage Distribution is first #################
-            dft[dep].value_counts(1).plot(ax=ax1,kind='bar')
+            dft[dep].value_counts(1).plot(ax=ax1,kind='bar', color=color_list)
             if dft[dep].dtype == object:
                 dft[dep] = dft[dep].factorize()[0]
             for p in ax1.patches:
@@ -874,7 +877,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             ax1.set_xticklabels(classes, rotation = 45, ha="right", fontsize=9)
             ax1.set_title('Percentage Distribution of Target = %s' %dep, fontsize=10, y=1.05)
             #### Freq Distribution is next ###########################
-            dft[dep].value_counts().plot(ax=ax2,kind='bar')
+            dft[dep].value_counts().plot(ax=ax2,kind='bar', color=color_list)
             for p in ax2.patches:
                 ax2.annotate(str(round(p.get_height(),2)), (round(p.get_x()*1.01,2), round(p.get_height()*1.01,2)))
             #### Do not change the next 2 lines even though they may appear redundant. Otherwise it will error!
@@ -915,6 +918,8 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression', 
         othernums = [x for x in nums if x not in [dep]]
     else:
         othernums = [x for x in nums if x not in dep]
+    #sns.color_palette("Set1")
+    sns.set_palette("Set1")
     if modeltype == 'Regression' or dep == None or dep == '':
         image_count = 0
         if modeltype == 'Regression':

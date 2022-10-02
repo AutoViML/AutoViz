@@ -362,7 +362,7 @@ def data_suggestions(data):
         columns = ['Nuniques', 'dtype','Nulls','Nullpercent', 'NuniquePercent',
                        'Value counts Min']).sort_values(by ='Nuniques',ascending = False)
     newcol = 'Data cleaning improvement suggestions'
-    print('%s: all dark red columns must be fixed before proceeding to ML modeling.' %newcol)
+    print('%s. Complete them before proceeding to ML modeling.' %newcol)
     mixed_cols = [col for col in data.columns if len(data[col].apply(type).value_counts()) > 1]
     df[newcol] = ''
     df['first_comma'] = ''
