@@ -8,12 +8,14 @@ From version 0.1.50 onwards, AutoViz now automatically analyzes your dataset and
 
 In order to get this latest function, you must upgrade autoviz to the latest version by:<br>
 
-```pip install autoviz --upgrade```
+```pip install autoviz --upgrade
+```
 
 In the same version, you can also get data suggestions by using `verbose=1` or by simply importing:<br>
 
 ```from autoviz import data_cleaning_suggestions
-data_cleaning_suggestions(df)```
+data_cleaning_suggestions(df)
+```
 
 ### Dec-23-2021 Update: AutoViz now does Wordclouds! #autoviz #wordcloud
 AutoViz can now create Wordclouds automatically for your NLP variables in data. It detects NLP variables automatically and creates wordclouds for them. See Colab notebook for example: [AutoViz Demo with HTML setting](https://colab.research.google.com/drive/1r5QqESRZDY98FFfDOgVtMAVA_oaGtqqx?usp=sharing)
