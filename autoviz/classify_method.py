@@ -382,7 +382,7 @@ def data_suggestions(data):
     df.loc[mask3,'first_comma'] = ", "
     if len(non_num_cols) > 0:
         for x in non_num_cols:
-            if df.loc[x, 'Nullpercent'] == 100:
+            if df.loc[x, 'NuniquePercent'] == 100:
                 df.loc[x, newcol] += df.loc[x,'first_comma'] + 'possible ID column: drop'
                 df.loc[x,'first_comma'] = ", "
     mask5 = df['Nullpercent'] >= 90
