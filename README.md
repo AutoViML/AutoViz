@@ -2,45 +2,6 @@
 
 Automatically Visualize any dataset, any size with a single line of code. Now you can save these interactive charts as HTML files automatically with the `"html"` setting.
 
-### Sep-2022 Update: AutoViz now provides data cleansing suggestions! #autoviz #datacleaning
-From version 0.1.50 onwards, AutoViz now automatically analyzes your dataset and provides suggestions for how to clean your  data set. It detects missing values, identifies rare categories, finds infinite values, detects mixed data types, and so much more. This will help you tremendously speed up your data cleaning activities. If you have suggestions to add more data cleaning steps please file an `Issue` in our GitHub and we will gladly consider it. Here is an example of how data cleaning suggestions look:<br>
-<img align="center" src="https://i.ibb.co/NKf1gdg/autoviz-data-cleaning.png">
-
-In order to get this latest function, you must upgrade autoviz to the latest version by:
-```
-pip install autoviz --upgrade
-```
-
-In the same version, you can also get data suggestions by using `AV.AutoViz(......, verbose=1)` or by simply importing it:<br>
-
-```
-from autoviz import data_cleaning_suggestions
-data_cleaning_suggestions(df)
-```
-
-### Dec-23-2021 Update: AutoViz now does Wordclouds! #autoviz #wordcloud
-AutoViz can now create Wordclouds automatically for your NLP variables in data. It detects NLP variables automatically and creates wordclouds for them. See Colab notebook for example: [AutoViz Demo with HTML setting](https://colab.research.google.com/drive/1r5QqESRZDY98FFfDOgVtMAVA_oaGtqqx?usp=sharing)
-
-<img align="center" src="https://i.postimg.cc/DyT466xP/wordclouds.png">
-
-### Dec 21, 2021: AutoViz now runs on Docker containers as part of MLOps pipelines. Check out Orchest.io
-We are excited to announce that AutoViz and Deep_AutoViML are now available as containerized applications on Docker. This means that you can build data pipelines using a fantastic tool like [orchest.io](orchest.io) to build MLOps pipelines visually. Here are two sample pipelines we have created:
-
-<b>AutoViz pipeline</b>: https://lnkd.in/g5uC-z66
-<b>Deep_AutoViML pipeline</b>: https://lnkd.in/gdnWTqCG
-
-You can find more examples and a wonderful video on [orchest's web site](https://github.com/orchest/orchest-examples)
-![banner](https://github.com/rsesha/autoviz_pipeline/blob/main/autoviz_orchest.png)
-
-### Dec-17-2021 AutoViz now uses HoloViews to display dashboards with Bokeh and save them as Dynamic HTML for web serving #HTML #Bokeh #Holoviews
-Now you can use AutoViz to create Interactive Bokeh charts and dashboards (see below) either in Jupyter Notebooks or in the browser. Use chart_format as follows:
-- `chart_format='bokeh'`: interactive Bokeh dashboards are plotted in Jupyter Notebooks.
-- `chart_format='server'`, dashboards will pop up for each kind of chart on your web browser.
-- `chart_format='html'`, interactive Bokeh charts will be silently saved as Dynamic HTML files under `AutoViz_Plots` directory
-<img align="center" src="https://i.postimg.cc/MTCZ6GzQ/Auto-Viz-HTML-dashboards.png" />
-
-![banner](intro2.gif)
-
 [![Pepy Downloads](https://pepy.tech/badge/autoviz)](https://pepy.tech/project/autoviz)
 [![Pepy Downloads per week](https://pepy.tech/badge/autoviz/week)](https://pepy.tech/project/autoviz)
 [![Pepy Downloads per month](https://pepy.tech/badge/autoviz/month)](https://pepy.tech/project/autoviz)
@@ -172,6 +133,43 @@ AutoViz will do the rest. You will see charts and plots on your screen.
 - `save_plot_dir` - directory you want the plots to be saved. Default is None which means it is saved under the current directory under a sub-folder named `AutoViz_Plots`. If the `save_plot_dir` does not exist, it creates it.
 
 ![server_charts](server_charts.JPG)
+
+### Sep-2022 Update: AutoViz now provides data cleansing suggestions! #autoviz #datacleaning
+From version 0.1.50 onwards, AutoViz now automatically analyzes your dataset and provides suggestions for how to clean your  data set. It detects missing values, identifies rare categories, finds infinite values, detects mixed data types, and so much more. This will help you tremendously speed up your data cleaning activities. If you have suggestions to add more data cleaning steps please file an `Issue` in our GitHub and we will gladly consider it. Here is an example of how data cleaning suggestions look:<br>
+<img align="center" src="https://i.ibb.co/NKf1gdg/autoviz-data-cleaning.png">
+
+In order to get this latest function, you must upgrade autoviz to the latest version by:
+```
+pip install autoviz --upgrade
+```
+
+In the same version, you can also get data suggestions by using `AV.AutoViz(......, verbose=1)` or by simply importing it:<br>
+
+```
+from autoviz import data_cleaning_suggestions
+data_cleaning_suggestions(df)
+```
+
+### Dec-23-2021 Update: AutoViz now does Wordclouds! #autoviz #wordcloud
+AutoViz can now create Wordclouds automatically for your NLP variables in data. It detects NLP variables automatically and creates wordclouds for them. See Colab notebook for example: [AutoViz Demo with HTML setting](https://colab.research.google.com/drive/1r5QqESRZDY98FFfDOgVtMAVA_oaGtqqx?usp=sharing)
+
+<img align="center" src="https://i.postimg.cc/DyT466xP/wordclouds.png">
+
+### Dec 21, 2021: AutoViz now runs on Docker containers as part of MLOps pipelines. Check out Orchest.io
+We are excited to announce that AutoViz and Deep_AutoViML are now available as containerized applications on Docker. This means that you can build data pipelines using a fantastic tool like [orchest.io](orchest.io) to build MLOps pipelines visually. Here are two sample pipelines we have created:
+
+<b>AutoViz pipeline</b>: https://lnkd.in/g5uC-z66
+<b>Deep_AutoViML pipeline</b>: https://lnkd.in/gdnWTqCG
+
+You can find more examples and a wonderful video on [orchest's web site](https://github.com/orchest/orchest-examples)
+![banner](https://github.com/rsesha/autoviz_pipeline/blob/main/autoviz_orchest.png)
+
+### Dec-17-2021 AutoViz now uses HoloViews to display dashboards with Bokeh and save them as Dynamic HTML for web serving #HTML #Bokeh #Holoviews
+Now you can use AutoViz to create Interactive Bokeh charts and dashboards (see below) either in Jupyter Notebooks or in the browser. Use chart_format as follows:
+- `chart_format='bokeh'`: interactive Bokeh dashboards are plotted in Jupyter Notebooks.
+- `chart_format='server'`, dashboards will pop up for each kind of chart on your web browser.
+- `chart_format='html'`, interactive Bokeh charts will be silently saved as Dynamic HTML files under `AutoViz_Plots` directory
+<img align="center" src="https://i.postimg.cc/MTCZ6GzQ/Auto-Viz-HTML-dashboards.png" />
 
 ## Maintainers
 

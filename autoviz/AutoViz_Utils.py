@@ -1529,8 +1529,8 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
                 print('    Since number of features selected is greater than max columns analyzed, limiting to %d variables' %max_cols_analyzed)
                 important_features = important_features[:max_cols_analyzed]
             dft = dft[important_features+[depVar]]
-            #### Time to  classify the important columns again ###
-            var_df = classify_columns(dft[important_features], verbose)
+            #### Time to  classify the important columns again. Set verbose to zero so you don't print it again ###
+            var_df = classify_columns(dft[important_features], verbose=0)
             IDcols = var_df['id_vars']
             discrete_string_vars = var_df['nlp_vars']+var_df['discrete_string_vars']
             cols_delete = var_df['cols_delete']
