@@ -134,6 +134,17 @@ AutoViz will do the rest. You will see charts and plots on your screen.
 
 ![server_charts](server_charts.JPG)
 
+### Apr-2023 Update: AutoViz now creates scatter plots for categorical variables when data contains only cat variables
+From version 0.1.600 onwards, AutoViz now automatically draws `catscatter` plots for pairs of categorical variables in a data frame. A `catscatter` plot is a type of scatter plot that shows the frequency of each combination of categories in two variables. It can be useful for exploring the relationship between categorical variables and identifying patterns or outliers. It creates these plots only if the data contains no numeric variables. Otherwise, it doesn't create them since it would be unncessary.
+
+```
+AutoViz is grateful to the cascatter implementation of Myr Barnés, 2020.
+You can see the original here: https://github.com/myrthings/catscatter/blob/master/catscatter.py
+# More info about this function here:
+# - https://towardsdatascience.com/visualize-categorical-relationships-with-catscatter-e60cdb164395
+# - https://github.com/myrthings/catscatter/blob/master/README.md
+```
+
 ### Sep-2022 Update: AutoViz now provides data cleansing suggestions! #autoviz #datacleaning
 From version 0.1.50 onwards, AutoViz now automatically analyzes your dataset and provides suggestions for how to clean your  data set. It detects missing values, identifies rare categories, finds infinite values, detects mixed data types, and so much more. This will help you tremendously speed up your data cleaning activities. If you have suggestions to add more data cleaning steps please file an `Issue` in our GitHub and we will gladly consider it. Here is an example of how data cleaning suggestions look:<br>
 <img align="center" src="https://i.ibb.co/NKf1gdg/autoviz-data-cleaning.png">

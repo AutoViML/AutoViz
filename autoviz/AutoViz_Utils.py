@@ -147,7 +147,99 @@ def analyze_problem_type(train, target, verbose=0) :
 # and a Numeric Column (typically the Dep Var) as the "Value" aggregated by Sum.
 # Let's do some pivot tables to capture some meaningful insights
 import random
-def draw_pivot_tables(dft,cats,nums,problem_type,verbose,chart_format,depVar='', classes=None, mk_dir=None):
+def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', classes=None, mk_dir=None):
+    #### Finally I have fixed the bugs in pivot tables due to "category" dtypes in data ##############
+    plot_name = 'Bar_Plots_Cats'
+    cats = [i for i in dft.loc[:,dft.nunique()<=15]]
+    dft = copy.deepcopy(dft)
+    cols = 2
+    cmap = plt.get_cmap('jet')
+    #### For some reason, the cmap colors are not working #########################
+    colors = cmap(np.linspace(0, 1, len(cats)))
+    colors = cycle('byrcmgkbyrcmgkbyrcmgkbyrcmgkbyr')
+    #colormaps = ['summer', 'rainbow','viridis','inferno','magma','jet','plasma']
+    colormaps = ['Greys','Blues','Greens','GnBu','PuBu',
+                    'YlGnBu','PuBuGn','BuGn','YlGn']
+    #colormaps = ['Purples','Oranges','Reds','YlOrBr',
+    #                'YlOrRd','OrRd','PuRd','RdPu','BuPu',]
+    N = len(cats)
+    combos = copy.deepcopy(cats)
+    if N==0:
+        print('No categorical or boolean vars in data set. Hence no pivot plots...')
+        return None
+    noplots = copy.deepcopy(N)
+    #### You can set the number of subplots per row and the number of categories to display here cols = 2
+    displaylimit = 20
+    categorylimit = 5
+    imgdata_list = []
+    width_size = 15
+    height_size = 5
+    stringlimit = 20
+    N = len(cats)
+    sns.set_palette("Set1")
+    ###########  This works equally well for classification as well as Regression ###
+    lst=[]
+    noplots=int(len(cats))
+    dicti = {}
+    counter = 1
+    cols = 2
+    ### first make sure there are enough plots to plot #####
+    ######  we want to now figure out rows and columns ####
+    if noplots%cols <= 2:
+        if noplots == 0:
+            rows = 1
+        else:
+            rows = int((noplots/cols)+0.5)
+    else:
+        rows = int((noplots/cols)+0.5)
+    countplots  = len(cats)
+    if N > 0:
+        fig = plt.figure()
+        if cols < 2:
+            fig.set_size_inches(min(15,8),rows*height_size)
+            fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
+            fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
+        else:
+            fig.set_size_inches(min(cols*10,20),rows*height_size)
+            fig.subplots_adjust(hspace=0.5) ### This controls the space betwen rows
+            fig.subplots_adjust(wspace=0.3) ### This controls the space between columns
+        ### we start to draw the pivot tables here #########
+        for var1 in combos:
+            #color1 = random.choice(colormaps)
+            color1 = "Set1"
+            data = pd.DataFrame(dicti)
+            x=dft[var1]
+            ax1 = fig.add_subplot(rows,cols,counter)
+            nocats = min(categorylimit,dft[var1].nunique())
+            data = dft[var1].value_counts()
+            if problem_type != 'Binary_Classification' or problem_type != 'Multi_Classification':
+                sns.countplot(x=var1,
+                                data=dft,
+                                ax=ax1,
+                                order=dft[var1].value_counts().index,
+                                hue = depVar)
+            else:
+                sns.countplot(x=var1,
+                                data=dft,
+                                ax=ax1,
+                                order=dft[var1].value_counts().index,)
+            ax1.set_xlabel(var1)
+            ax1.set_xticklabels(dft[var1].value_counts().index, rotation=30, ha='right', fontsize=9)
+            ax1.set_title('Distribution of %s' %var1,fontsize=12)
+            counter += 1
+        fig.tight_layout()
+        fig.suptitle('Distribution of Variables (with <=15 categories)', fontsize=15,y=1.01);
+    image_count = 0
+    if verbose == 2:
+        imgdata_list.append(save_image_data(fig, chart_format,
+                            plot_name, depVar, mk_dir))
+        image_count += 1
+    if verbose <= 1:
+        plt.show();
+    ####### End of Pivot Plotting #############################
+    return imgdata_list
+
+def draw_pivot_tables_old(dft,problem_type,verbose,chart_format,depVar='', classes=None, mk_dir=None):
     #### Finally I have fixed the bugs in pivot tables due to "category" dtypes in data ##############
     plot_name = 'Bar_Plots_Pivots'
     cats = copy.deepcopy(cats)
@@ -345,6 +437,9 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
             ####Strip plots are meant for categorical plots so x axis must always be depVar ##
             plt.subplot(rows,cols,plotc)
             sns.stripplot(x=dft[dep], y=dft[num], ax=plt.gca(), jitter=jitter)
+            plt.xticks(rotation=30, ha='right', fontsize=9)
+            plt.ylabel(num)
+            plt.xlabel(dep)
         plt.suptitle('Scatter Plot of Continuous Variable vs Target (jitter=%0.2f)' %jitter, fontsize=15,y=1.01)
         fig.tight_layout();
         if verbose <= 1:
@@ -520,6 +615,7 @@ def plot_fast_average_num_by_cat(dft, cats, num_vars, verbose=0,kind="bar"):
         return fig
 ################# The barplots module below calls the plot_fast_average_num_by_cat module above ###
 def draw_barplots(dft,cats,conti,problem_type,verbose,chart_format,dep='', classes=None, mk_dir=None):
+
     cats = cats[:]
     conti = conti[:]
     plot_name = 'Bar_Plots'
@@ -960,8 +1056,10 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression', 
         image_count = 0
         classes = df[dep].factorize()[1].tolist()
         ######################### Add Box plots here ##################################
+        # Styling...
         numb = len(nums)
         target_vars = df[dep].unique()
+        target_len = df[dep].nunique()
         if len(othernums) >= 1:
             width_size = 15
             height_size = 7
@@ -973,13 +1071,13 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression', 
             fig = plt.figure(figsize=(width_size,rows*height_size))
             for col in nums:
                 ax = plt.subplot(rows,cols,count+1)
-                for targetvar in target_vars:
-                    data[targetvar] = np.nan
-                    mask = df[dep]==targetvar
-                    data.loc[mask,targetvar] = df.loc[mask,col]
-                ax = sns.boxplot(data=data, orient='v', fliersize=5, ax=ax,
-                        linewidth=3, notch=False, saturation=0.5, showfliers=False)
+                sns.boxplot(x=dep,
+                    y=col,
+                    data=df,
+                    ax=ax,
+                    linewidth=3, notch=False, saturation=0.5, showfliers=False)
                 ax.set_title('%s for each %s' %(col,dep))
+                ax.set_xticklabels(df[dep].value_counts().index, rotation=30, ha='right', fontsize=9)
                 count += 1
             fig.suptitle('Box Plots without Outliers shown',  fontsize=15)
             fig.tight_layout();
@@ -1120,8 +1218,142 @@ def draw_date_vars(dfx,dep,datevars, num_vars,verbose, chart_format, modeltype='
                         plot_name, dep, mk_dir))
         image_count += 1
     return imgdata_list
-    ############# End of Date vars plotting #########################
+############# End of Date vars plotting #########################
+def catscatter(data,colx,coly, ax, ratio=10,save=False,save_name='Default'):
+    """
+    ####################################################################################
+    # The catscatter idea was conceived by: Myr Barnés in 2020 
+    # This idea is reused and modified here in AutoViz with sincere thanks to Myr Barnés.
+    ####################################################################################
+    The function draws catscatter plots for pairs of categorical variables in a data frame. 
+    A catscatter plot is a type of scatter plot that shows the frequency of each combination 
+    of categories in two variables. It can be useful for exploring the relationship between 
+    categorical variables and identifying patterns or outliers.
+    """
+    length = 7
+    # aggregate record counts by different labels of cat_x and cat_y
+    df = data.groupby([colx, coly]).size().reset_index(name='record_count')
+    top_xticks = df[colx].value_counts().index[:length]
+    top_yticks = df[coly].value_counts().index[:length]
+    df = df[(df[colx].isin(top_xticks)) & (df[coly].isin(top_yticks))].reset_index(drop=True)
+    cols = 'record_count'
+    # define the color map
+    color=['red', 'green', 'grey']
+    font_size = 7
+    font='Helvetica'
+    # Create a dict to encode the categeories into numbers (sorted)
+    xticks = df[colx].sort_values().unique().tolist()
+    yticks = df[coly].sort_values().unique().tolist()
+    
+    colx_codes=dict(zip(xticks,range(len(xticks))))
+    coly_codes=dict(zip(yticks,range(len(yticks))))
+    
+    # Apply the encoding
+    df[colx]=df[colx].apply(lambda x: colx_codes[x])
+    df[coly]=df[coly].apply(lambda x: coly_codes[x])
+    
+    # Prepare the aspect of the plot
+    #plt.rcParams['xtick.bottom'] = plt.rcParams['xtick.labelbottom'] = False
+    #plt.rcParams['xtick.top'] = plt.rcParams['xtick.labeltop'] = True
+    plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams['font.sans-serif'] = [font] + plt.rcParams['font.sans-serif']
+    plt.rcParams['xtick.color']=color[-1]
+    plt.rcParams['ytick.color']=color[-1]
+    plt.box(False)
 
+    plt.tick_params(
+        axis='x',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom=True,      # ticks along the bottom edge are off
+        top=False,         # ticks along the top edge are off
+        labelbottom=True) # labels along the bottom edge are off
+
+    plt.tick_params(
+        axis='y',          # changes apply to the y-axis
+        which='major',      # both major and minor ticks are affected
+        left=False,      # ticks along the bottom edge are off
+        right=False,         # ticks along the top edge are off
+        ) # labels along the bottom edge are off
+
+    # Plot all the lines for the background
+    for num in range(len(top_yticks)):
+        ax.hlines(num,-1,len(top_xticks),linestyle='dashed',linewidth=1,color=color[num%2],alpha=0.5)
+    for num in range(len(top_xticks)):
+        ax.vlines(num,-1,len(top_yticks),linestyle='dashed',linewidth=1,color=color[num%2],alpha=0.5)
+        
+    
+    ax.set_xticklabels(['']+xticks[:length], rotation=15, ha='right', color=color[-1])
+    ax.set_xticks(range(-1,len(xticks)))
+    ax.set_yticklabels(['']+yticks[:length], rotation=15, ha='left', color=color[-1])
+    ax.set_yticks(range(-1,len(yticks)+1))
+
+    # Plot the scatter plot with the numbers
+    ax.scatter(df[colx],
+               df[coly],
+               s=df[cols]*ratio,
+               zorder=1,
+               color=color[-1],
+               )
+    ax.set_xlim(xmin=-1,xmax=len(colx_codes))
+    ax.set_ylim(ymin=-1,ymax=len(coly_codes))
+    return ax
+############################################################################
+def draw_catscatterplots(dft,cats, problem_type, verbose, 
+                chart_format, mk_dir=None):
+    """
+    The function draws catscatter plots for pairs of categorical variables in a data frame. 
+    A catscatter plot is a type of scatter plot that shows the frequency of each combination 
+    of categories in two variables. It can be useful for exploring the relationship between 
+    categorical variables and identifying patterns or outliers.
+    Args:
+        dft (pandas.DataFrame): The data frame containing the categorical variables.
+        cats (list): A list of column names of the categorical variables in dft.
+        problem_type (str): The type of problem to be solved, either 'classification' or 'regression'.
+        verbose (int): The level of verbosity for displaying the plots. 0 means no plots, 1 means show plots, 2 means save plots as image files.
+        chart_format (str): The format of the image files to be saved. Can be 'png', 'jpg', 'svg', etc.
+        mk_dir (str, optional): The directory where the image files will be saved. Defaults to None.
+
+    Returns:
+        list: A list of image data objects for each catscatter plot if verbose == 2, otherwise an empty list.
+    """
+    imgdata_list = list()
+    image_count = 0
+    N = len(cats)
+    chunksize = 20
+    if len(cats) == 0:
+        #### If there are no categorical variables, nothing to plot here ######
+        return imgdata_list
+    else:
+        width_size = 15
+        height_size = 5
+    #### start drawing the catscatter here ###
+    cols = 2
+    gap=0.5
+    image_count = 0
+    combos = combinations(cats, 2)
+    combs = copy.deepcopy(combos)
+    noplots = int((N**2-N)/2)
+    rows = int((noplots/cols)+0.99)
+    counter = 1
+    fig = plt.figure(figsize=(width_size,rows*height_size))
+    fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows
+    for (var1,var2) in combs:
+        try:
+            plt.subplot(rows,cols,counter)
+            ax1 = plt.gca()
+            catscatter(dft, var1, var2, ax1, ratio=10)
+            ax1.set_title('Catscatter plot for '+var1 + '(X axis) vs. '+var2, fontsize=10)
+            counter += 1
+        except:
+            plt.close('all')
+    fig.suptitle('Catscatter plot of Pairs of Categorical Variables', fontsize=15, y=1.01)
+    if verbose == 2:
+        imgdata_list.append(save_image_data(fig, chart_format,
+                        plot_name, dep, mk_dir))
+        image_count += 1
+    return imgdata_list
+
+######################################################################################
 # This little function classifies columns into 4 types: categorical, continuous, boolean and
 # certain columns that have only one value repeated that they are useless and must be removed from dataset
 #Subtract RIGHT_LIST from LEFT_LIST to produce a new list
@@ -1455,9 +1687,9 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
         continuous_vars = var_df['int_vars']
         categorical_vars = list_difference(categorical_vars, int_vars)
         int_vars = []
-    elif len(var_df['continuous_vars'])==0 and len(int_vars)==0:
-        print('Cannot visualize this dataset since no numeric or integer vars in data...returning')
-        return dataname
+    #elif len(var_df['continuous_vars'])==0 and len(int_vars)==0:
+    #    print('Cannot visualize this dataset since no numeric or integer vars in data...returning')
+    #    return dataname
     else:
         continuous_vars = var_df['continuous_vars']
     #### from now you can use wordclouds on discrete_string_vars ######################
@@ -1559,10 +1791,10 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
                                             continuous_vars), max_cols_analyzed))
             if verbose >= 1:
                 print('    List of variables selected: %s' %(continuous_vars[:max_cols_analyzed]))
-    elif len(continuous_vars) < 1:
-        print('No continuous variables in this data set. No visualization can be performed')
-        ### Return data frame as is #####
-        return dfte
+    #elif len(continuous_vars) < 1:
+    #    print('No continuous variables in this data set. No visualization can be performed')
+    #    ### Return data frame as is #####
+    #    return dfte
     else:
         #########     If above 1 but below limit, leave features as it is   ######################
         if not isinstance(depVar, list):

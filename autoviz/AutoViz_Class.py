@@ -173,6 +173,13 @@ class AutoViz_Class():
         'subheading':[],#"\n".join(subheading)
         'desc': [] #"\n".join(desc)
         }  ######## This is for description and images for date time plots ###
+        self.catscatter_plot = {
+        'name': 'catscatter',
+        'heading': 'Cat-Scatter  Plots of categorical vars',
+        'plots': [],
+        'subheading':[],#"\n".join(subheading)
+        'desc': [] #"\n".join(desc)
+        }  ######## This is for description and images for catscatter plots ###
 
 
     def add_plots(self,plotname,X):
@@ -326,8 +333,9 @@ class AutoViz_Class():
             except:
                 print('Could not draw Distribution Plot')
             try:
-                svg_data = draw_violinplot(dft,depVar,continuous_vars,verbose,chart_format,problem_type, mk_dir)
-                self.add_plots('violin_plot',svg_data)
+                if len(continuous_vars) > 0:
+                    svg_data = draw_violinplot(dft,depVar,continuous_vars,verbose,chart_format,problem_type, mk_dir)
+                    self.add_plots('violin_plot',svg_data)
             except:
                 print('Could not draw Violin Plot')
             try:
@@ -354,7 +362,12 @@ class AutoViz_Class():
                 except:
                     print('Could not draw Bar Plots')
             else:
-                print ('No Continuous Variables at all in this dataset...')
+                try:
+                    svg_data = draw_catscatterplots(dft,cats, problem_type, verbose, 
+                                chart_format, mk_dir=None)
+                    self.add_plots('catscatter_plot',svg_data)
+                except:
+                    print ('Could not draw catscatter plots...')
         else:
             if problem_type=='Regression':
                 ############## This is a Regression Problem #################
@@ -387,8 +400,9 @@ class AutoViz_Class():
                 except:
                     print('Could not draw some Distribution Plots')
                 try:
-                    svg_data = draw_violinplot(dft,depVar,continuous_vars,verbose,chart_format,problem_type, mk_dir)
-                    self.add_plots('violin_plot',svg_data)
+                    if len(continuous_vars) > 0:
+                        svg_data = draw_violinplot(dft,depVar,continuous_vars,verbose,chart_format,problem_type, mk_dir)
+                        self.add_plots('violin_plot',svg_data)
                 except:
                     print('Could not draw Violin Plots')
                 try:
@@ -408,21 +422,27 @@ class AutoViz_Class():
                     except:
                         print('Could not draw some Time Series plots')
                 if len(continuous_vars) > 0:
+
                     try:
-                        svg_data = draw_pivot_tables(dft,find_remove_duplicates(cats+bool_vars),
-                                    continuous_vars,problem_type,verbose,chart_format,depVar,classes, mk_dir)
+                        svg_data = draw_pivot_tables(dft, problem_type, verbose,
+                            chart_format,depVar,classes, mk_dir)
                         self.add_plots('pivot_plot',svg_data)
                     except:
                         print('Could not draw some Pivot Charts against Dependent Variable')
                     try:
-                        svg_data = draw_barplots(dft,cats,continuous_vars,problem_type,verbose,
-                                                    chart_format,depVar,classes, mk_dir)
+                        svg_data = draw_barplots(dft, find_remove_duplicates(cats+bool_vars),continuous_vars,
+                                                    problem_type, verbose,chart_format,depVar,classes, mk_dir)
                         self.add_plots('bar_plot',svg_data)
                         #self.add_plots('bar_plot',None)
                     except:
                         print('Could not draw some Bar Charts')
                 else:
-                    print ('No Continuous Variables at all in this dataset...')
+                    try:
+                        svg_data = draw_catscatterplots(dft,cats, problem_type, verbose, 
+                                    chart_format, mk_dir=None)
+                        self.add_plots('catscatter_plot',svg_data)
+                    except:
+                        print ('Could not draw catscatter plots...')
             else :
                 ############ This is a Classification Problem ##################
                 try:
@@ -454,8 +474,9 @@ class AutoViz_Class():
                 except:
                     print('Could not draw some Distribution Plots')
                 try:
-                    svg_data = draw_violinplot(dft,depVar,continuous_vars,verbose,chart_format,problem_type, mk_dir)
-                    self.add_plots('violin_plot',svg_data)
+                    if len(continuous_vars) > 0:
+                        svg_data = draw_violinplot(dft,depVar,continuous_vars,verbose,chart_format,problem_type, mk_dir)
+                        self.add_plots('violin_plot',svg_data)
                 except:
                     print('Could not draw some Violin Plots')
                 try:
@@ -476,8 +497,8 @@ class AutoViz_Class():
                         print('Could not draw some Time Series plots')
                 if len(continuous_vars) > 0:
                     try:
-                        svg_data = draw_pivot_tables(
-                            dft,find_remove_duplicates(cats+bool_vars),continuous_vars,problem_type,verbose,chart_format,depVar,classes, mk_dir)
+                        svg_data = draw_pivot_tables(dft, problem_type, verbose,
+                                        chart_format,depVar,classes, mk_dir)
                         self.add_plots('pivot_plot',svg_data)
                     except:
                         print('Could not draw some Pivot Charts against Dependent Variable')
@@ -491,7 +512,12 @@ class AutoViz_Class():
                             print('Could not draw some Bar Charts')
                         pass
                 else:
-                    print ('No Continuous Variables at all in this dataset...')
+                    try:
+                        svg_data = draw_catscatterplots(dft,cats, problem_type, verbose, 
+                                    chart_format, mk_dir=None)
+                        self.add_plots('catscatter_plot',svg_data)
+                    except:
+                        print ('Could not draw catscatter plots...')
         ###### Now you can check for NLP vars or discrete_string_vars to do wordcloud #######
         if len(discrete_string_vars) > 0:
             plotname = 'wordcloud'
