@@ -62,18 +62,19 @@ pip install -r requirements.txt
 
 Read this Medium article to know how to use [AutoViz](https://towardsdatascience.com/autoviz-a-new-tool-for-automated-visualization-ec9c1744a6ad).
 
-In the AutoViz directory, open a Jupyter Notebook and use this line to instantiate the library
+In the AutoViz directory, open a Jupyter Notebook and use this line to instantiate the AutoViz_Class.<br>
+<b>Alert!</b>: You no longer have to do: `from autoviz.AutoViz_Class import AutoViz_Class`. <br>
+Instead, you can simply do<br>
 
 ```py
-from autoviz.AutoViz_Class import AutoViz_Class
-
+from autoviz import AutoViz_Class
 AV = AutoViz_Class()
 ```
 
 Load a dataset (any CSV or text file) into a Pandas dataframe or give the name of the path and filename you want to visualize.
 If you don't have a filename, you can simply assign the filename argument `""` (empty string).
 
-Call AutoViz using the filename (or dataframe) along with the separator and the name of the target variable in the input.
+Call AutoViz method using the filename (or dataframe) along with the separator and the name of the target variable in the input.
 
 ```py
 filename = ""

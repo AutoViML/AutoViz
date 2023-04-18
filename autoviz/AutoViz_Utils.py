@@ -150,7 +150,12 @@ import random
 def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', classes=None, mk_dir=None):
     #### Finally I have fixed the bugs in pivot tables due to "category" dtypes in data ##############
     plot_name = 'Bar_Plots_Cats'
+    imgdata_list = []
     cats = [i for i in dft.loc[:,dft.nunique()<=15]]
+    if isinstance(depVar, str):
+        cats = [x for x in cats if x not in [depVar]]
+    else:
+        cats = [x for x in cats if x not in depVar]
     dft = copy.deepcopy(dft)
     cols = 2
     cmap = plt.get_cmap('jet')
@@ -171,7 +176,6 @@ def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', class
     #### You can set the number of subplots per row and the number of categories to display here cols = 2
     displaylimit = 20
     categorylimit = 5
-    imgdata_list = []
     width_size = 15
     height_size = 5
     stringlimit = 20
@@ -218,14 +222,15 @@ def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', class
                                 ax=ax1,
                                 order=dft[var1].value_counts().index,
                                 hue = depVar)
+                ax1.set_title('Distribution of %s by %s' %(var1, depVar),fontsize=12)
             else:
                 sns.countplot(x=var1,
                                 data=dft,
                                 ax=ax1,
                                 order=dft[var1].value_counts().index,)
+                ax1.set_title('Distribution of %s' %var1,fontsize=12)
             ax1.set_xlabel(var1)
             ax1.set_xticklabels(dft[var1].value_counts().index, rotation=30, ha='right', fontsize=9)
-            ax1.set_title('Distribution of %s' %var1,fontsize=12)
             counter += 1
         fig.tight_layout()
         fig.suptitle('Distribution of Variables (with <=15 categories)', fontsize=15,y=1.01);
@@ -458,8 +463,6 @@ def draw_pair_scatters(dfin,nums,problem_type, verbose,chart_format, dep=None, c
     """
     plot_name = 'Pair_Scatter_Plots'
     dft = dfin[:]
-    if len(nums) <= 1:
-        return
     classes = copy.deepcopy(classes)
     cols = 2
     colortext = 'brymcgkbyrcmgkbyrcmgkbyrcmgkbyr'
@@ -692,7 +695,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         if timeseries_flag:
             fig.suptitle('Time Series: Heatmap of all Differenced Continuous vars for target = %s' %dep, fontsize=15,y=1.01)
         else:
-            fig.suptitle('Heatmap of all Continuous Variables for target = %s' %dep, fontsize=15,y=1.01)
+            fig.suptitle('Heatmap of all Numeric Variables with target: %s' %dep, fontsize=15,y=1.01)
         plotc = 1
         #rows = len(target_vars)
         rows = 1
@@ -733,7 +736,7 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         if timeseries_flag:
             fig.suptitle('Time Series Data: Heatmap of Differenced Continuous vars including target = %s' %dep, fontsize=15,y=1.01)
         else:
-            fig.suptitle('Heatmap of all Continuous Variables including target = %s' %dep,fontsize=15,y=1.01)
+            fig.suptitle('Heatmap of all Numeric Variables including target: %s' %dep,fontsize=15,y=1.01)
         fig.tight_layout();
         if verbose <= 1:
             plt.show();
@@ -816,7 +819,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             rows = int((noplots/cols)+0.99 )
             k = 0
             fig = plt.figure(figsize=(width_size,rows*height_size))
-            fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows
+            fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows            
             for each_cat in copy_cats:
                 color2 = next(colors)
                 ax1 = plt.subplot(rows, cols, k+1)
@@ -824,24 +827,26 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 ### In some small datasets, we get floats as categories since there are so few categories.
                 if dft[each_cat].dtype in ['float16','float32','float64']:
                     ### In those cases, we must remove the width_size since it thinks they are an index and errors.
-                    dft[each_cat].value_counts().plot(kind='bar', 
-                                            #color=color2,
+                    dft[each_cat].value_counts(normalize=True, dropna=False).plot(kind='bar', 
+                                            color=color2,
                                             ax=ax1,label='%s' %each_cat)
-                    labels = dft[each_cat].value_counts().index.tolist()
+                    labels = dft[each_cat].value_counts(dropna=False).index.tolist()
                 else:
-                    dft[each_cat].value_counts()[:width_size].plot(kind='bar', 
-                                            #color=color2,
+                    dft[each_cat].value_counts(normalize=True, dropna=False)[:width_size].plot(kind='bar', 
+                                            color=color2,
                                             ax=ax1,label='%s' %each_cat)
-                    labels = dft[each_cat].value_counts()[:width_size].index.tolist()
+                    labels = dft[each_cat].value_counts(dropna=False)[:width_size].index.tolist()
+                k += 1
                 ax1.set_xticklabels(labels,**kwds);
-                ax1.set_title('Distribution of %s (top %d categories only)' %(each_cat,width_size))
+                ax1.set_title('Normalized distribution of %s (top %d categories only)' %(each_cat,width_size))
             fig.tight_layout();
+            
             ########## This is where you end the logic for distplots ################
             if verbose == 2:
                 imgdata_list.append(save_image_data(fig, chart_format,
                                 plot_name+'_Cats', dep, mk_dir))
                 image_count += 1
-            fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=12,y=1.01)
+            fig.suptitle('Histograms and Normalized distribitions of all variables', fontsize=12,y=1.01)
             if verbose <= 1:
                 plt.show();
     else:
@@ -884,12 +889,14 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                     dft[[each_conti]] = dft[[each_conti]].fillna(0)
             plt.subplot(rows, cols, k+1)
             ax1 = plt.gca()
+            
             if dft[each_conti].dtype==object:
                 kwds = {"rotation": 45, "ha":"right"}
                 labels = dft[each_conti].value_counts()[:width_size].index.tolist()
                 conti_df = dft[[dep,each_conti]].groupby([dep,each_conti]).size().nlargest(width_size).reset_index(name='Values')
                 pivot_df = conti_df.pivot(index=each_conti, columns=dep, values='Values')
-                #print('color list = %s' %color_list)
+                ### row_ticks must be modified since some values of dep are missing in conti_df
+                row_ticks = conti_df[dep].unique().tolist()
                 pivot_df.loc[:,row_ticks].plot.bar(stacked=True, 
                     color=color_list, 
                     ax=ax1)
@@ -902,7 +909,8 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 labels = dft[each_conti].value_counts()[:width_size].index.tolist()
                 conti_df = dft[[dep,each_conti]].groupby([dep,each_conti]).size().nlargest(width_size).reset_index(name='Values')
                 pivot_df = conti_df.pivot(index=each_conti, columns=dep, values='Values')
-                #print('color list = %s' %color_list)
+                ### row_ticks must be modified since some values of dep are missing in conti_df
+                row_ticks = conti_df[dep].unique().tolist()
                 pivot_df.loc[:,row_ticks].plot.bar(stacked=True, 
                     color=color_list,
                     ax=ax1)
@@ -911,6 +919,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 #ax1.set_xticklabels(labels,**kwds);
                 ax1.set_title('Distribution of %s (top %d categories only)' %(each_conti,width_size))
             else:
+                
                 for target_var, color2, class_label in zip(target_vars,color_list,classes):
                     try:
                         if legend_flag <= label_limit:

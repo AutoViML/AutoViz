@@ -352,15 +352,15 @@ def data_suggestions(data):
     df = pd.DataFrame(
         {
          #'column': list(data),
-        'Nuniques': nunik,
+         'Nullpercent' : 100*(nulls/length),
          'NuniquePercent': (100*(nunik/length)),
          'dtype': data.dtypes,
+        'Nuniques': nunik,
          'Nulls' : nulls,
-         'Nullpercent' : 100*(nulls/length),
-         'Value counts Min':minn
+         'Least num. of categories':minn
         },
-        columns = ['Nuniques', 'dtype','Nulls','Nullpercent', 'NuniquePercent',
-                       'Value counts Min']).sort_values(by ='Nuniques',ascending = False)
+        columns = ['Nullpercent', 'NuniquePercent','dtype','Nuniques', 'Nulls',
+                       'Least num. of categories']).sort_values(by = 'Nullpercent',ascending = False)
     newcol = 'Data cleaning improvement suggestions'
     print('%s. Complete them before proceeding to ML modeling.' %newcol)
     mixed_cols = [col for col in data.columns if len(data[col].apply(type).value_counts()) > 1]
@@ -368,14 +368,14 @@ def data_suggestions(data):
     df['first_comma'] = ''
     if len(cat_cols) > 0:
         mask0 = df['dtype'] == 'object'
-        mask1 = df['Value counts Min']/df['Nuniques'] <= 0.05
+        mask1 = df['Least num. of categories']/df['Nuniques'] <= 0.05
         mask4 = df['dtype'] == 'category'
         df.loc[mask0&mask1,newcol] += df.loc[mask0&mask1,'first_comma'] + 'combine rare categories'
         df.loc[mask4&mask1,newcol] += df.loc[mask4&mask1,'first_comma'] + 'combine rare categories'
         df.loc[mask0&mask1,'first_comma'] = ', '
         df.loc[mask4&mask1,'first_comma'] = ', '
     mask2 = df['Nulls'] > 0
-    df.loc[mask2,newcol] += df.loc[mask2,'first_comma'] + 'fill missing'
+    df.loc[mask2,newcol] += df.loc[mask2,'first_comma'] + 'fill missing values'
     df.loc[mask2,'first_comma'] = ", "
     mask3 = df['Nuniques'] == 1
     df.loc[mask3,newcol] += df.loc[mask3,'first_comma'] + 'invariant values: drop'
@@ -398,18 +398,24 @@ def data_suggestions(data):
             df.loc[x,newcol] += df.loc[x,'first_comma'] + 'infinite values: drop'
             df.loc[x,'first_comma'] = ", "
     #### Check for skewed float columns #######
-    skew_cols1 = np.array(num_cols)[[(np.abs(np.round(data[col].skew(), 1)) > 1
+    skew_cols1 = np.array(num_cols)[[(np.abs(np.round(data[col].skew(), 1)) >= 1
                     ) & (np.abs(np.round(data[col].skew(), 1)) <= 5) for col in num_cols]].tolist()
     skew_cols2 = np.array(num_cols)[[(np.abs(np.round(data[col].skew(), 1)) > 5) for col in num_cols]].tolist()
     skew_cols = list(set(skew_cols1+skew_cols2))
     ### Check for skewed values in columns #####
     if len(skew_cols1) > 0:
         for x in skew_cols1:
-            df.loc[x,newcol] += df.loc[x,'first_comma'] + 'skewed: cap or drop outliers'
+            if data[x].skew() < 0:
+                df.loc[x,newcol] += df.loc[x,'first_comma'] + 'left skewed distribution: cap or drop outliers'
+            else:
+                df.loc[x,newcol] += df.loc[x,'first_comma'] + 'right skewed distribution: cap or drop outliers'
             df.loc[x,'first_comma'] = ", "
     if len(skew_cols2) > 0:
         for x in skew_cols2:
-            df.loc[x,newcol] += df.loc[x,'first_comma'] + 'highly skewed: drop outliers or do box-cox transform'
+            if data[x].skew() < 0:
+                df.loc[x,newcol] += df.loc[x,'first_comma'] + 'highly left skewed distribution: drop outliers or do box-cox transform'
+            else:
+                df.loc[x,newcol] += df.loc[x,'first_comma'] + 'highly right skewed distribution: drop outliers or do box-cox transform'
             df.loc[x,'first_comma'] = ", "
     ##### Do the same for mixed dtype columns - they must be fixed! ##
     if len(mixed_cols) > 0:
