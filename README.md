@@ -232,7 +232,7 @@ AutoViz is released under the Apache License, Version 2.0. By using AutoViz, you
 # Tips
 <p>That covers the main aspects of AutoViz, but here are some additional tips and reminders to help you make the most of the library:</p>
 <ul>
-  <li>Make sure to regularly upgrade AutoViz to benefit from the <a href="https://github.com/AutoViML/AutoViz/blob/main/updates.md">latest features, bug fixes, and improvements</a>. You can update it using <code>pip install --upgrade autoviz</code>.</li>
+  <li>Make sure to regularly upgrade AutoViz to benefit from the <a href="https://github.com/AutoViML/AutoViz/blob/master/updates.md">latest features, bug fixes, and improvements</a>. You can update it using <code>pip install --upgrade autoviz</code>.</li>
   <li>AutoViz is highly customizable, so don't hesitate to explore and experiment with various settings, such as <code>chart_format</code>, <code>verbose</code>, and <code>max_rows_analyzed</code>. This will allow you to create visualizations that better suit your specific needs and preferences.</li>
   <li>Remember to delete the <code>AutoViz_Plots</code> directory (or any custom directory you specified) periodically if you used the <code>verbose=2</code> option, as it can accumulate a large number of saved charts over time.</li>
   <li>For further guidance or inspiration, check out the <a href="https://towardsdatascience.com/autoviz-a-new-tool-for-automated-visualization-ec9c1744a6ad">Medium article on AutoViz</a>, as well as other online resources and tutorials.</li>
