@@ -216,13 +216,20 @@ def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', class
             ax1 = fig.add_subplot(rows,cols,counter)
             nocats = min(categorylimit,dft[var1].nunique())
             data = dft[var1].value_counts()
-            if problem_type != 'Binary_Classification' or problem_type != 'Multi_Classification':
-                sns.countplot(x=var1,
-                                data=dft,
-                                ax=ax1,
-                                order=dft[var1].value_counts().index,
-                                hue = depVar)
-                ax1.set_title('Distribution of %s by %s' %(var1, depVar),fontsize=12)
+            if problem_type in ['Binary_Classification', 'Multi_Classification']:
+                if dft[depVar].nunique() > 15:
+                    sns.countplot(x=var1,
+                                    data=dft,
+                                    ax=ax1,
+                                    order=dft[var1].value_counts().index,)
+                    ax1.set_title('Distribution of %s' %var1,fontsize=12)
+                else:
+                    sns.countplot(x=var1,
+                                    data=dft,
+                                    ax=ax1,
+                                    order=dft[var1].value_counts().index,
+                                    hue = depVar)
+                    ax1.set_title('Distribution of %s by %s' %(var1, depVar),fontsize=12)
             else:
                 sns.countplot(x=var1,
                                 data=dft,
@@ -783,6 +790,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
             cols = 3
             rows = len(conti)
             fig, axes = plt.subplots(rows, cols, figsize=(width_size,rows*height_size))
+            fig.subplots_adjust(hspace=gap) ### This controls the space betwen rows            
             k = 1
             binsize = 30
             for each_conti in conti:
@@ -804,9 +812,9 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 skew_val=round(dft[each_conti].skew(), 1)
                 ax2.set_yticklabels([])
                 ax2.set_yticks([])
-                ax1.set_title(each_conti + " | Distplot")
-                ax2.set_title(each_conti + " | Boxplot")
-                ax3.set_title(each_conti + " | Probability Plot - Skew: "+str(skew_val))
+                ax1.set_title(each_conti + " | Distplot", fontsize=9)
+                ax2.set_title(each_conti + " | Boxplot", fontsize=9)
+                ax3.set_title(each_conti + " | Probability Plot - Skew: "+str(skew_val), fontsize=9)
             ###### Save the plots to disk if verbose = 2 ############
             if verbose == 2:
                 imgdata_list.append(save_image_data(fig, chart_format,
@@ -838,7 +846,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                     labels = dft[each_cat].value_counts(dropna=False)[:width_size].index.tolist()
                 k += 1
                 ax1.set_xticklabels(labels,**kwds);
-                ax1.set_title('Normalized distribution of %s (top %d categories only)' %(each_cat,width_size))
+                ax1.set_title('Norm. disti.of %s (top %d categories only)' %(each_cat,width_size), fontsize=9)
             fig.tight_layout();
             
             ########## This is where you end the logic for distplots ################
@@ -846,7 +854,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                 imgdata_list.append(save_image_data(fig, chart_format,
                                 plot_name+'_Cats', dep, mk_dir))
                 image_count += 1
-            fig.suptitle('Histograms and Normalized distribitions of all variables', fontsize=12,y=1.01)
+            fig.suptitle('Histograms and Normalized distribitions of all variables', fontsize=12, y=1.01)
             if verbose <= 1:
                 plt.show();
     else:
@@ -1706,7 +1714,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
     if len(IDcols+cols_delete) == 0:
         print('        No variables removed since no ID or low-information variables found in data set')
     else:
-        print('        %d variables removed since they were ID or low-information variables'
+        print('        %d variable(s) removed since they were ID or low-information variables'
                                 %len(IDcols+cols_delete))
         if verbose >= 1:
             print('        List of variables removed: %s' %(IDcols+cols_delete))
@@ -1789,7 +1797,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
             if len(IDcols+cols_delete+discrete_string_vars) == 0:
                 print('    No variables removed since no ID or low-information variables found in data')
             else:
-                print('    %d variables removed since they were ID or low-information variables'
+                print('    %d variable(s) removed since they were ID or low-information variables'
                                         %len(IDcols+cols_delete+discrete_string_vars))
             if verbose >= 1:
                 print('    List of variables removed: %s' %(IDcols+cols_delete+discrete_string_vars))
