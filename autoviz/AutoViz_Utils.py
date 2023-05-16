@@ -686,8 +686,6 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         except:
             if verbose >= 1 and len(datevars) > 0:
                 print('No date vars could be found or %s could not be indexed.' %datevars)
-            elif verbose >= 1 and len(datevars) == 0:
-                print('No date vars could be found in data set')
             timeseries_flag = False
     # Add a column: the color depends on target variable but you can use whatever function
     imgdata_list = list()

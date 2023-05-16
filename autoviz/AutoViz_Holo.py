@@ -163,6 +163,7 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
     imgdata_list = list()
     height_size = 400
     width_size = 500
+    
     ##########    Now start drawing the Bokeh Plots ###############################
     if len(nums) > 0:
         if problem_type == 'Clustering':
@@ -280,24 +281,29 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
     imgdata_list = list()
     N = len(nums)
     cols = 2
+    plot_name = 'kde_plots'
     width_size = 600
     height_size = 400
-    plot_name = 'kde_plots'
     ########################################################################################
+    def return_dynamic_objects(dfout, dep, title='Distribution of Target variable'):
+        width_size = 600
+        height_size = 400
+        pdf1 = pd.DataFrame(dfout[dep].value_counts().reset_index())
+        pdf2 = pd.DataFrame(dfout[dep].value_counts(1).reset_index())
+        drawobj41 = pdf1.hvplot(kind='bar', color='lightblue', title=title).opts(
+                        height=height_size, width=width_size,xrotation=70)
+        drawobj42 = pdf2.hvplot(kind='bar', color='lightgreen', title=title)
+        return (drawobj41+drawobj42)
+
     if problem_type.endswith('Classification'):
         colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
-        pdf1 = pd.DataFrame(dfin[dep].value_counts().reset_index())
-        pdf2 = pd.DataFrame(dfin[dep].value_counts(1).reset_index())
-        drawobj41 = pdf1.hvplot(kind='bar', color='r', title='Distribution of Target variable').opts(
-                        height=height_size, width=width_size,xrotation=70)
-        drawobj42 = pdf2.hvplot(kind='bar', color='g', title='Percent Distribution of Target variable').opts(
-                        )
-        dmap = hv.DynamicMap((drawobj41+drawobj42).opts(shared_axes=False).opts(title='Histogram and KDE of Target = %s' %dep)).opts(
+        dmap = hv.DynamicMap(return_dynamic_objects(dfin, dep, title='Percent Distribution of Target variable'
+                        ).opts(shared_axes=False).opts(title='Histogram and KDE of Target = %s' %dep)).opts(
                             height=height_size, width=width_size)
         dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
         hv_all = pn.pane.HoloViews(dmap)#, sizing_mode="stretch_both")
-        ls_objects.append(drawobj41)
-        ls_objects.append(drawobj42)
+        #ls_objects.append(drawobj41)
+        #ls_objects.append(drawobj42)
     else:
         if not isinstance(dep, list):
             ### it means dep is a string ###
@@ -305,15 +311,11 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
                 ### there is no target variable to draw ######
                 return ls_objects
             else:
-                drawobj41 = dfin[dep].hvplot(kind='bar', color='r', title='Histogram of Target variable').opts(
-                                height=height_size,width=width_size,color='lightgreen', xrotation=70)
-                drawobj42 = dfin[dep].hvplot(kind='kde', color='g', title='KDE Plot of Target variable').opts(
-                                height=height_size,width=width_size,color='lightblue')
-                dmap = hv.DynamicMap((drawobj41+drawobj42)).opts(title='Histogram and KDE of Target = %s' %dep, width=width_size)
+                dmap = hv.DynamicMap(return_dynamic_objects(dfin, dep, title=f'Histogram and KDE of Target = {dep}')).opts(width=width_size)
                 dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
                 hv_all = pn.pane.HoloViews(dmap)
-                ls_objects.append(drawobj41)
-                ls_objects.append(drawobj42)
+                #ls_objects.append(drawobj41)
+                #ls_objects.append(drawobj42)
     #### In this case we are using multiple objects in panel ###
     ##### Save all the chart objects here ##############
     if verbose == 2:

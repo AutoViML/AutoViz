@@ -71,15 +71,14 @@ dft = AV.AutoViz(filename)
 ```
 
 Feed AutoViz any input filename (in CSV, txt, or JSON format), and set `max_rows_analyzed` and `max_cols_analyzed` based on memory limitations in your environment, and watch the magic happen!
-<p>AutoViz generates charts in multiple formats using the `chart_format` setting which can one of the following:
-- `'png'`, `'svg'`, or `'jpg'`: Inline Matplotlib charts
-    * Save locally (`verbose=2`) or display in Jupyter Notebooks (`verbose=1`)
-    * Default AutoViz behavior
-- `'bokeh'`: Interactive Bokeh charts in Jupyter Notebooks
-- `'server'`: Browser-based dashboards with individual chart types
-- `'html'`: Interactive Bokeh charts saved as HTML files under the `AutoViz_Plots` directory (working folder) or specified directory using the `save_plot_dir` setting
 
-AutoViz takes care of the rest. You'll see charts and plots on your screen.
+AutoViz can now create charts in multiple  formats using the `chart_format` setting:
+- If `chart_format ='png'` or `'svg'` or `'jpg'`: Matplotlib charts are plotted inline.
+    * Can be saved locally (using `verbose=2` setting) or displayed (`verbose=1`) in Jupyter Notebooks.
+    * This is the default behavior for AutoViz.
+- If `chart_format='bokeh'`: Interactive Bokeh charts are plotted in Jupyter Notebooks.
+- If `chart_format='server'`, dashboards will pop up for each kind of chart on your browser.
+- If `chart_format='html'`, interactive Bokeh charts will be created and silently saved as HTML files under the `AutoViz_Plots` directory (under working folder) or any other directory that you specify using the `save_plot_dir` setting (during input).
 
 ![var_charts](var_charts.JPG)
 
