@@ -214,7 +214,6 @@ Here are some additional tips and reminders to help you make the most of the lib
 - **AutoViz is highly customizable, so don't hesitate to explore and experiment with various settings**, such as chart_format, verbose, and max_rows_analyzed. This will allow you to create visualizations that better suit your specific needs and preferences.
 - **Remember to delete the AutoViz_Plots directory (or any custom directory you specified) periodically** if you used the verbose=2 option, as it can accumulate a large number of saved charts over time.
 - **For further guidance or inspiration, check out the <a href="https://towardsdatascience.com/autoviz-a-new-tool-for-automated-visualization-ec9c1744a6ad">Medium article</a> on AutoViz**, as well as other online resources and tutorials.
-- **Additional tips**
 <ul>
   <li>AutoViz will visualize any sized file using a statistically valid sample.</li>
   <li>COMMA is the default separator in the file, but you can change it.</li>
