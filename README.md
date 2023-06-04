@@ -16,6 +16,7 @@ With AutoViz, you can easily and quickly generate insightful visualizations for 
 
 ## Table of Contents
 
+- [Latest Updates for AutoViz](#Latest)
 - [The purpose and motivation for AutoViz](#motivation)
 - [How to install and setup AutoViz in your environment](#installation)
 - [How to use AutoViz with various options and settings](#usage)
@@ -26,6 +27,9 @@ With AutoViz, you can easily and quickly generate insightful visualizations for 
 - [License](#license)
 - [Additional Tips before you start](#tips)
 - [Disclaimer](#disclaimer)
+
+## Latest
+The latest updates about `autoviz` library can be found in <a href="https://github.com/AutoViML/AutoViz/blob/master/updates.md">Updates page</a>.
 
 ## Motivation
 The motivation to create AutoViz stems from the need for a more efficient, user-friendly, and automated approach to data visualization. Visualizing data is a crucial step in the data analysis process, as it helps users understand patterns, trends, and relationships in the data. However, creating insightful visualizations can be time-consuming and require specialized knowledge of various plotting libraries and techniques.

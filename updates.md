@@ -3,6 +3,8 @@
 ### June 2023: AutoViz now has Data Quality checks and a transformer to fix your data quality
 From version 0.1.70, AutoViz can now automatically analyze your dataset and fix data quality issues in your data set. All you have to do is to `from autoviz import FixDQ ` and use it like a `fit_transform` transformer. It's that easy to perform data cleaning now with AutoViz!
 
+![data_clean](images/data_clean.png)
+
 ### Apr-2023 Update: AutoViz now creates scatter plots for categorical variables when data contains only cat variables
 From version 0.1.600 onwards, AutoViz now automatically draws `catscatter` plots for pairs of categorical variables in a data frame. A `catscatter` plot is a type of scatter plot that shows the frequency of each combination of categories in two variables. It can be useful for exploring the relationship between categorical variables and identifying patterns or outliers. It creates these plots only if the data contains no numeric variables. Otherwise, it doesn't create them since it would be unncessary.
 
