@@ -99,10 +99,8 @@ Arguments for `AV.AutoViz()` method:
 - `max_cols_analyzed`: Limit the number of continuous variables to be analyzed.
 - `save_plot_dir`: Directory for saving plots. Default is None, which saves plots under the current directory in a subfolder named AutoViz_Plots. If the save_plot_dir doesn't exist, it will be created.
 
-![server_charts](images/server_charts.JPG)
-
 ## Examples
-Here are some examples to help you get started with AutoViz. If you need full jupyter notebooks with code samples they can be found in [examples](https://github.com/AutoViML/AutoViz/tree/master/examples) folder.
+Here are some examples to help you get started with AutoViz. If you need full jupyter notebooks with code samples they can be found in [examples](https://github.com/AutoViML/AutoViz/tree/master/Examples) folder.
 
 ### Example 1: Visualize a CSV file with a target variable
 
@@ -149,7 +147,7 @@ dft = AV.AutoViz(
     header=0,
     verbose=1,
     lowess=False,
-    chart_format="bokeh",
+    chart_format="server",
     max_rows_analyzed=150000,
     max_cols_analyzed=30,
     save_plot_dir=None
@@ -177,7 +175,7 @@ dft = AV.AutoViz(
     header=0,
     verbose=2,
     lowess=False,
-    chart_format="server",
+    chart_format="bokeh",
     max_rows_analyzed=150000,
     max_cols_analyzed=30,
     save_plot_dir=custom_plot_dir
