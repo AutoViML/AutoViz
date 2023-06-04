@@ -19,3 +19,4 @@ panel>=0.12.6
 xgboost>=0.82
 fsspec>=0.8.3
 typing-extensions>=4.1.1
+pandas-dq==1.28
