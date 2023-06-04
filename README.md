@@ -155,7 +155,7 @@ dft = AV.AutoViz(
 
 ```
 
-![server_charts](images/bokeh_charts.JPG)
+![server_charts](images/server_charts.JPG)
 
 ### Example 3: Generate interactive Bokeh charts and save them as HTML files in a custom directory
 
