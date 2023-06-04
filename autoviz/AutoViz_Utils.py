@@ -784,7 +784,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
         #sns.color_palette("Set1")
         sns.set_palette("Set1")
         ##### First draw all the numeric variables in row after row #############
-        if not len(conti) == 0:
+        if len(conti) > 0:
             cols = 3
             rows = len(conti)
             fig, axes = plt.subplots(rows, cols, figsize=(width_size,rows*height_size))
@@ -819,7 +819,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
                                 plot_name+'_Numeric', dep, mk_dir))
                 image_count += 1
         #####  Now draw each of the categorical variable distributions in each subplot ####
-        if not len(cats) == 0:
+        if len(cats) > 0:
             cols = 2
             noplots = len(cats)
             rows = int((noplots/cols)+0.99 )
@@ -1037,7 +1037,7 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression', 
             nums = nums + [dep]
         numb = len(nums)
         if numb > number_in_each_row:
-            rows = int(numb/number_in_each_row)+1
+            rows = int((numb/number_in_each_row)+.99)
         else:
             rows = 1
         plot_index = 0

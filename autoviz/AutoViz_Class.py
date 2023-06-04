@@ -59,10 +59,17 @@ from xgboost.sklearn import XGBRegressor
 from sklearn.model_selection import train_test_split
 ##########################################################################################
 from autoviz.AutoViz_Holo import AutoViz_Holo
-from autoviz.AutoViz_Utils import *
+from autoviz.AutoViz_Utils import save_image_data, save_html_data, analyze_problem_type, draw_pivot_tables, draw_scatters
+from autoviz.AutoViz_Utils import draw_pair_scatters, plot_fast_average_num_by_cat, draw_barplots, draw_heatmap
+from autoviz.AutoViz_Utils import draw_distplot, draw_violinplot, draw_date_vars, catscatter, draw_catscatterplots
+from autoviz.AutoViz_Utils import list_difference, search_for_word_in_list, analyze_ID_columns, start_classifying_vars
+from autoviz.AutoViz_Utils import analyze_columns_in_dataset, find_remove_duplicates, load_file_dataframe, classify_print_vars
+from autoviz.AutoViz_Utils import marthas_columns, EDA_find_remove_columns_with_infinity, return_dictionary_list
+from autoviz.AutoViz_Utils import remove_variables_using_fast_correlation, count_freq_in_list, find_corr_vars, left_subtract
+from autoviz.AutoViz_Utils import convert_train_test_cat_col_to_numeric, return_factorized_dict, convert_a_column_to_numeric
+from autoviz.AutoViz_Utils import convert_all_object_columns_to_numeric, find_top_features_xgb, convert_a_mixed_object_column_to_numeric
 from autoviz.AutoViz_NLP import draw_word_clouds
-from autoviz.classify_method import data_suggestions
-#####################################################
+#############################################################################################
 class AutoViz_Class():
     """
         ##############################################################################
@@ -207,26 +214,6 @@ class AutoViz_Class():
         else:
             getattr(self,plotname)["subheading"].append(X)
 
-    def give_data_suggestions(self, X):
-        """
-        This is a simple program to give data cleaning and improvement suggestions in class AV. 
-        Make sure you send in a dataframe. Otherwise, this will give an error.
-        """
-        return self.get_data_suggestions(X)
-
-    def get_data_suggestions(self, X):
-        """
-        This is a simple program to give data cleaning and improvement suggestions in class AV. 
-        Make sure you send in a dataframe. Otherwise, this will give an error.
-        """
-        if isinstance(X, pd.DataFrame):
-            dfx = data_suggestions(X)
-            all_rows = dfx.shape[0]
-            ax = dfx.head(all_rows).style.background_gradient(cmap='Reds').set_properties(**{'font-family': 'Segoe UI'})
-            display(ax);
-        else:
-            print("Input must be a dataframe. Please check input and try again.")
-
     def AutoViz(self, filename, sep=',', depVar='', dfte=None, header=0, verbose=1,
                             lowess=False,chart_format='svg',max_rows_analyzed=150000,
                                 max_cols_analyzed=30, save_plot_dir=None):
@@ -316,6 +303,11 @@ class AutoViz_Class():
         except:
             print('Not able to read or load file. Please check your inputs and try again...')
             return None
+        ###########  This is where perform data quality checks on data ################
+        if verbose >= 1:
+            print('To fix data quality issues automatically, import FixDQ from autoviz...')
+            data_cleaning_suggestions(dft, target=depVar)
+
         ##### This is where we start plotting different kinds of charts depending on dependent variables
         if depVar == None or depVar == '':
          ##### This is when No dependent Variable is given #######
@@ -553,3 +545,61 @@ class AutoViz_Class():
             print ('\n ###################### AUTO VISUALIZATION Completed ########################')
         return dft
 #############################################################################################
+from pandas_dq import Fix_DQ
+# Create a new class FixDQ by inheriting from Fix_DQ
+class FixDQ(Fix_DQ):
+    """
+    FixDQ is a great way to clean an entire train data set and apply the same steps in 
+    an MLOps pipeline to a test dataset. FixDQ can be used to detect most issues in 
+    your data (similar to data_cleaning_suggestions but without the `target` 
+    related issues) in one step. Then it fixes those issues it finds during the 
+    `fit` method by the `transform` method. This transformer can then be saved 
+    (or "pickled") for applying the same steps on test data either at the same 
+    time or later.
+
+    FixDQ will perform following data quality cleaning steps:
+        It removes ID columns from further processing
+        It removes zero-variance columns from further processing
+        It identifies rare categories and groups them into a single category 
+                    called "Rare"
+        It finds infinite values and replaces them with an upper bound based on 
+                    Inter Quartile Range
+        It detects mixed data types and drops those mixed-type columns from 
+                    further processing
+        It detects outliers and suggests to remove them or use robust statistics.
+        It detects high cardinality features but leaves them as it is.
+        It detects highly correlated features and drops one of them (whichever 
+                    comes first in the column sequence)
+        It detects duplicate rows and drops one of them or keeps only one copy 
+                    of duplicate rows
+        It detects duplicate columns and drops one of them or keeps only one copy
+        It detects skewed distributions and applies log or box-cox 
+                    transformations on them
+        It detects imbalanced classes and leaves them as it is
+        It detects feature leakage and drops one of those features if 
+                    they are highly correlated to target
+    """
+    def __init__(self, quantile=0.87, cat_fill_value = 'missing', 
+                num_fill_value = 9999, rare_threshold = 0.01, 
+                correlation_threshold = 0.9):
+        super().__init__()  # Call the parent class constructor
+        # Additional initialization code here
+        self.quantile = quantile
+        self.cat_fill_value = cat_fill_value
+        self.num_fill_value = num_fill_value
+        self.rare_threshold = rare_threshold
+        self.correlation_threshold = correlation_threshold
+
+###################################################################################
+from pandas_dq import dq_report
+def data_cleaning_suggestions(df, target=None):
+    """
+    This is a simple program to give data cleaning and improvement suggestions in class AV.
+    Make sure you send in a dataframe. Otherwise, this will give an error.
+    """
+    if isinstance(df, pd.DataFrame):
+        dqr = dq_report(data=df, target=target, html=False, csv_engine="pandas", verbose=1)
+    else:
+        print("Input must be a dataframe. Please check input and try again.")
+    return dqr
+###################################################################################
