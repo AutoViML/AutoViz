@@ -146,7 +146,7 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
         mk_dir = copy.deepcopy(save_plot_dir)
     if chart_format == 'html' and not os.path.isdir(mk_dir):
         os.mkdir(mk_dir)
-    mk_dir = os.path.join(mk_dir,target_dir)
+        mk_dir = os.path.join(mk_dir,target_dir)
     if chart_format == 'html' and not os.path.isdir(mk_dir):
         os.mkdir(mk_dir)
     ############   Start the clock here and classify variables in data set first ########
