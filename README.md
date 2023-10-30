@@ -2,7 +2,7 @@
 
 ![logo](images/logo.png)
 
-Unlock the power of **AutoViz** to visualize any dataset, any size, with just a single line of code! Plus, now you can save these interactive charts as HTML files automatically with the `html` setting.
+Unlock the power of **AutoViz** to visualize any dataset, any size, with just a single line of code! Plus, now you can get a quick assessment of your dataset's quality and fix DQ issues through the FixDQ() function.
 
 [![Pepy Downloads](https://pepy.tech/badge/autoviz)](https://pepy.tech/project/autoviz)
 [![Pepy Downloads per week](https://pepy.tech/badge/autoviz/week)](https://pepy.tech/project/autoviz)
@@ -32,22 +32,17 @@ With AutoViz, you can easily and quickly generate insightful visualizations for 
 The latest updates about `autoviz` library can be found in <a href="https://github.com/AutoViML/AutoViz/blob/master/updates.md">Updates page</a>.
 
 ## Motivation
-The motivation to create AutoViz stems from the need for a more efficient, user-friendly, and automated approach to data visualization. Visualizing data is a crucial step in the data analysis process, as it helps users understand patterns, trends, and relationships in the data. However, creating insightful visualizations can be time-consuming and require specialized knowledge of various plotting libraries and techniques.
+The motivation behind the creation of AutoViz is to provide a more efficient, user-friendly, and automated approach to exploratory data analysis (EDA) through quick and easy data visualization plus data quality. The library is designed to help users understand patterns, trends, and relationships in the data by creating insightful visualizations with minimal effort. AutoViz is particularly useful for beginners in data analysis as it abstracts away the complexities of various plotting libraries and techniques. For experts, it provides another expert tool that they can use to provide inights into data that they may have missed.
 
-AutoViz addresses these challenges by providing an easy-to-use, automated solution for generating meaningful visualizations with minimal effort. Its key motivations are:
-
-1. **Save time and effort**: AutoViz simplifies the visualization process by requiring just a single line of code to generate multiple insightful plots, eliminating the need to write multiple lines of code for each chart.
-
-2. **Handle large datasets**: AutoViz is designed to work with datasets of any size, intelligently sampling the data when necessary to ensure that the visualizations are generated quickly and efficiently, without compromising on the insights.
-
-3. **Democratize Data Science**: AutoViz makes data visualization accessible to a broader audience, including non-experts and beginners in data analysis, by abstracting away the complexities of various plotting libraries.
-
-4. **Automate EDA**: AutoViz now automatically analyzes and fixes Data Quality issues in your dataset. This will help users to quickly go from insights to action without having to manually analyze each variable. AutoViz uses the new `pandas-dq` library created by `autoviml` to perform data quality and cleaning.
-
-5. **Customization and interactivity**: AutoViz offers various options for customization, enabling users to tailor the generated visualizations to their specific needs and preferences. Moreover, with interactive chart formats like Bokeh, users can explore the data more dynamically.
-
-In summary, the motivation behind AutoViz is to make data visualization more efficient, accessible, and automated, enabling users to quickly gain valuable insights from their data and focus on making data-driven decisions.
-
+AutoViz is a powerful tool for generating insightful visualizations with minimal effort. Here are some of its key selling points compared to other automated EDA tools:
+<ol>
+<li><b>Ease of use</b>: AutoViz is designed to be user-friendly and accessible to beginners in data analysis, abstracting away the complexities of various plotting libraries</li>
+<li><b>Speed</b>: AutoViz is optimized for speed and can generate multiple insightful plots with just a single line of code</li>
+<li><b>Scalability</b>: AutoViz is designed to work with datasets of any size and can handle large datasets efficiently</li>
+<li><b>Automation</b>: AutoViz automates the visualization process, requiring just a single line of code to generate multiple insightful plots</li>
+<li><b>Customization</b>: AutoViz provides several options for customizing the visualizations, such as changing the chart type, color palette, etc.</li>
+<li><b>Data Quality</b>: AutoViz now provides data quality assessment by default and helps you fix DQ issues with a single line of code using the FixDQ() function</li>
+</ol>
 ## Installation
 
 **Prerequisites**
@@ -69,7 +64,7 @@ pip install -r requirements.txt
 ## Usage
 Discover how to use AutoViz in this Medium article.
 
-In the AutoViz directory, open a Jupyter Notebook or the command terminal and use the following code to instantiate the AutoViz_Class. Note: You no longer need to use ```from autoviz.AutoViz_Class import AutoViz_Class```. Instead, simply run:
+In the AutoViz directory, open a Jupyter Notebook or open a command palette (terminal) and use the following code to instantiate the AutoViz_Class. You can simply run this code step by step:
 
 ```python
 from autoviz import AutoViz_Class
@@ -77,9 +72,9 @@ AV = AutoViz_Class()
 dft = AV.AutoViz(filename)
 ```
 
-Feed AutoViz any input filename (in CSV, txt, or JSON format), and set `max_rows_analyzed` and `max_cols_analyzed` based on memory limitations in your environment, and watch the magic happen!
+AutoViz can use any input either filename (in CSV, txt, or JSON format) or a pandas dataframe. If you have a large dataset, you can set the `max_rows_analyzed` and `max_cols_analyzed` arguments to speed up the visualization by asking autoviz to sample your dataset.
 
-AutoViz can now create charts in multiple  formats using the `chart_format` setting:
+AutoViz can also create charts in multiple  formats using the `chart_format` setting:
 - If `chart_format ='png'` or `'svg'` or `'jpg'`: Matplotlib charts are plotted inline.
     * Can be saved locally (using `verbose=2` setting) or displayed (`verbose=1`) in Jupyter Notebooks.
     * This is the default behavior for AutoViz.
@@ -91,16 +86,16 @@ AutoViz can now create charts in multiple  formats using the `chart_format` sett
 ## API
 Arguments for `AV.AutoViz()` method:
 
-- `filename`: Use an empty string ("") if there's no associated filename and you want to use a dataframe; set dfte as the dataframe name. Provide a filename and leave dfte empty to load the dataset.
-- `sep`: File separator (comma, semi-colon, tab, or any column-separating value).
-- `depVar`: Target variable in your dataset; leave empty if not applicable.
-- `dfte`: Input dataframe for plotting charts; leave empty if providing a filename.
-- `header`: Row number of the header row in your file (0 for the first row).
+- `filename`: Use an empty string ("") if there's no associated filename and you want to use a dataframe. In that case, using the `dfte` argument for the dataframe. Otherwise provide a filename and leave `dfte` argument with an empty string. Only one of them can be used.
+- `sep`: File separator (comma, semi-colon, tab, or any column-separating value) if you use a filename above.
+- `depVar`: Target variable in your dataset; set it as an empty string if not applicable.
+- `dfte`: name of the pandas dataframe for plotting charts; leave it as empty string if using a filename.
+- `header`: set the row number of the header row in your file (0 for the first row). Otherwise leave it as 0.
 - `verbose`: 0 for minimal info and charts, 1 for more info and charts, or 2 for saving charts locally without display.
 - `lowess`: Use regression lines for each pair of continuous variables against the target variable in small datasets; avoid using for large datasets (>100,000 rows).
 - `chart_format`: 'svg', 'png', 'jpg', 'bokeh', 'server', or 'html' for displaying or saving charts in various formats, depending on the verbose option.
-- `max_rows_analyzed`: Limit the max number of rows for chart display, particularly useful for very large datasets (millions of rows) to reduce chart generation time. A statistically valid sample will be used.
-- `max_cols_analyzed`: Limit the number of continuous variables to be analyzed.
+- `max_rows_analyzed`: Limit the max number of rows to use for visualization when dealing with very large datasets (millions of rows). A statistically valid sample will be used by autoviz. Default is 150000 rows.
+- `max_cols_analyzed`: Limit the number of continuous variables to be analyzed. Defaul is 30 columns.
 - `save_plot_dir`: Directory for saving plots. Default is None, which saves plots under the current directory in a subfolder named AutoViz_Plots. If the save_plot_dir doesn't exist, it will be created.
 
 ## Examples

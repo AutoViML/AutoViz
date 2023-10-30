@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="autoviz",
-    version="0.1.730",
+    version="0.1.732",
     author="Ram Seshadri",
     # author_email="author@example.com",
     description="Automatically Visualize any dataset, any size with a single line of code",
@@ -15,8 +15,6 @@ setuptools.setup(
     url="https://github.com/AutoViML/AutoViz",
     packages=setuptools.find_packages(exclude=("tests",)),
     install_requires=[
-        "ipython",
-        "jupyter",
         "xlrd",
         "wordcloud",
         "emoji",

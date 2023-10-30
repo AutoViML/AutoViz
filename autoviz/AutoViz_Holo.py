@@ -192,7 +192,7 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
         drawobj6 = draw_heatmap_hv(dfin, nums, chart_format, date_vars, dep, problem_type, classes, 
                             mk_dir, verbose)
         ls_objects.append(drawobj6)
-    if len(date_vars) > 0:
+    if len(date_vars) > 0 and len(nums) > 0:
         drawobj7 = draw_date_vars_hv(dfin,dep,date_vars, nums, chart_format, problem_type, mk_dir, verbose)
         ls_objects.append(drawobj7)
     if len(nums) > 0 and len(cats) > 0:

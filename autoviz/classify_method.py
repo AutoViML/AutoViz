@@ -14,7 +14,6 @@ def warn(*args, **kwargs):
 warnings.warn = warn
 import logging
 ####################################################################################
-from IPython.display import display
 import pdb
 from functools import reduce
 import copy

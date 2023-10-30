@@ -1,5 +1,3 @@
-ipython
-jupyter
 xlrd
 wordcloud
 numpy
