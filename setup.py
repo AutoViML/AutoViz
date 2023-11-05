@@ -21,7 +21,7 @@ setuptools.setup(
         "numpy",
         "pandas",
         "pyamg",
-        "matplotlib>=3.3.3",
+        "matplotlib >=3.3.3, <3.6",
         "seaborn>=0.11.1",
         "scikit-learn",
         "statsmodels",
