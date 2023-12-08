@@ -6,6 +6,8 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]:
       max-parallel: 5
 
     steps:
