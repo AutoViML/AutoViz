@@ -12,7 +12,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     license='Apache License 2.0',
-    url="https://github.com/AutoViML/AutoViz",
+    url="https://github.com/eltphd/AutoViz.git",
     packages=setuptools.find_packages(exclude=("tests",)),
     install_requires=[
         "xlrd",
@@ -22,7 +22,7 @@ setuptools.setup(
         "pandas",
         "pyamg",
         "matplotlib >=3.3.3, <3.6",
-        "seaborn>=0.11.1",
+        "seaborn>=0.13",
         "scikit-learn",
         "statsmodels",
         "nltk",
