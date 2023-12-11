@@ -7,7 +7,7 @@ nltk
 emoji
 textblob
 matplotlib>=3.3.3, <3.6
-seaborn>=0.11.1
+seaborn>=0.13
 scikit-learn
 statsmodels
 holoviews~=1.14.9
@@ -17,4 +17,4 @@ panel>=0.12.6
 xgboost>=0.82
 fsspec>=0.8.3
 typing-extensions>=4.1.1
-pandas-dq==1.28
+pandas-dq>=1.28

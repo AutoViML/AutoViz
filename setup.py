@@ -12,7 +12,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     license='Apache License 2.0',
-    url="https://github.com/eltphd/AutoViz.git",
+    url="https://github.com/AutoViML/AutoViz.git",
     packages=setuptools.find_packages(exclude=("tests",)),
     install_requires=[
         "xlrd",
@@ -34,7 +34,7 @@ setuptools.setup(
         "xgboost>=0.82",
         "fsspec>=0.8.3",
         "typing-extensions>=4.1.1",
-        "pandas-dq==1.28"
+        "pandas-dq>=1.28"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
