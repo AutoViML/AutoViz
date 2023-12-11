@@ -35,12 +35,12 @@ import matplotlib.pyplot as plt
 # from matplotlib import io
 import io
 import seaborn as sns
-sns.set(style="whitegrid", color_codes=True)
+sns.set(style="ticks", color_codes=True)
 import re
 import pdb
 import pprint
 import matplotlib
-matplotlib.style.use('seaborn')
+matplotlib.style.use('seaborn-v0_8-ticks')
 from itertools import cycle, combinations
 from collections import defaultdict
 import copy
