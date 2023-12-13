@@ -445,10 +445,12 @@ def draw_scatters(dfin,nums,verbose,chart_format,problem_type,dep=None, classes=
         rows = int((noplots/cols)+0.99)
         ### Be very careful with the next line. we have used the singular "subplot" ##
         fig = plt.figure(figsize=(width_size,rows*height_size))
+        sns.set_palette("Set1")
         for num, plotc, color_val in zip(nums, range(1,noplots+1),colors):
             ####Strip plots are meant for categorical plots so x axis must always be depVar ##
             plt.subplot(rows,cols,plotc)
-            sns.stripplot(x=dft[dep], y=dft[num], ax=plt.gca(), jitter=jitter)
+            ### Don't change this line - it works properly now Dec 20, 2023 ####
+            sns.stripplot(data=dft, x=dep, y=num, hue=dep, ax=plt.gca(), jitter=jitter)
             plt.xticks(rotation=30, ha='right', fontsize=9)
             plt.ylabel(num)
             plt.xlabel(dep)
@@ -1030,6 +1032,7 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression', 
     else:
         othernums = [x for x in nums if x not in dep]
     #sns.color_palette("Set1")
+    
     sns.set_palette("Set1")
     if modeltype == 'Regression' or dep == None or dep == '':
         image_count = 0
@@ -1054,8 +1057,9 @@ def draw_violinplot(df, dep, nums,verbose,chart_format, modeltype='Regression', 
                 fig = plt.figure(figsize=(min(width_size*len(num_10),width_size),min(height_size,height_size*len(num_10))))
             ax = fig.gca()
             #ax.set_xticklabels (df.columns, tolist(), size=10)
-            sns.violinplot(data=df_norm, orient='v', fliersize=5, scale='width',
-                linewidth=3, notch=False, saturations=0.5, ax=ax, inner='box')
+            #### Don't change this line since it works to best now Dec 20, 2023 #####
+            sns.violinplot(data=df_norm, orient='v', scale='width',
+                linewidth=3, ax=ax, inner='box')
             fig.suptitle('Violin Plot of all Continuous Variables', fontsize=15)
             fig.tight_layout();
             if verbose <= 1:
@@ -1698,6 +1702,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
     categorical_vars = var_df['cat_vars'] + var_df['factor_vars'] + int_vars + bool_vars
     date_vars = var_df['date_vars']
     
+    
     if len(var_df['continuous_vars'])==0 and len(int_vars)>0:
         continuous_vars = var_df['int_vars']
         categorical_vars = list_difference(categorical_vars, int_vars)
@@ -1727,6 +1732,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
         # If depVar is a list, just select the first one in the list to visualize!
         depVar = depVar[0]
         print('Since AutoViz cannot visualize multi-label targets, selecting %s from target list' %depVar[0])
+    
     ### Now we analyze depVar as usual - Do not change the next line to elif! ###
     if type(depVar) == str:
         if depVar == '':
@@ -1739,7 +1745,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
             except:
                 print('Could not find given target var in data set. Please check input')
                 ### return the data frame as is ############
-                return dfte
+                return dfte,depVar,IDcols,bool_vars,categorical_vars,continuous_vars,discrete_string_vars,date_vars,classes,problem_type, cols_list
             cols_list = list_difference(list(dft),depVar)
             if dft[depVar].dtype == object:
                 classes = dft[depVar].unique().tolist()
@@ -1822,6 +1828,7 @@ def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
     #categorical_vars = left_subtract(categorical_vars,np.array(
     #    categorical_vars)[dft[categorical_vars].nunique()>30].tolist())
     #############   Next you can print them if verbose is set to print #########
+    
     ppt = pprint.PrettyPrinter(indent=4)
     if verbose>=2 and len(cols_list) <= max_cols_analyzed:
         #marthas_columns(dft,verbose)

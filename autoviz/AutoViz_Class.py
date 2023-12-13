@@ -296,6 +296,7 @@ class AutoViz_Class():
             os.mkdir(mk_dir)
         ############   Start the clock here and classify variables in data set first ########
         start_time = time.time()
+        
         try:
             dft, depVar,IDcols,bool_vars,cats,continuous_vars,discrete_string_vars,date_vars,classes,problem_type,selected_cols = classify_print_vars(
                                                 filename,sep,max_rows_analyzed, max_cols_analyzed,
@@ -305,8 +306,23 @@ class AutoViz_Class():
             return None
         ###########  This is where perform data quality checks on data ################
         if verbose >= 1:
-            print('To fix data quality issues automatically, import FixDQ from autoviz...')
-            data_cleaning_suggestions(dft, target=depVar)
+            print('To fix these data quality issues in the dataset, import FixDQ from autoviz...')
+        ####   Run the Data Cleaning suggestions report now ############
+
+        if not depVar is None:
+            if isinstance(depVar, list):
+                remaining_vars = left_subtract(list(dft), depVar)
+                if len(remaining_vars) == len(list(dft)):
+                    print('depVar %s not found in given dataset. Please check your input and try again' %depVar)
+                    return dft
+                ### run the data cleaning report with a multi-label list of targets ##
+                data_cleaning_suggestions(dft, target=depVar)
+            else:
+                ### run the data cleaning report with a single-label target ##
+                data_cleaning_suggestions(dft, target=depVar)
+        else:
+            ### run data cleaning report with no target ####
+            data_cleaning_suggestions(dft, target='')
 
         ##### This is where we start plotting different kinds of charts depending on dependent variables
         if depVar == None or depVar == '':

@@ -14,8 +14,6 @@ def warn(*args, **kwargs):
 warnings.warn = warn
 import logging
 ####################################################################################
-from IPython.display import display
-import pdb
 from functools import reduce
 import copy
 import time
@@ -27,7 +25,7 @@ def left_subtract(l1,l2):
     return lst
 #################################################################################
 import copy
-def EDA_find_remove_columns_with_infinity(df, remove=False):
+def EDA_find_remove_columns_with_infinity(df, remove=False, verbose=0):
     """
     This function finds all columns in a dataframe that have inifinite values (np.inf or -np.inf)
     It returns a list of column names. If the list is empty, it means no columns were found.
@@ -38,11 +36,13 @@ def EDA_find_remove_columns_with_infinity(df, remove=False):
     sum_rows = np.isinf(dfx).values.sum()
     add_cols =  list(dfx.columns.to_series()[np.isinf(dfx).any()])
     if sum_rows > 0:
-        print('    there are %d rows and %d columns with infinity in them...' %(sum_rows,len(add_cols)))
+        if verbose > 0:
+            print('    there are %d rows and %d columns with infinity in them...' %(sum_rows,len(add_cols)))
         if remove:
             ### here you need to use df since the whole dataset is involved ###
             nocols = [x for x in df.columns if x not in add_cols]
-            print("    Shape of dataset before %s and after %s removing columns with infinity" %(df.shape,(df[nocols].shape,)))
+            if verbose > 0:
+                print("    Shape of dataset before %s and after %s removing columns with infinity" %(df.shape,(df[nocols].shape,)))
             return df[nocols]
         else:
             ## this will be a list of columns with infinity ####
@@ -81,7 +81,7 @@ def classify_columns(df_preds, verbose=0):
     cols_delete = []
     cols_delete = [col for col in list(train) if (len(train[col].value_counts()) == 1
                                        ) | (train[col].isnull().sum()/len(train) >= 0.90)]
-    inf_cols = EDA_find_remove_columns_with_infinity(train)
+    inf_cols = EDA_find_remove_columns_with_infinity(train, remove=False, verbose=verbose)
     mixed_cols = [x for x in list(train) if len(train[x].dropna().apply(type).value_counts()) > 1]
     if len(mixed_cols) > 0:
         print('    Removing %s column(s) due to mixed data type detected...' %mixed_cols)
@@ -276,7 +276,7 @@ def classify_columns(df_preds, verbose=0):
     ###############  This is where you print all the types of variables ##############
     ####### Returns 8 vars in the following order: continuous_vars,int_vars,cat_vars,
     ###  string_bool_vars,discrete_string_vars,nlp_vars,date_or_id_vars,cols_delete
-    if verbose == 0:
+    if verbose == 1:
         print("    Number of Numeric Columns = ", len(continuous_vars))
         print("    Number of Integer-Categorical Columns = ", len(int_vars))
         print("    Number of String-Categorical Columns = ", len(cat_vars))
@@ -289,7 +289,7 @@ def classify_columns(df_preds, verbose=0):
         print("    Number of ID Columns = ", len(id_vars))
         print("    Number of Columns to Delete = ", len(cols_delete))
     if verbose >= 2:
-        print('  Printing upto %d columns max in each category:' %max_cols_to_print)
+        print('  Printing upto %d columns (max) in each category:' %max_cols_to_print)
         print("    Numeric Columns : %s" %continuous_vars[:max_cols_to_print])
         print("    Integer-Categorical Columns: %s" %int_vars[:max_cols_to_print])
         print("    String-Categorical Columns: %s" %cat_vars[:max_cols_to_print])

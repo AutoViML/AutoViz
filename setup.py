@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="autoviz",
-    version="0.1.733",
+    version="0.1.734",
     author="Ram Seshadri",
     # author_email="author@example.com",
     description="Automatically Visualize any dataset, any size with a single line of code",
@@ -34,7 +34,7 @@ setuptools.setup(
         "xgboost>=0.82",
         "fsspec>=0.8.3",
         "typing-extensions>=4.1.1",
-        "pandas-dq>=1.28"
+        "pandas-dq>=1.29"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
