@@ -7,12 +7,12 @@ nltk
 emoji
 textblob
 matplotlib>=3.3.3, <3.6
-seaborn>=0.13.0
+seaborn>=0.12.2
 scikit-learn
 statsmodels
-holoviews~=1.14.9
-bokeh~=2.4.2
-hvplot~=0.7.3
+holoviews>=1.14.9
+bokeh>=2.4.2
+hvplot>=0.7.3
 panel>=0.12.6
 xgboost>=0.82
 fsspec>=0.8.3
