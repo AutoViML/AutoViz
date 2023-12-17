@@ -40,7 +40,6 @@ import re
 import pdb
 import pprint
 import matplotlib
-matplotlib.style.use('seaborn-v0_8-ticks')
 from itertools import cycle, combinations
 from collections import defaultdict
 import copy
