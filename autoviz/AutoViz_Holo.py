@@ -273,19 +273,20 @@ def draw_cat_vars_hv(dfin, dep, nums, cats, chart_format, problem_type, mk_dir, 
     ### The X axis should be cat vars and the Y axis should be numeric vars ######
     x = pnw.Select(name='X-Axis', value=cats[0], options=cats)
     y = pnw.Select(name='Y-Axis', value=quantileable[0], options=quantileable)
-
     ## you need to decorate this function with depends to make the widgets change axes real time ##
     @pn.depends(x.param.value, y.param.value) 
     def create_figure(x, y):
-        opts = dict(cmap=cmap_list[0], line_color='black')
-        #opts['size'] = bubble_size
+        #opts = dict(cmap=cmap_list[0], line_color='black')
+        opts = dict(cmap=cmap_list[0], width=width_size, height=height_size, line_color='black',
+                xrotation=70, title='Average of each numeric var by categorical var')
+        ### If it is None, don't stack it
+        opts['color'] = next(colors)
         opts['alpha'] = alpha
         opts['tools'] = ['hover']
         opts['toolbar'] = 'above'
         opts['colorbar'] = True
         conti_df = dft[[x,y]].groupby(x).mean().reset_index()
-        return hv.Bars(conti_df).opts(width=width_size, height=height_size, 
-                xrotation=70, title='Average of each numeric var by categorical var')
+        return hv.Bars(conti_df).opts(**opts)
 
     widgets = pn.WidgetBox(x, y)
 
@@ -364,13 +365,12 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
         display(hv_all)
     return ls_objects
 #####################################################################################################
-def draw_scatters_hv(dfin, nums, chart_format, problem_type,
+def draw_scatters_hv(dft, nums, chart_format, problem_type,
                   dep=None, classes=None, lowess=False, mk_dir='AutoViz_Plots', verbose=0):
     ensure_hvplot_imported()
     ######## SCATTER PLOTS ARE USEFUL FOR COMPARING NUMERIC VARIABLES
     ##### we are going to modify dfin and classes, so we are making copies to make changes
-    dfin = copy.deepcopy(dfin)
-    dft = copy.deepcopy(dfin)
+    dft = copy.deepcopy(dft)
     image_count = 0
     imgdata_list = list()
     classes = copy.deepcopy(classes)
@@ -383,6 +383,7 @@ def draw_scatters_hv(dfin, nums, chart_format, problem_type,
     bubble_size = 10
     colortext = 'brycgkbyrcmgkbyrcmgkbyrcmgkbyr'
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
+    cmap_list = ['rainbow', 'viridis', 'plasma', 'inferno', 'magma', 'cividis']
     plot_name = 'scatterplots'
     #####################################################
     if problem_type == 'Regression':
@@ -390,7 +391,6 @@ def draw_scatters_hv(dfin, nums, chart_format, problem_type,
         ####### First, Plot each Continuous variable against the Target Variable ###
         ######   This is a Very Simple Way to build an Scatter Chart with One Variable as a Select Variable #######
         alpha = 0.5
-        colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
         def load_symbol(symbol, **kwargs):
             color = next(colors)
             return hv.Scatter((dft[symbol].values,dft[dep].values)).opts(framewise=True).opts(size=bubble_size,
@@ -411,16 +411,35 @@ def draw_scatters_hv(dfin, nums, chart_format, problem_type,
         ####### This is a Classification Problem #### You need to plot a Scatter plot ####
         #######   This widget based code works well except it does not add jitter. But it changes y-axis so that's good!
         ##################################################################################################################
-        target_vars = dft[dep].unique()
-        x = pn.widgets.Select(name='x', options=nums)
+        x = pn.widgets.Select(name='x', options=[dep])
+        y = pn.widgets.Select(name='y', options=nums)
+        @pn.depends(x.param.value, y.param.value) 
+        def create_figure(x, y):
+            opts = dict(cmap=cmap_list[0], width=width_size, height=height_size, line_color='black')
+            opts['color'] = next(colors)
+            opts['size'] = bubble_size
+            opts['alpha'] = alpha
+            opts['tools'] = ['hover']
+            opts['toolbar'] = 'above'
+            opts['colorbar'] = True
+            opts['title'] ='Scatter Plot of each numeric variable against target variable'
+            return hv.Scatter(dft, [x, y], label="%s vs %s" % (x.title(), y.title()),
+                ).opts(**opts)
+
+        widgets = pn.WidgetBox(x, y)
+
+        hv_all = pn.Row(widgets, create_figure).servable('Cross-selector')
+        #############  This is the old way of doing it - but it wasn't pretty ################
+        #target_vars = dft[dep].unique()
+        #x = pn.widgets.Select(name='x', options=nums)
         y = pn.widgets.Select(name='y', options=nums)
         kind = pn.widgets.Select(name='kind', value='scatter', options=['scatter'])
         #######  This is where you call the widget and pass it the hv_plotto draw a Chart #######
-        hv_plot = dft.hvplot(x=dep, y=y, kind=kind, height=height_size, width=width_size, size=bubble_size,
-                        title='Scatter Plot of each independent numeric variable against target variable')
-        hv_panel = pn.panel(hv_plot)
-        hv_all = pn.Row(pn.WidgetBox(y), hv_plot)
-
+        #hv_plot = dft.hvplot(x=dep, y=y, kind=kind, height=height_size, width=width_size, size=bubble_size,color = next(colors),
+        #                title='Scatter Plot of each independent numeric variable against target variable')
+        #hv_panel = pn.panel(hv_plot)
+        #hv_all = pn.Row(pn.WidgetBox(y), hv_plot)
+        ##
         ##################################################################################################################
         #############   This works well except that the y-axis does not change when you switch y-variable ################
         ##################################################################################################################
@@ -488,6 +507,7 @@ def draw_pair_scatters_hv(dfin,nums,problem_type,chart_format, dep=None,
     bubble_size = 10
     cmap_list = ['rainbow', 'viridis', 'plasma', 'inferno', 'magma', 'cividis']
     plot_name = 'pair_scatters'
+    colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
     ###########################################################################
     if problem_type in ['Regression', 'Clustering']:
         ########## This is for Regression problems ##########
@@ -531,8 +551,9 @@ def draw_pair_scatters_hv(dfin,nums,problem_type,chart_format, dep=None,
             opts['tools'] = ['hover']
             opts['toolbar'] = 'above'
             opts['colorbar'] = True
+            opts['title'] ='Pair-wise Scatter Plot of two Independent Numeric variables'
             return hv.Points(dft, [x, y], label="%s vs %s" % (x.title(), y.title()),
-                title='Pair-wise Scatter Plot of two Independent Numeric variables').opts(**opts)
+                ).opts(**opts)
 
         widgets = pn.WidgetBox(x, y, color)
 
@@ -571,14 +592,17 @@ def draw_pair_scatters_hv(dfin,nums,problem_type,chart_format, dep=None,
         def create_figure(x, y, color):
             opts = dict(cmap=cmap_list[0], width=width_size, height=height_size, line_color='black')
             if color != 'None':
-                opts['color'] = color 
+                opts['color'] = color
+            else:
+                opts['color'] = next(colors)
             opts['size'] = bubble_size
             opts['alpha'] = alpha
             opts['tools'] = ['hover']
             opts['toolbar'] = 'above'
             opts['colorbar'] = True
+            opts['title'] ='Pair-wise Scatter Plot of two Independent Numeric variables'
             return hv.Points(dft, [x, y], label="%s vs %s" % (x.title(), y.title()),
-                title='Pair-wise Scatter Plot of two Independent Numeric variables').opts(**opts)
+                ).opts(**opts)
 
         widgets = pn.WidgetBox(x, y, color)
 
@@ -983,17 +1007,20 @@ def draw_date_vars_hv(df,dep,datevars, nums, chart_format, modeltype='Regression
     ## you need to decorate this function with depends to make the widgets change axes real time ##
     @pn.depends(x.param.value, y.param.value) 
     def create_figure(x, y):
-        opts = dict(cmap=cmap_list[0], line_color='black')
+        #opts = dict(cmap=cmap_list[0], line_color='black')
+        opts = dict(cmap=cmap_list[0], width=width_size, height=height_size, 
+            line_color='black',
+            line_width=1, line_dash='dotted', line_alpha=0.5)
         #opts['size'] = bubble_size
         opts['alpha'] = alpha
         opts['tools'] = ['hover']
         opts['toolbar'] = 'above'
         opts['colorbar'] = True
+        #opts['color'] = next(colors)
+        opts['title'] = title='Time Series plots of Numeric vars'
         dft = df.set_index(df[x])
         conti_df = df[[x,y]].set_index(df[x]).drop(x, axis=1)
-        return hv.Curve(conti_df).opts(
-            line_width=1, line_color=next(colors),line_dash='dotted', line_alpha=0.5).opts(
-            width=width_size, height=height_size,title='Time Series plots of Numeric vars')
+        return hv.Curve(conti_df).opts(**opts)
 
     widgets = pn.WidgetBox(x, y)
 
