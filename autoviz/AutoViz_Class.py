@@ -37,7 +37,6 @@ import io
 import seaborn as sns
 sns.set(style="ticks", color_codes=True)
 import re
-import pdb
 import pprint
 import matplotlib
 from itertools import cycle, combinations
@@ -56,9 +55,10 @@ import xgboost as xgb
 from xgboost.sklearn import XGBClassifier
 from xgboost.sklearn import XGBRegressor
 from sklearn.model_selection import train_test_split
+
 ##########################################################################################
 from autoviz.AutoViz_Holo import AutoViz_Holo
-from autoviz.AutoViz_Utils import save_image_data, save_html_data, analyze_problem_type, draw_pivot_tables, draw_scatters
+from autoviz.AutoViz_Utils import save_image_data, analyze_problem_type, draw_pivot_tables, draw_scatters
 from autoviz.AutoViz_Utils import draw_pair_scatters, plot_fast_average_num_by_cat, draw_barplots, draw_heatmap
 from autoviz.AutoViz_Utils import draw_distplot, draw_violinplot, draw_date_vars, catscatter, draw_catscatterplots
 from autoviz.AutoViz_Utils import list_difference, search_for_word_in_list, analyze_ID_columns, start_classifying_vars

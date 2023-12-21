@@ -1,5 +1,15 @@
 # Latest updates and news from AutoViz!
 
+### December 2023: AutoViz now has modular dependency loading and improved support for Python versions 3.10+
+<li>Modular Dependency Loading: AutoViz now uses a more flexible approach for importing visualization libraries starting with version `0.1.801`. This means you only need to install certain dependencies (like hvplot and holoviews) if you plan to use specific backends (e.g., bokeh). This change significantly reduces installation issues for users on newer Python versions such as 3.10 and higher.</li>
+
+<li>Improved Backend Support: Depending on your Python environment, AutoViz dynamically adjusts to use compatible visualization libraries, ensuring a smoother user experience. Requirements:
+        "holoviews>=1.14.9",
+        "bokeh>=2.4.2",
+        "hvplot>=0.7.3",
+        "panel>=0.12.6".
+</li>
+
 ### June 2023: AutoViz now has Data Quality checks and a transformer to fix your data quality
 From version 0.1.70, AutoViz can now automatically analyze your dataset and fix data quality issues in your data set. All you have to do is to `from autoviz import FixDQ ` and use it like a `fit_transform` transformer. It's that easy to perform data cleaning now with AutoViz!
 

@@ -15,21 +15,57 @@ Unlock the power of **AutoViz** to visualize any dataset, any size, with just a 
 With AutoViz, you can easily and quickly generate insightful visualizations for your data. Whether you're a beginner or an expert in data analysis, AutoViz can help you explore your data and uncover valuable insights. Try it out and see the power of automated visualization for yourself!
 
 ## Table of Contents
-
-- [Latest Updates for AutoViz](#Latest)
-- [The purpose and motivation for AutoViz](#motivation)
-- [How to install and setup AutoViz in your environment](#installation)
-- [How to use AutoViz with various options and settings](#usage)
-- [The API and available options](#api)
-- [Examples to get you started](#examples)
-- [Maintainers](#maintainers)
-- [Contributing to the project](#contributing)
-- [License](#license)
-- [Additional Tips before you start](#tips)
-- [Disclaimer](#disclaimer)
+<ul>
+<li><a href="#latest">Latest Updates</a></li>
+<li><a href="#importantannouncement">Important Announcement</a></li>
+<li><a href="#citation">Citation</a></li>
+<li><a href="#motivation">Motivation for AutoViz</a></li>
+<li><a href="#usage">How to use AutoViz</a></li>
+<li><a href="#api">API for using AutoViz</a></li>
+<li><a href="#examples">Examples of using AutoViz</a></li>
+<li><a href="#maintainers">Maintainers</a></li>
+<li><a href="#contributing">Contributing</a></li>
+<li><a href="#license">License</a></li>
+<li><a href="#tips">Tips for using AutoViz</a></li>
+<li><a href="#disclaimer">Disclaimer</a></li>
+</ul>
 
 ## Latest
 The latest updates about `autoviz` library can be found in <a href="https://github.com/AutoViML/AutoViz/blob/master/updates.md">Updates page</a>.
+
+## ImportantAnnouncement
+### Starting with version 0.1.801, an important Update Regarding Dependency Management
+We're excited to announce a significant update to AutoViz that enhances compatibility with various Python versions and streamlines dependency management!
+<li>Modular Dependency Loading: AutoViz now uses a more flexible approach for importing visualization libraries starting with version `0.1.801`. This means you only need to install certain dependencies (like hvplot and holoviews) if you plan to use specific backends (e.g., bokeh). This change significantly reduces installation issues for users on newer Python versions such as 3.10 and higher.</li>
+
+<li>Improved Backend Support: Depending on your Python environment, AutoViz dynamically adjusts to use compatible visualization libraries, ensuring a smoother user experience. Requirements:
+        "holoviews>=1.14.9",
+        "bokeh>=2.4.2",
+        "hvplot>=0.7.3",
+        "panel>=0.12.6".
+</li>
+
+### What Does This Mean for You?
+<li>Easier Installation: If you've faced challenges installing AutoViz due to dependency conflicts, this update is for you. Now, you can install AutoViz without needing to install all its visualization dependencies upfront.</li>
+
+<li>Tailored Usage: Choose the visualization backend that works best for your environment. AutoViz will handle the rest, importing necessary libraries as needed.</li>
+
+<li>Seamless Compatibility: Users on the latest Python versions (like 3.11 and 3.12) can now enjoy a hassle-free AutoViz experience.</li>
+
+### How to Update?
+Simply pull the latest version of AutoViz (0.1.801 and higher) from the pip repository. The modular dependency system will be automatically applied.
+
+### Feedback
+Your feedback is crucial! If you encounter any issues or have suggestions, please let us know through [GitHub Issues](https://github.com/AutoViML/AutoViz/issues)
+
+Thank you for your continued support and happy visualizing!
+
+## Citation
+If you use AutoViz in your research project or paper, please use the following format for citations:<p>
+"Seshadri, Ram (2020). GitHub - AutoViML/AutoViz: Automatically Visualize any dataset, any size with a single line of code. source code: https://github.com/AutoViML/AutoViz"</p>
+<b>Current citations for AutoViz</b>
+
+[Google Scholar](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C31&q=autoviz&oq=autoviz)
 
 ## Motivation
 The motivation behind the creation of AutoViz is to provide a more efficient, user-friendly, and automated approach to exploratory data analysis (EDA) through quick and easy data visualization plus data quality. The library is designed to help users understand patterns, trends, and relationships in the data by creating insightful visualizations with minimal effort. AutoViz is particularly useful for beginners in data analysis as it abstracts away the complexities of various plotting libraries and techniques. For experts, it provides another expert tool that they can use to provide inights into data that they may have missed.

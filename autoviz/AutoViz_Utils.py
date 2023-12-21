@@ -37,7 +37,6 @@ import io
 import seaborn as sns
 sns.set(style="whitegrid", color_codes=True)
 import re
-import pdb
 import pprint
 import matplotlib
 #matplotlib.style.use('seaborn')
@@ -57,15 +56,7 @@ import xgboost as xgb
 from xgboost.sklearn import XGBClassifier
 from xgboost.sklearn import XGBRegressor
 from sklearn.model_selection import train_test_split
-######## This is where we import HoloViews related libraries  #########
-import hvplot.pandas
-import holoviews as hv
-from holoviews import opts
-import panel as pn
-import panel.widgets as pnw
-import holoviews.plotting.bokeh
 from .classify_method import classify_columns
-from bokeh.resources import INLINE
 ######## This is where we store the image data in a dictionary with a list of images #########
 def save_image_data(fig, chart_format, plot_name, depVar, mk_dir, additional=''):
     if not os.path.isdir(mk_dir):
@@ -90,19 +81,6 @@ def save_image_data(fig, chart_format, plot_name, depVar, mk_dir, additional='')
         imgdata.seek(0)
         figdata_png = base64.b64encode(imgdata.getvalue())
         return figdata_png
-
-def save_html_data(hv_all, chart_format, plot_name, mk_dir, additional=''):
-    print('Saving %s in HTML format' %(plot_name+additional))
-    if not os.path.isdir(mk_dir):
-        os.mkdir(mk_dir)
-    if additional == '':
-        filename = os.path.join(mk_dir,plot_name+"."+chart_format)
-    else:
-        filename = os.path.join(mk_dir,plot_name+additional+"."+chart_format)
-    ## it is amazing you can save interactive plots ##
-    ## You don't need the resources = INLINE since it would consume too much space in HTML plots
-    #pn.panel(hv_all).save(filename, embed=True, resources=INLINE) 
-    pn.panel(hv_all).save(filename, embed=True)
 
 #### This module analyzes a dependent Variable and finds out whether it is a
 #### Regression or Classification type problem
@@ -1617,6 +1595,7 @@ def load_file_dataframe(dataname, sep=",", header=0, verbose=0, nrows=None,parse
         #### this means they have given file name as a string to load the file #####
         codex_flag = False
         codex = ['ascii', 'utf-8', 'iso-8859-1', 'cp1252', 'latin1']
+        
         if dataname != '' and dataname.endswith(('csv')):
             try:
                 dfte = pd.read_csv(dataname, sep=sep, header=header, encoding=None,
@@ -2080,7 +2059,6 @@ from collections import OrderedDict
 ############## CONVERSION OF STRING COLUMNS TO NUMERIC WITHOUT LABEL ENCODER #########
 #######################################################################################
 import copy
-import pdb
 def convert_a_column_to_numeric(x, col_dict=""):
     '''Function converts any pandas series (or column) consisting of string chars,
        into numeric values. It converts an all-string column to an all-number column.

@@ -4,9 +4,7 @@ import pandas as pd
 ############# Import from autoviz.AutoViz_Class the following libraries #######
 from autoviz.AutoViz_Utils import *
 ##############   make sure you use: conda install -c pyviz hvplot ###############
-import hvplot.pandas  # noqa
 import copy
-import pdb
 ####################################################################################
 #### The warnings from Sklearn are so annoying that I have to shut it off ####
 import warnings
@@ -17,9 +15,8 @@ warnings.warn = warn
 ########################################
 import logging
 logging.getLogger("param").setLevel(logging.ERROR)
-from bokeh.util.warnings import BokehUserWarning 
 import warnings 
-warnings.simplefilter(action='ignore', category=BokehUserWarning)
+#warnings.simplefilter(action='ignore', category=BokehUserWarning)
 warnings.filterwarnings("ignore")
 from sklearn.exceptions import DataConversionWarning
 warnings.filterwarnings(action='ignore', category=DataConversionWarning)
@@ -52,17 +49,31 @@ import xgboost as xgb
 from xgboost.sklearn import XGBClassifier
 from xgboost.sklearn import XGBRegressor
 import os
+# If specific functions/classes are needed from your own modules
+from .classify_method import classify_columns
 ##########################################################################################
-######## This is where we import HoloViews related libraries  #########
-import hvplot.pandas
-import holoviews as hv
-from holoviews import opts
-#hv.notebook_extension('bokeh')
-hv.extension('bokeh', 'matplotlib')
-#hv.extension('bokeh')
-import panel as pn
-import panel.widgets as pnw
-import holoviews.plotting.bokeh
+def ensure_hvplot_imported():
+    global hv, opts, pn, pnw, INLINE, classify_columns
+    try:
+        # Import main modules
+        import hvplot.pandas
+        import holoviews as hv
+        import panel as pn
+        from bokeh.resources import INLINE
+        from bokeh.util.warnings import BokehUserWarning 
+
+        # Import submodules and specific components
+        from holoviews import opts
+        import panel.widgets as pnw
+        import holoviews.plotting.bokeh
+
+        # Set the extension
+        hv.extension('bokeh', 'matplotlib')
+
+    except ImportError as e:
+        raise ImportError(f"An error occurred while importing: {str(e)}")
+######################################################################################
+##### Now you can use hv, opts, pn, etc. in your modules 
 ######################################################################################
 ######## This is where we store the image data in a dictionary with a list of images #########
 def save_image_data_hv(fig, chart_count, chart_format):
@@ -80,12 +91,28 @@ def save_image_data_hv(fig, chart_count, chart_format):
         imgdata.seek(0)
         figdata_png = base64.b64encode(imgdata.getvalue())
         return figdata_png
-##############  This is where we
+##############  This is where we save panels that we create to HTML ############
+def save_html_data(hv_all, chart_format, plot_name, mk_dir, additional=''):
+    ensure_hvplot_imported()
+    print('Saving %s in HTML format' %(plot_name+additional))
+    if not os.path.isdir(mk_dir):
+        os.mkdir(mk_dir)
+    if additional == '':
+        filename = os.path.join(mk_dir,plot_name+"."+chart_format)
+    else:
+        filename = os.path.join(mk_dir,plot_name+additional+"."+chart_format)
+    ## it is amazing you can save interactive plots ##
+    ## You don't need the resources = INLINE since it would consume too much space in HTML plots
+    #pn.panel(hv_all).save(filename, embed=True, resources=INLINE) 
+    pn.panel(hv_all).save(filename, embed=True)
+
+##############  This is where we append panels that we create ############
 def append_panels(hv_panel, imgdata_list, chart_format):
     imgdata_list.append(hv.output(hv_panel, backend='bokeh', fig=chart_format))
     return imgdata_list
 ###### Display on Jupyter Notebook or on the Server ########
 def display_dmap(dmap):
+    ensure_hvplot_imported()
     renderer = hv.renderer('bokeh')
     #### You must have a Dynamic Map dmap to render these Bokeh objects on Servers
     app = renderer.app(dmap)
@@ -93,6 +120,7 @@ def display_dmap(dmap):
     return server
 ####################################################################################
 def display_obj(dmap_in):
+    ensure_hvplot_imported()
     ### This is to render the chart in a web server to display as a dashboard!!
     renderer = hv.renderer('bokeh')
     #### You must have a Dynamic Map dmap to render these Bokeh objects on Servers
@@ -101,6 +129,7 @@ def display_obj(dmap_in):
     display(server)
 ####################################################################################
 def display_server(dmap):
+    ensure_hvplot_imported()
     #### You must have a Dynamic Map dmap to render these Bokeh objects on Servers
     server = pn.serve(dmap, start=True, show=False)
     return server
@@ -201,6 +230,7 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
     return dfin
 ####################################################################################
 def draw_cat_vars_hv(dfin, dep, nums, cats, chart_format, problem_type, mk_dir, verbose=0):
+    ensure_hvplot_imported()
     ######## SCATTER PLOTS ARE USEFUL FOR COMPARING NUMERIC VARIABLES
     ##### we are going to modify dfin and classes, so we are making copies to make changes
     dft = copy.deepcopy(dfin)
@@ -276,6 +306,7 @@ def draw_cat_vars_hv(dfin, dep, nums, cats, chart_format, problem_type, mk_dir, 
     return hv_panel
 #####################################################################################################
 def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_objects, mk_dir, verbose=0):
+    ensure_hvplot_imported()
     dft = copy.deepcopy(dfin)
     image_count = 0
     imgdata_list = list()
@@ -335,6 +366,7 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
 #####################################################################################################
 def draw_scatters_hv(dfin, nums, chart_format, problem_type,
                   dep=None, classes=None, lowess=False, mk_dir='AutoViz_Plots', verbose=0):
+    ensure_hvplot_imported()
     ######## SCATTER PLOTS ARE USEFUL FOR COMPARING NUMERIC VARIABLES
     ##### we are going to modify dfin and classes, so we are making copies to make changes
     dfin = copy.deepcopy(dfin)
@@ -443,7 +475,7 @@ def draw_pair_scatters_hv(dfin,nums,problem_type,chart_format, dep=None,
     #### PAIR SCATTER PLOTS ARE NEEDED ONLY FOR CLASSIFICATION PROBLEMS IN NUMERIC VARIABLES
     ### This is where you plot a pair-wise scatter plot of Independent Variables against each other####
     """
-
+    ensure_hvplot_imported()
     dft = dfin[:]
     image_count = 0
     imgdata_list = list()
@@ -578,6 +610,7 @@ def draw_pair_scatters_hv(dfin,nums,problem_type,chart_format, dep=None,
 ##### Must do this only for Continuous Variables
 def draw_distplot_hv(dft, cats, conti, chart_format,problem_type,dep=None, 
                     classes=None, mk_dir='AutoViz_Plots', verbose=0):
+    ensure_hvplot_imported()
     dft = copy.deepcopy(dft)
     image_count = 0
     imgdata_list = list()
@@ -783,6 +816,7 @@ def draw_distplot_hv(dft, cats, conti, chart_format,problem_type,dep=None,
 ##################################################################################
 def draw_violinplot_hv(dft, dep, nums,chart_format, modeltype='Regression', 
                     mk_dir='AutoViz_Plots', verbose=0):
+    ensure_hvplot_imported()
     dft = copy.deepcopy(dft)
     image_count = 0
     imgdata_list = list()
@@ -910,6 +944,7 @@ def draw_violinplot_hv(dft, dep, nums,chart_format, modeltype='Regression',
 ###########################################################################################
 def draw_date_vars_hv(df,dep,datevars, nums, chart_format, modeltype='Regression',
                         mk_dir='AutoViz_Plots', verbose=0):
+    ensure_hvplot_imported()
     #### Now you want to display 2 variables at a time to see how they change over time
     ### Don't change the number of cols since you will have to change rows formula as well
     df = copy.deepcopy(df)
@@ -980,6 +1015,7 @@ def draw_date_vars_hv(df,dep,datevars, nums, chart_format, modeltype='Regression
 ################################################################################################
 def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
                             modeltype='Regression',classes=None, mk_dir='AutoViz_Plots', verbose=0):
+    ensure_hvplot_imported()
     dft = copy.deepcopy(dft)
     ### Test if this is a time series data set, then differene the continuous vars to find
     ###  if they have true correlation to Dependent Var. Otherwise, leave them as is
