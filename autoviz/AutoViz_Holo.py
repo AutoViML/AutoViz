@@ -210,10 +210,14 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
     drawobj3 = draw_distplot_hv(dfin, cats, nums, chart_format, problem_type, dep, classes, mk_dir, verbose)
     ls_objects.append(drawobj3)
     ### kdeplot is the only time you send in ls_objects since it has to be returned with 2 objects ###
-    drawobj4 = draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_objects, mk_dir, verbose)
-    if not drawobj4:
-        ### if it is not blank, then treat it as ls_objects ###
-        ls_objects = copy.deepcopy(drawobj4)
+    try:
+        drawobj4 = draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_objects, mk_dir, verbose)
+        if not drawobj4:
+            ### if it is not blank, then treat it as ls_objects ###
+            ls_objects = copy.deepcopy(drawobj4)
+    except:
+        ### This KDE plot errors a lot due to DynamicMaps of holoviews being buggy, so better to skip it!
+        print('KDE plot is erroring due to problems with DynamicMaps. Hence it is skipped')
     if len(nums) > 0:
         drawobj5 = draw_violinplot_hv(dfin, dep, nums, chart_format, problem_type, mk_dir, verbose)
         ls_objects.append(drawobj5)
@@ -316,6 +320,7 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
     plot_name = 'kde_plots'
     width_size = 600
     height_size = 400
+
     ########################################################################################
     def return_dynamic_objects(dfout, dep, title='Distribution of Target variable'):
         width_size = 600
