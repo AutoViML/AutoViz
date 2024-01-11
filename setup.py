@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="autoviz",
-    version="0.1.803",
+    version="0.1.804",
     author="Ram Seshadri",
     # author_email="author@example.com",
     description="Automatically Visualize any dataset, any size with a single line of code",
@@ -18,7 +18,7 @@ setuptools.setup(
         "xlrd",
         "wordcloud",
         "emoji",
-        "numpy",
+        "numpy<1.25.0",
         "pandas",
         "pyamg",
         "matplotlib<=3.7.4",
