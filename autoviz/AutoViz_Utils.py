@@ -749,6 +749,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
     width_size = 15  #### this is to control the width of chart as well as number of categories to display
     height_size = 5
     gap = 0.4 #### This controls the space between rows  ######
+    pdb.set_trace()
     if dep is None or dep=='' or problem_type == 'Regression':
         image_count = 0
         transparent = 0.7

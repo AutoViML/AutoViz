@@ -251,6 +251,7 @@ def draw_cat_vars_hv(dfin, dep, nums, cats, chart_format, problem_type, mk_dir, 
     colortext = 'brycgkbyrcmgkbyrcmgkbyrcmgkbyr'
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
     plot_name = 'cat_var_plots'
+    hv_panel = None
     #####################################################
     if problem_type == 'Clustering':
         ### There is no depVar in clustering, so no need to add it to None
@@ -281,7 +282,7 @@ def draw_cat_vars_hv(dfin, dep, nums, cats, chart_format, problem_type, mk_dir, 
     @pn.depends(x.param.value, y.param.value) 
     def create_figure(x, y):
         #opts = dict(cmap=cmap_list[0], line_color='black')
-        opts = dict(cmap=cmap_list[0], width=width_size, height=height_size, line_color='black',
+        opts = dict(width=width_size, height=height_size, line_color='black',
                 xrotation=70, title='Average of each numeric var by categorical var')
         ### If it is None, don't stack it
         opts['color'] = next(colors)
@@ -320,7 +321,7 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
     plot_name = 'kde_plots'
     width_size = 600
     height_size = 400
-
+    hv_all = None
     ########################################################################################
     def return_dynamic_objects(dfout, dep, title='Distribution of Target variable'):
         width_size = 600
@@ -338,7 +339,7 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
                         ).opts(shared_axes=False).opts(title='Histogram and KDE of Target = %s' %dep)).opts(
                             height=height_size, width=width_size)
         dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
-        hv_all = pn.pane.HoloViews(dmap)#, sizing_mode="stretch_both")
+        hv_all = pn.panel.HoloViews(dmap)#, sizing_mode="stretch_both")
         #ls_objects.append(drawobj41)
         #ls_objects.append(drawobj42)
     else:
@@ -350,7 +351,7 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
             else:
                 dmap = hv.DynamicMap(return_dynamic_objects(dfin, dep, title=f'Histogram and KDE of Target = {dep}')).opts(width=width_size)
                 dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
-                hv_all = pn.pane.HoloViews(dmap)
+                hv_all = pn.panel.HoloViews(dmap)
                 #ls_objects.append(drawobj41)
                 #ls_objects.append(drawobj42)
     #### In this case we are using multiple objects in panel ###
@@ -390,6 +391,8 @@ def draw_scatters_hv(dft, nums, chart_format, problem_type,
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
     cmap_list = ['rainbow', 'viridis', 'plasma', 'inferno', 'magma', 'cividis']
     plot_name = 'scatterplots'
+    hv_all = None
+    hv_panel = None
     #####################################################
     if problem_type == 'Regression':
         ####### This is a Regression Problem #### You need to plot a Scatter plot ####
@@ -513,6 +516,7 @@ def draw_pair_scatters_hv(dfin,nums,problem_type,chart_format, dep=None,
     cmap_list = ['rainbow', 'viridis', 'plasma', 'inferno', 'magma', 'cividis']
     plot_name = 'pair_scatters'
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
+    hv_panel = None
     ###########################################################################
     if problem_type in ['Regression', 'Clustering']:
         ########## This is for Regression problems ##########
@@ -653,6 +657,7 @@ def draw_distplot_hv(dft, cats, conti, chart_format,problem_type,dep=None,
     height_size = 400
     gap = 0.4 #### This controls the space between rows  ######
     plot_name = 'distplots'
+    hv_all = None
     ###################################################################################
     if dep==None or dep=='' or problem_type == 'Regression':
         ######### This is for Regression problems only ########
@@ -857,6 +862,7 @@ def draw_violinplot_hv(dft, dep, nums,chart_format, modeltype='Regression',
         nums = [x for x in nums if x not in dep]
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
     plot_name = 'violinplots'
+    hv_all = None
     #############################################################################
     if modeltype in ['Regression', 'Clustering']:
         ### This is for Regression and None Dep variable problems only ##
@@ -990,6 +996,7 @@ def draw_date_vars_hv(df,dep,datevars, nums, chart_format, modeltype='Regression
     colortext = 'brycgkbyrcmgkbyrcmgkbyrcmgkbyr'
     colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
     plot_name = 'timeseries_plots'
+    hv_panel = None
     #####################################################
     ###### Draw the time series for Regression and DepVar
     #####################################################
@@ -1013,7 +1020,7 @@ def draw_date_vars_hv(df,dep,datevars, nums, chart_format, modeltype='Regression
     @pn.depends(x.param.value, y.param.value) 
     def create_figure(x, y):
         #opts = dict(cmap=cmap_list[0], line_color='black')
-        opts = dict(cmap=cmap_list[0], width=width_size, height=height_size, 
+        opts = dict(width=width_size, height=height_size, 
             line_color='black',
             line_width=1, line_dash='dotted', line_alpha=0.5)
         #opts['size'] = bubble_size
@@ -1063,6 +1070,7 @@ def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
         height_size = 800
         width_size = 1200
     plot_name = 'heatmaps'
+    hv_panel = None
     #####  If it is a datetime index we need to calculate heat map on differenced data ###
     if isinstance(dft.index, pd.DatetimeIndex) :
         dft = dft[:]
