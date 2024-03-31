@@ -12,7 +12,6 @@ list_req = [
     "wordcloud",
     "emoji",
     # Assuming numpy version <1.25.0 is compatible with older Python versions and older HoloViews
-    "numpy<1.25.0",  
     "pandas",
     "pyamg",
     "matplotlib<=3.7.4",  # Specify versions compatible with older Python versions
@@ -21,9 +20,7 @@ list_req = [
     "statsmodels",
     "nltk",
     "textblob",
-    "holoviews~=1.14.9",  # Older compatible version
     "bokeh~=2.4.2",       # Ensure compatibility with older HoloViews
-    "hvplot~=0.7.3",      # Older compatible version
     "panel>=0.12.6",
     "xgboost>=0.82,<1.7",
     "fsspec>=0.8.3",
@@ -33,12 +30,20 @@ list_req = [
 # Define default dependencies (compatible with older Python versions)
 install_requires = list_req
 
+if python_version >= (3, 11):
+    install_requires = list_req + [
+    "numpy<1.25.0",  
+    "hvplot~=0.7.3",      # Older compatible version
+    "holoviews~=1.14.9",  # Older compatible version
+    ]
+
 # For Python versions >= 3.10 and < 3.11, update the dependency list
 if (3, 10) <= python_version < (3, 11):
     install_requires = list_req + [
         # Keep most dependencies as is, adjust only where necessary
         "numpy>=1.25.0",  # Update as needed for compatibility with newer HoloViews
         # Update other dependencies as needed
+        "hvplot>=0.9.2", ###newer hvplot
         "holoviews>=1.16.0",  # Update based on the bug fix relevant to Python 3.10
         # Ensure other dependencies are compatible
     ]
@@ -47,6 +52,8 @@ if (3, 10) <= python_version < (3, 11):
 if python_version >= (3, 11):
     install_requires = list_req + [
         # Adjust dependencies as needed for Python 3.11
+        "numpy>=1.25.0",  # Update as needed for compatibility with newer HoloViews
+        "hvplot>=0.9.2", ###newer hvplot
         "holoviews>=1.15.3",  # Ensure version is >= 1.15.3 for Python 3.11 support
         # Update or keep other dependencies as needed
     ]
