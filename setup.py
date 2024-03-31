@@ -7,8 +7,7 @@ with open("README.md", "r") as fh:
 # Determine the Python version
 python_version = sys.version_info
 
-# Define default dependencies (compatible with older Python versions)
-install_requires = [
+list_req = [
     "xlrd",
     "wordcloud",
     "emoji",
@@ -31,10 +30,12 @@ install_requires = [
     "typing-extensions>=4.1.1",
     "pandas-dq>=1.29"
 ]
+# Define default dependencies (compatible with older Python versions)
+install_requires = list_req
 
 # For Python versions >= 3.10 and < 3.11, update the dependency list
 if (3, 10) <= python_version < (3, 11):
-    install_requires = [
+    install_requires = list_req + [
         # Keep most dependencies as is, adjust only where necessary
         "numpy>=1.25.0",  # Update as needed for compatibility with newer HoloViews
         # Update other dependencies as needed
@@ -44,7 +45,7 @@ if (3, 10) <= python_version < (3, 11):
 
 # For Python versions >= 3.11, ensure HoloViews is at least 1.15.3 for the bug fix
 if python_version >= (3, 11):
-    install_requires = [
+    install_requires = list_req + [
         # Adjust dependencies as needed for Python 3.11
         "holoviews>=1.15.3",  # Ensure version is >= 1.15.3 for Python 3.11 support
         # Update or keep other dependencies as needed
