@@ -30,11 +30,12 @@ list_req = [
 # Define default dependencies (compatible with older Python versions)
 install_requires = list_req
 
-if python_version >= (3, 11):
+if python_version < (3, 10):
     install_requires = list_req + [
     "numpy<1.25.0",  
     "hvplot~=0.7.3",      # Older compatible version
     "holoviews~=1.14.9",  # Older compatible version
+    "panel~=0.14.4",
     ]
 
 # For Python versions >= 3.10 and < 3.11, update the dependency list
@@ -46,6 +47,7 @@ if (3, 10) <= python_version < (3, 11):
         "hvplot>=0.9.2", ###newer hvplot
         "holoviews>=1.16.0",  # Update based on the bug fix relevant to Python 3.10
         # Ensure other dependencies are compatible
+        "panel>=1.4.0",
     ]
 
 # For Python versions >= 3.11, ensure HoloViews is at least 1.15.3 for the bug fix
@@ -56,6 +58,7 @@ if python_version >= (3, 11):
         "hvplot>=0.9.2", ###newer hvplot
         "holoviews>=1.15.3",  # Ensure version is >= 1.15.3 for Python 3.11 support
         # Update or keep other dependencies as needed
+        "panel>=1.4.0",
     ]
 
 setuptools.setup(
