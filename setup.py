@@ -21,7 +21,6 @@ list_req = [
     "nltk",
     "textblob",
     "bokeh~=2.4.2",       # Ensure compatibility with older HoloViews
-    "panel>=0.12.6",
     "xgboost>=0.82,<1.7",
     "fsspec>=0.8.3",
     "typing-extensions>=4.1.1",
