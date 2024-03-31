@@ -1,0 +1,20 @@
+xlrd
+wordcloud
+numpy>=1.25.0  # Adjust as necessary
+pyamg
+pandas
+nltk
+emoji
+textblob
+matplotlib>=3.7.4  # Adjust as necessary
+seaborn>=0.12.2
+scikit-learn
+statsmodels
+holoviews>=1.16.0
+bokeh>=2.4.2  # Ensure compatibility
+hvplot>=0.7.3  # Ensure compatibility
+panel>=0.12.6
+xgboost>=0.82,<1.7
+fsspec>=0.8.3
+typing-extensions>=4.1.1
+pandas-dq>=1.29

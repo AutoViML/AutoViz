@@ -34,19 +34,17 @@ With AutoViz, you can easily and quickly generate insightful visualizations for 
 The latest updates about `autoviz` library can be found in <a href="https://github.com/AutoViML/AutoViz/blob/master/updates.md">Updates page</a>.
 
 ## ImportantAnnouncement
-### Starting with version 0.1.801, an important Update Regarding Dependency Management
-We're excited to announce a significant update to AutoViz that enhances compatibility with various Python versions and streamlines dependency management!
-<li>Modular Dependency Loading: AutoViz now uses a more flexible approach for importing visualization libraries starting with version `0.1.801`. This means you only need to install certain dependencies (like hvplot and holoviews) if you plan to use specific backends (e.g., bokeh). This change significantly reduces installation issues for users on newer Python versions such as 3.10 and higher.</li>
+### Starting with version 0.1.807, an important update regarding Python Version Management
+<li>We're excited to announce we've made significant updates to our `setup.py` script to dynamically manage dependencies based on your Python version. This means that when you install AutoViz, the installation process will automatically select versions of dependencies such as HoloViews, Bokeh, and hvPlot that are best suited to your specific Python environment.
 
-<li>Improved Backend Support: Depending on your Python environment, AutoViz dynamically adjusts to use compatible visualization libraries, ensuring a smoother user experience. Requirements:
-        "holoviews>=1.14.9",
-        "bokeh>=2.4.2",
-        "hvplot>=0.7.3",
-        "panel>=0.12.6".
-</li>
+For `Python versions below 3.10`, AutoViz will use versions of its dependencies known to be stable and compatible with older Python versions.
+
+For `Python 3.10`, the script has been configured to use updated dependencies that address specific fixes and enhancements relevant to this version.
+
+For `Python 3.11 and newer versions`, setup.py ensures compatibility by selecting library versions that support the latest Python features and fixes, including critical updates made in HoloViews for Python 3.11 support.</li>
 
 ### What Does This Mean for You?
-<li>Easier Installation: If you've faced challenges installing AutoViz due to dependency conflicts, this update is for you. Now, you can install AutoViz without needing to install all its visualization dependencies upfront.</li>
+<li><b>Easier Installation</b>: This approach allows AutoViz to leverage the latest advancements in our dependencies while maintaining robust support for older Python versions. The installation process is seamless—simply run pip install . in the AutoViz directory, and the script takes care of the rest, tailoring the installation to your environment.</li>
 
 <li>Tailored Usage: Choose the visualization backend that works best for your environment. AutoViz will handle the rest, importing necessary libraries as needed.</li>
 
@@ -94,8 +92,26 @@ git clone git@github.com:AutoViML/AutoViz.git
 conda create -n <your_env_name> python=3.7 anaconda
 conda activate <your_env_name> # ON WINDOWS: `source activate <your_env_name>`
 cd AutoViz
+```
+For Python versions below 3.10, install dependencies as follows:
+
+```
 pip install -r requirements.txt
 ```
+
+For Python 3.10, please use:
+
+```
+pip install -r requirements-py310.txt
+```
+
+For Python 3.11 and above, it's recommended to use:
+
+```
+pip install -r requirements-py311.txt
+```
+
+These requirement files ensure that AutoViz works seamlessly with your Python environment by installing compatible versions of libraries like HoloViews, Bokeh, and hvPlot. Please select the requirement file that corresponds to your Python version to enjoy a smooth experience with AutoViz.</li>
 
 ## Usage
 Discover how to use AutoViz in this Medium article.
