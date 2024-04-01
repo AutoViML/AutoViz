@@ -16,9 +16,11 @@ warnings.warn = warn
 import logging
 logging.getLogger("param").setLevel(logging.ERROR)
 import warnings 
-#warnings.simplefilter(action='ignore', category=BokehUserWarning)
-warnings.filterwarnings("ignore")
 from sklearn.exceptions import DataConversionWarning
+warnings.filterwarnings("ignore")
+### These Bokeh warnings are useless => leave them alone for now!
+### from bokeh.util.warnings import BokehUserWarning
+## warnings.simplefilter(action='ignore', category=BokehUserWarning) 
 warnings.filterwarnings(action='ignore', category=DataConversionWarning)
 ####################################################################################
 import matplotlib
@@ -53,7 +55,7 @@ import os
 from .classify_method import classify_columns
 ##########################################################################################
 def ensure_hvplot_imported():
-    global hv, opts, pn, pnw, INLINE, classify_columns
+    global hv, opts, pn, pnw, INLINE
     try:
         # Import main modules
         import hvplot.pandas
@@ -211,6 +213,7 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
     ls_objects.append(drawobj3)
     ### kdeplot is the only time you send in ls_objects since it has to be returned with 2 objects ###
     try:
+        #### This KDE draws only the distribution of the target variable!
         drawobj4 = draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_objects, mk_dir, verbose)
         if not drawobj4:
             ### if it is not blank, then treat it as ls_objects ###
@@ -322,6 +325,8 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
     width_size = 600
     height_size = 400
     hv_all = None
+    transparent = 0.5
+    color='lightblue'
     ########################################################################################
     def return_dynamic_objects(dfout, dep, title='Distribution of Target variable'):
         width_size = 600
@@ -332,14 +337,14 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
                         height=height_size, width=width_size,xrotation=70)
         drawobj42 = pdf2.hvplot(kind='bar', color='lightgreen', title=title)
         return (drawobj41+drawobj42)
-
+    
     if problem_type.endswith('Classification'):
         colors = cycle('brycgkbyrcmgkbyrcmgkbyrcmgkbyr')
         dmap = hv.DynamicMap(return_dynamic_objects(dfin, dep, title='Percent Distribution of Target variable'
                         ).opts(shared_axes=False).opts(title='Histogram and KDE of Target = %s' %dep)).opts(
                             height=height_size, width=width_size)
         dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
-        hv_all = pn.panel.HoloViews(dmap)#, sizing_mode="stretch_both")
+        hv_all = pn.pane.HoloViews(dmap)#, sizing_mode="stretch_both")
         #ls_objects.append(drawobj41)
         #ls_objects.append(drawobj42)
     else:
@@ -349,9 +354,10 @@ def draw_kdeplot_hv(dfin, cats, nums, chart_format, problem_type, dep, ls_object
                 ### there is no target variable to draw ######
                 return ls_objects
             else:
-                dmap = hv.DynamicMap(return_dynamic_objects(dfin, dep, title=f'Histogram and KDE of Target = {dep}')).opts(width=width_size)
-                dmap.opts(framewise=True,axiswise=True) ## both must be True for your charts to have dynamically varying axes!
-                hv_all = pn.panel.HoloViews(dmap)
+                dmap = hv.Distribution(dfin[dep]).opts(color=color,
+                                        height=height_size, width=width_size, alpha=transparent,
+                                    title='KDE (Distribution) Plot of Target Variable')
+                hv_all = pn.pane.HoloViews(dmap)
                 #ls_objects.append(drawobj41)
                 #ls_objects.append(drawobj42)
     #### In this case we are using multiple objects in panel ###
@@ -879,6 +885,7 @@ def draw_violinplot_hv(dft, dep, nums,chart_format, modeltype='Regression',
         drawobjv_list = [] ## this keeps track of the actual values
         drawobj_list = [] ## this keeps track of the names
         counter = 0
+        string_size = 10
         for i in range(0,df_p.shape[1],iter_limit):
             new_end = i+iter_limit
             #print('i = ',i,"new end = ", new_end)
@@ -890,9 +897,10 @@ def draw_violinplot_hv(dft, dep, nums,chart_format, modeltype='Regression',
                 #print(title_string )
             conti = nums[i:new_end]
             ######################### Add Standard Scaling here ##################################
+            short_conti = [x[:string_size] for x in conti]
             from sklearn.preprocessing import StandardScaler
             SS = StandardScaler()
-            data = pd.DataFrame(SS.fit_transform(dft[conti]),columns=conti)
+            data = pd.DataFrame(SS.fit_transform(dft[conti]),columns=short_conti)
             var_name = 'drawobjv_list['+str(counter)+']'
             drawobj_list.append(var_name)
             drawobjv_list.append(var_name)

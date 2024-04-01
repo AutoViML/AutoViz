@@ -749,7 +749,7 @@ def draw_distplot(dft, cat_bools, conti, verbose,chart_format,problem_type,dep=N
     width_size = 15  #### this is to control the width of chart as well as number of categories to display
     height_size = 5
     gap = 0.4 #### This controls the space between rows  ######
-    pdb.set_trace()
+    
     if dep is None or dep=='' or problem_type == 'Regression':
         image_count = 0
         transparent = 0.7
@@ -1652,17 +1652,20 @@ def load_file_dataframe(dataname, sep=",", header=0, verbose=0, nrows=None,parse
         return None
 ##########################################################################################
 import copy
+import pdb
 def classify_print_vars(filename,sep, max_rows_analyzed, max_cols_analyzed,
                         depVar='',dfte=None, header=0,verbose=0):
     corr_limit = 0.7  ### This limit represents correlation above this, vars will be removed
     
     start_time=time.time()
+    
     if filename:
         dataname = copy.deepcopy(filename)
         parse_dates = True
     else:
         dataname = copy.deepcopy(dfte)
         parse_dates = False
+    
     dfte = load_file_dataframe(dataname, sep=sep, header=header, verbose=verbose, 
                     nrows=max_rows_analyzed, parse_dates=parse_dates)
     
