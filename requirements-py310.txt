@@ -1,7 +1,6 @@
 xlrd
 wordcloud
 pyamg
-pandas
 nltk
 emoji
 textblob
@@ -16,4 +15,5 @@ pandas-dq>=1.29
 numpy>=1.25.0
 hvplot>=0.9.2
 panel>=1.4.0
-holoviews~=1.16.0
+holoviews>=1.15.3
+pandas<2.0

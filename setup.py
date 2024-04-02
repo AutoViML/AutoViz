@@ -12,7 +12,6 @@ list_req = [
     "wordcloud",
     "emoji",
     # Assuming numpy version <1.25.0 is compatible with older Python versions and older HoloViews
-    "pandas",
     "pyamg",
     "matplotlib<=3.7.4",  # Specify versions compatible with older Python versions
     "seaborn>=0.12.2",
@@ -28,41 +27,44 @@ list_req = [
 # Define default dependencies (compatible with older Python versions)
 install_requires = list_req
 
-if python_version < (3, 10):
+if python_version <= (3, 10):
     install_requires = list_req + [
     "numpy<1.25.0",  
     "hvplot~=0.7.3",      # Older compatible version
-    "holoviews~=1.14.9",  # Older compatible version
+    "holoviews<=1.14.9",  # Older compatible version
     "panel~=0.14.4", ## this is an old versjon of panel
     "param==1.13.0", ### something broke in panel without this
+    "pandas<2.0", ## pandas must be below 2.0 version
     ]
 
 # For Python versions >= 3.10 and < 3.11, update the dependency list
-if (3, 10) <= python_version < (3, 11):
+if (3, 10) < python_version <= (3, 11):
     install_requires = list_req + [
         # Keep most dependencies as is, adjust only where necessary
         "numpy>=1.25.0",  # Update as needed for compatibility with newer HoloViews
         # Update other dependencies as needed
         "hvplot>=0.9.2", ###newer hvplot
-        "holoviews>=1.16.0",  # Update based on the bug fix relevant to Python 3.10
+        "holoviews>=1.15.3",  # Update based on the bug fix relevant to Python 3.10
         # Ensure other dependencies are compatible
-        "panel>=1.4.0",
+        "panel>=1.4.0", ## this is a new version of panel
+        "pandas<2.0", ## pandas must be below 2.0 version
     ]
 
 # For Python versions >= 3.11, ensure HoloViews is at least 1.15.3 for the bug fix
-if python_version >= (3, 11):
+if python_version > (3, 11):
     install_requires = list_req + [
         # Adjust dependencies as needed for Python 3.11
         "numpy>=1.25.0",  # Update as needed for compatibility with newer HoloViews
         "hvplot>=0.9.2", ###newer hvplot
         "holoviews>=1.15.3",  # Ensure version is >= 1.15.3 for Python 3.11 support
         # Update or keep other dependencies as needed
-        "panel>=1.4.0",
+        "panel>=1.4.0", ## this is a new version of panel
+        "pandas<2.0", ## pandas must be below 2.0 version
     ]
 
 setuptools.setup(
     name="autoviz",
-    version="0.1.807",
+    version="0.1.808",
     author="Ram Seshadri",
     description="Automatically Visualize any dataset, any size with a single line of code",
     long_description=long_description,

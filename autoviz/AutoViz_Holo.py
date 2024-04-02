@@ -1112,8 +1112,8 @@ def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
         if timeseries_flag:
             dft_target = dft[[dep]+conti].diff()
         else:
-            dft_target = dft[:]
-        dft_target[dep] = dft[dep].values
+            dft_target = dft[conti]
+            dft_target[dep] = dft[dep].values
         corre = dft_target.corr()
         if timeseries_flag:
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size, colorbar=True, 

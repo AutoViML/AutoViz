@@ -1,7 +1,6 @@
 xlrd
 wordcloud
 pyamg
-pandas
 nltk
 emoji
 textblob
@@ -18,3 +17,4 @@ hvplot~=0.7.3
 panel~=0.14.4
 holoviews~=1.14.9
 param==1.13.0
+pandas<2.0

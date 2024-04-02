@@ -688,8 +688,8 @@ def draw_heatmap(dft, conti, verbose,chart_format,datevars=[], dep=None,
         if timeseries_flag:
             dft_target = dft[[dep]+conti].diff()
         else:
-            dft_target = dft[:]
-        dft_target[dep] = dft[dep].values
+            dft_target = dft[conti]
+            dft_target[dep] = dft[dep].values
         corr = dft_target.corr()
         plt.subplot(rows, cols, plotc)
         ax1 = plt.gca()
