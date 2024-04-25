@@ -29,7 +29,7 @@ install_requires = list_req
 
 if python_version <= (3, 10):
     install_requires = list_req + [
-    "numpy<1.24",  # older version. otherwise get numpy bool error
+    "numpy<1.24",  # older version. otherwise you get numpy bool error
     "hvplot~=0.7.3",      # Older compatible version
     "holoviews<=1.14.9",  # Older compatible version
     "panel~=0.14.4", ## this is an old versjon of panel
@@ -41,10 +41,10 @@ if python_version <= (3, 10):
 if (3, 10) < python_version <= (3, 11):
     install_requires = list_req + [
         # Keep most dependencies as is, adjust only where necessary
-        "numpy>=1.25.0",  # Update as needed for compatibility with newer HoloViews
+        "numpy>=1.24.0",  # Update as needed for compatibility with newer HoloViews
         # Update other dependencies as needed
         "hvplot>=0.9.2", ###newer hvplot
-        "holoviews>=1.15.3",  # Update based on the bug fix relevant to Python 3.10
+        "holoviews>=1.16.0",  # Update based on the bug fix relevant to Python 3.10
         # Ensure other dependencies are compatible
         "panel>=1.4.0", ## this is a new version of panel
         "pandas>=2.0", ## pandas must be below 2.0 version
