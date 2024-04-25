@@ -29,7 +29,7 @@ install_requires = list_req
 
 if python_version <= (3, 10):
     install_requires = list_req + [
-    "numpy<1.25.0",  
+    "numpy<1.24",  # older version. otherwise get numpy bool error
     "hvplot~=0.7.3",      # Older compatible version
     "holoviews<=1.14.9",  # Older compatible version
     "panel~=0.14.4", ## this is an old versjon of panel
