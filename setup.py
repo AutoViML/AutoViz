@@ -13,8 +13,6 @@ list_req = [
     "emoji",
     # Assuming numpy version <1.25.0 is compatible with older Python versions and older HoloViews
     "pyamg",
-    "matplotlib<=3.7.4",  # Specify versions compatible with older Python versions
-    "seaborn>=0.12.2",
     "scikit-learn",
     "statsmodels",
     "nltk",
@@ -27,7 +25,7 @@ list_req = [
 # Define default dependencies (compatible with older Python versions)
 install_requires = list_req
 
-if python_version <= (3, 10):
+if python_version < (3, 10):
     install_requires = list_req + [
     "numpy<1.24",  # older version. otherwise you get numpy bool error
     "hvplot~=0.7.3",      # Older compatible version
@@ -35,10 +33,12 @@ if python_version <= (3, 10):
     "panel~=0.14.4", ## this is an old versjon of panel
     "param==1.13.0", ### something broke in panel without this
     "pandas<2.0", ## pandas must be below 2.0 version
+    "matplotlib<=3.7.4", ## newer version of matplotlib
+    "seaborn<=0.12.2", ## newer version of seaborn ##
     ]
 
 # For Python versions >= 3.10 and < 3.11, update the dependency list
-if (3, 10) < python_version <= (3, 11):
+if (3, 10) <= python_version <= (3, 11):
     install_requires = list_req + [
         # Keep most dependencies as is, adjust only where necessary
         "numpy>=1.24.0",  # Update as needed for compatibility with newer HoloViews
@@ -48,6 +48,8 @@ if (3, 10) < python_version <= (3, 11):
         # Ensure other dependencies are compatible
         "panel>=1.4.0", ## this is a new version of panel
         "pandas>=2.0", ## pandas must be below 2.0 version
+        "matplotlib>3.7.4", ## newer version of matplotlib
+        "seaborn>0.12.2", ## newer version of seaborn ##
     ]
 
 # For Python versions >= 3.11, ensure HoloViews is at least 1.15.3 for the bug fix
@@ -60,11 +62,13 @@ if python_version > (3, 11):
         # Update or keep other dependencies as needed
         "panel>=1.4.0", ## this is a new version of panel
         "pandas<2.0", ## pandas must be below 2.0 version
+        "matplotlib>3.7.4", ## newer version of matplotlib
+        "seaborn>0.12.2", ## newer version of seaborn ##
     ]
 
 setuptools.setup(
     name="autoviz",
-    version="0.1.901",
+    version="0.1.902",
     author="Ram Seshadri",
     description="Automatically Visualize any dataset, any size with a single line of code",
     long_description=long_description,
