@@ -225,7 +225,12 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
         drawobj5 = draw_violinplot_hv(dfin, dep, nums, chart_format, problem_type, mk_dir, verbose)
         ls_objects.append(drawobj5)
     if len(nums) > 0:
-        drawobj6 = draw_heatmap_hv(dfin, nums, chart_format, date_vars, dep, problem_type, classes, 
+        #### Adding int vars to nums since pandas has changed the df.corr() to error when cats are included ###
+        if len(cats) > 0:
+            nums_in = nums + dfin[cats].select_dtypes(include="number").columns.tolist()
+        else:
+            nums_in = nums[:]
+        drawobj6 = draw_heatmap_hv(dfin, nums_in, chart_format, date_vars, dep, problem_type, classes, 
                             mk_dir, verbose)
         ls_objects.append(drawobj6)
     if len(date_vars) > 0:
@@ -1035,7 +1040,7 @@ def draw_date_vars_hv(df,dep,datevars, nums, chart_format, modeltype='Regression
         opts['alpha'] = alpha
         opts['tools'] = ['hover']
         opts['toolbar'] = 'above'
-        opts['colorbar'] = True
+        #opts['colorbar'] = True
         #opts['color'] = next(colors)
         opts['title'] = title='Time Series plots of Numeric vars'
         dft = df.set_index(df[x])
@@ -1115,15 +1120,16 @@ def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
             dft_target = dft[conti]
             dft_target[dep] = dft[dep].values
         corre = dft_target.corr()
+        corre = corre.round(2)
         if timeseries_flag:
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size, colorbar=True, 
                     cmap=cmap_list, rot=70,
-            title='Time Series: Heatmap of all Differenced Continuous vars for target = %s' %dep)
+            title='Time Series: Heatmap of all Differenced Numeric vars for target = %s' %dep)
         else:
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size,  colorbar=True,
                     cmap=cmap_list,
                     rot=70,
-            title='Heatmap of all Continuous Variables including target');
+            title='Heatmap of all Numeric Variables including target');
         hv_plot = heatmap * hv.Labels(heatmap).opts(opts.Labels(text_font_size='7pt'))
         hv_panel = pn.panel(hv_plot)
         if verbose == 2:
@@ -1143,17 +1149,18 @@ def draw_heatmap_hv(dft, conti, chart_format, datevars=[], dep=None,
             dft_target = dft_target[:]
         N = len(conti)
         corre = dft_target.corr()
+        corre = corre.round(2)
         if timeseries_flag:
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size, colorbar=True, 
                     cmap=cmap_list,
                                            rot=70,
-                title='Time Series Data: Heatmap of Differenced Continuous vars including target').opts(
+                title='Time Series Data: Heatmap of Differenced Numeric vars including target').opts(
                         opts.HeatMap(tools=['hover'], toolbar='above'))
         else:
             heatmap = corre.hvplot.heatmap(height=height_size, width=width_size, colorbar=True, 
                     cmap=cmap_list,
                                            rot=70,
-            title='Heatmap of all Continuous Variables including target').opts(
+            title='Heatmap of all Numeric Variables including target').opts(
                                     opts.HeatMap(tools=['hover'],  toolbar='above'))
         hv_plot = heatmap * hv.Labels(heatmap).opts(opts.Labels(text_font_size='7pt'))
         hv_panel = pn.panel(hv_plot)

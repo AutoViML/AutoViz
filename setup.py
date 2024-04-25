@@ -34,7 +34,7 @@ if python_version <= (3, 10):
     "holoviews<=1.14.9",  # Older compatible version
     "panel~=0.14.4", ## this is an old versjon of panel
     "param==1.13.0", ### something broke in panel without this
-    "pandas<2.0", ## pandas must be below 2.0 version
+    "pandas>=2.0", ## pandas must be below 2.0 version
     ]
 
 # For Python versions >= 3.10 and < 3.11, update the dependency list
@@ -47,7 +47,7 @@ if (3, 10) < python_version <= (3, 11):
         "holoviews>=1.15.3",  # Update based on the bug fix relevant to Python 3.10
         # Ensure other dependencies are compatible
         "panel>=1.4.0", ## this is a new version of panel
-        "pandas<2.0", ## pandas must be below 2.0 version
+        "pandas>=2.0", ## pandas must be below 2.0 version
     ]
 
 # For Python versions >= 3.11, ensure HoloViews is at least 1.15.3 for the bug fix
@@ -64,7 +64,7 @@ if python_version > (3, 11):
 
 setuptools.setup(
     name="autoviz",
-    version="0.1.808",
+    version="0.1.901",
     author="Ram Seshadri",
     description="Automatically Visualize any dataset, any size with a single line of code",
     long_description=long_description,
