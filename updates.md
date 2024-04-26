@@ -1,5 +1,32 @@
 # Latest updates and news from AutoViz!
 
+### April 2024: AutoViz version 0.1.900+ series has some fixes for autoviz install issues
+You can always use pip install from git which uses the latest setup.py and it works well!
+`!pip install git+https://github.com/AutoViML/AutoViz`
+
+But if you are using `pip install autoviz`, then you will get two kinds of errors. In order to know what to do, perform the following steps.
+
+**First print these 3 versions of pandas, numpy and holoviews**<br>
+<code>
+import pandas as pd<br>
+import numpy as np<br>
+import holoviews as hv<br>
+print(pd.__version__, np.__version__,hv.__version__)
+</code>
+
+If it prints 
+`numpy<1.24, pandas<2.0, holoviews <= 1.14.19`
+
+These are all older versions of pandas and numpy along with older versions of holoviews<=1.14.9. These three older versions work together since holoviews uses an older syntax numpy (`np.bool`) that numpy<1.24 uses. However, if you are running this in kaggle kernels, you must restart your Kaggle kernel after you install autoviz since it changes the numpy and pandas versions to an older version and requires a restart to take effect. But if you get this error: `"ValueError: ClassSelector parameter None value must be an instance of (function, tuple), not <function size at 0x7c5f3e111770>."` In that case, you must upgrade holoviews to 1.16.0.
+
+But if the above statements, print newer versions of pandas and numpy, like this:<br>
+<code>
+pandas>=2.0.0 numpy>=1.24.0 holoviews>=1.16.0 
+</code>
+then you need newer versions of holoviews. Although regular AutoViz works well with newer pandas and numpy the older holoviews version corrupts it. AutoViz_Holo needs newer versions such as holoviews>=1.16.0 in order to work with newer numpy and pandas. For example, if you don't upgrade holoviews to >=1.16.0 you will get this error: "ValueError: ClassSelector parameter None value must be an instance of (function, tuple), not <function size at 0x7c5f3e111770>."
+
+Hope this is clear. Please let us know via the issues tab in GitHub.
+
 ### December 2023: AutoViz now has modular dependency loading and improved support for Python versions 3.10+
 <li>Modular Dependency Loading: AutoViz now uses a more flexible approach for importing visualization libraries starting with version `0.1.801`. This means you only need to install certain dependencies (like hvplot and holoviews) if you plan to use specific backends (e.g., bokeh). This change significantly reduces installation issues for users on newer Python versions such as 3.10 and higher.</li>
 
