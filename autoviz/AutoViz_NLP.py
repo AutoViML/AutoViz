@@ -8,6 +8,8 @@ import string
 
 from collections import Counter
 
+from .AutoViz_Holo import save_image_data
+
 pd.set_option('display.max_colwidth', 5000)
 
 # Contraction map
@@ -579,12 +581,10 @@ def clean_text(x):
     return x
 
 
-def draw_wordcloud_from_dataframe(dataframe, column, chart_format,
-                                  depVar, mk_dir, verbose=0):
+def draw_wordcloud_from_dataframe(dataframe, column):
     """
     This handy function draws a dataframe column using Wordcloud library and nltk.
     """
-    imgdata_list = []
 
     ### Remember that fillna only works at dataframe level! ##
     X_train = dataframe[[column]].fillna("missing")
@@ -631,7 +631,6 @@ def draw_word_clouds(dft, each_string_var, chart_format, plotname,
     dft = dft[:]
     width_size = 20
     height_size = 10
-    image_count = 0
     imgdata_list = []
 
     if problem_type == 'Regression' or problem_type == 'Clustering':
@@ -644,8 +643,7 @@ def draw_word_clouds(dft, each_string_var, chart_format, plotname,
         while plotc <= num_plots:
             plt.subplot(rows, cols, plotc)
             ax1 = plt.gca()
-            wc1 = draw_wordcloud_from_dataframe(dft, each_string_var, chart_format,
-                                                dep, mk_dir, verbose)
+            wc1 = draw_wordcloud_from_dataframe(dft, each_string_var)
             plotc += 1
             ax1.axis("off")
             ax1.imshow(wc1)
@@ -653,7 +651,7 @@ def draw_word_clouds(dft, each_string_var, chart_format, plotname,
         image_count = 0
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                                                plotname, depVar, mk_dir))
+                                                plotname, mk_dir))
             image_count += 1
         if verbose <= 1:
             plt.show()
@@ -671,11 +669,9 @@ def draw_word_clouds(dft, each_string_var, chart_format, plotname,
             ax1.axis("off")
             dft_target = dft.loc[(dft[dep] == target_vars[plotc - 1])][each_string_var]
             if isinstance(dft_target, pd.Series):
-                wc1 = draw_wordcloud_from_dataframe(pd.DataFrame(dft_target), each_string_var, chart_format,
-                                                    dep, mk_dir, verbose)
+                wc1 = draw_wordcloud_from_dataframe(pd.DataFrame(dft_target), each_string_var)
             else:
-                wc1 = draw_wordcloud_from_dataframe(dft_target, each_string_var, chart_format,
-                                                    dep, mk_dir, verbose)
+                wc1 = draw_wordcloud_from_dataframe(dft_target, each_string_var)
             ax1.imshow(wc1)
             ax1.set_title('Wordcloud for %s, target=%s' % (each_string_var, target_vars[plotc - 1]), fontsize=20)
             plotc += 1
@@ -684,7 +680,7 @@ def draw_word_clouds(dft, each_string_var, chart_format, plotname,
         image_count = 0
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                                                plotname, depVar, mk_dir))
+                                                plotname, mk_dir))
             image_count += 1
         if verbose <= 1:
             plt.show()

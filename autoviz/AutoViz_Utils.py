@@ -23,7 +23,7 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 
 
-def warn(*args, **kwargs):
+def warn():
     pass
 
 
@@ -57,7 +57,7 @@ from .classify_method import classify_columns
 
 
 ######## This is where we store the image data in a dictionary with a list of images #########
-def save_image_data(fig, chart_format, plot_name, depVar, mk_dir, additional=''):
+def save_image_data(fig, chart_format, plot_name, mk_dir, additional=''):
     if not os.path.isdir(mk_dir):
         os.mkdir(mk_dir)
     if additional == '':
@@ -126,7 +126,7 @@ def analyze_problem_type(train, target, verbose=0):
 # Pivot Tables are generally meant for Categorical Variables on the axes
 # and a Numeric Column (typically the Dep Var) as the "Value" aggregated by Sum.
 # Let's do some pivot tables to capture some meaningful insights
-def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', classes=None, mk_dir=None):
+def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', mk_dir=None):
     #### Finally I have fixed the bugs in pivot tables due to "category" dtypes in data ##############
     plot_name = 'Bar_Plots_Cats'
     imgdata_list = []
@@ -136,14 +136,9 @@ def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', class
     else:
         cats = [x for x in cats if x not in depVar]
     dft = copy.deepcopy(dft)
-    cols = 2
     cmap = plt.get_cmap('jet')
     #### For some reason, the cmap colors are not working #########################
-    colors = cmap(np.linspace(0, 1, len(cats)))
-    colors = cycle('byrcmgkbyrcmgkbyrcmgkbyrcmgkbyr')
     # colormaps = ['summer', 'rainbow','viridis','inferno','magma','jet','plasma']
-    colormaps = ['Greys', 'Blues', 'Greens', 'GnBu', 'PuBu',
-                 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn']
     # colormaps = ['Purples','Oranges','Reds','YlOrBr',
     #                'YlOrRd','OrRd','PuRd','RdPu','BuPu',]
     N = len(cats)
@@ -151,17 +146,12 @@ def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', class
     if N == 0:
         print('No categorical or boolean vars in data set. Hence no pivot plots...')
         return None
-    noplots = copy.deepcopy(N)
     #### You can set the number of subplots per row and the number of categories to display here cols = 2
-    displaylimit = 20
     categorylimit = 5
-    width_size = 15
     height_size = 5
-    stringlimit = 20
     N = len(cats)
     sns.set_palette("Set1")
     ###########  This works equally well for classification as well as Regression ###
-    lst = []
     noplots = int(len(cats))
     dicti = {}
     counter = 1
@@ -175,7 +165,6 @@ def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', class
             rows = int((noplots / cols) + 0.5)
     else:
         rows = int((noplots / cols) + 0.5)
-    countplots = len(cats)
     if N > 0:
         fig = plt.figure()
         if cols < 2:
@@ -189,12 +178,7 @@ def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', class
         ### we start to draw the pivot tables here #########
         for var1 in combos:
             # color1 = random.choice(colormaps)
-            color1 = "Set1"
-            data = pd.DataFrame(dicti)
-            x = dft[var1]
             ax1 = fig.add_subplot(rows, cols, counter)
-            nocats = min(categorylimit, dft[var1].nunique())
-            data = dft[var1].value_counts()
             if problem_type in ['Binary_Classification', 'Multi_Classification']:
                 if dft[depVar].nunique() > 15:
                     sns.countplot(x=var1,
@@ -223,7 +207,7 @@ def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', class
     image_count = 0
     if verbose == 2:
         imgdata_list.append(save_image_data(fig, chart_format,
-                                            plot_name, depVar, mk_dir))
+                                            plot_name, mk_dir))
         image_count += 1
     if verbose <= 1:
         plt.show()
@@ -231,32 +215,24 @@ def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', class
     return imgdata_list
 
 
-def draw_pivot_tables_old(dft, problem_type, verbose, chart_format, depVar='', classes=None, mk_dir=None):
+def draw_pivot_tables_old(dft, verbose, chart_format, depVar='', mk_dir=None):
     #### Finally I have fixed the bugs in pivot tables due to "category" dtypes in data ##############
     plot_name = 'Bar_Plots_Pivots'
     cats = copy.deepcopy(cats)
     cats = list(set(cats))
     dft = copy.deepcopy(dft)
-    cols = 2
     cmap = plt.get_cmap('jet')
     #### For some reason, the cmap colors are not working #########################
-    colors = cmap(np.linspace(0, 1, len(cats)))
-    colors = cycle('byrcmgkbyrcmgkbyrcmgkbyrcmgkbyr')
     # colormaps = ['summer', 'rainbow','viridis','inferno','magma','jet','plasma']
-    colormaps = ['Greys', 'Blues', 'Greens', 'GnBu', 'PuBu',
-                 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn']
     # colormaps = ['Purples','Oranges','Reds','YlOrBr',
     #                'YlOrRd','OrRd','PuRd','RdPu','BuPu',]
     N = len(cats)
     if N == 0:
         print('No categorical or boolean vars in data set. Hence no pivot plots...')
         return None
-    noplots = copy.deepcopy(N)
     #### You can set the number of subplots per row and the number of categories to display here cols = 2
-    displaylimit = 20
     categorylimit = 5
     imgdata_list = []
-    width_size = 15
     height_size = 5
     stringlimit = 20
     combos = combinations(cats, 2)
@@ -270,7 +246,6 @@ def draw_pivot_tables_old(dft, problem_type, verbose, chart_format, depVar='', c
         return imgdata_list
     if depVar is not None or not depVar == '' or not depVar == []:
         ###########  This works equally well for classification as well as Regression ###
-        lst = []
         noplots = int((N ** 2 - N) / 2)
         dicti = {}
         counter = 1
@@ -312,9 +287,6 @@ def draw_pivot_tables_old(dft, problem_type, verbose, chart_format, depVar='', c
             for (var1, var2) in combos:
                 # color1 = random.choice(colormaps)
                 color1 = "Set1"
-                data = pd.DataFrame(dicti)
-                x = dft[var1]
-                y = dft[var2]
                 ax1 = fig.add_subplot(rows, cols, counter)
                 nocats = min(categorylimit, dft[var1].nunique())
                 nocats1 = min(categorylimit, dft[var2].nunique())
@@ -345,7 +317,7 @@ def draw_pivot_tables_old(dft, problem_type, verbose, chart_format, depVar='', c
     image_count = 0
     if verbose == 2:
         imgdata_list.append(save_image_data(fig, chart_format,
-                                            plot_name, depVar, mk_dir))
+                                            plot_name, mk_dir))
         image_count += 1
     if verbose <= 1:
         plt.show()
@@ -370,19 +342,12 @@ def draw_scatters(dfin, nums, verbose, chart_format, problem_type, dep=None, cla
     imgdata_list = []
     if dfin.shape[0] >= 10000 or lowess is False:
         lowess = False
-        x_est = None
-        transparent = 0.6
-        bubble_size = 80
     else:
         if verbose <= 1:
             print('Using Lowess Smoothing. This might take a few minutes for large data sets...')
         lowess = True
-        x_est = None
-        transparent = 0.6
-        bubble_size = 100
     if verbose <= 1:
-        x_est = np.mean
-    N = len(nums)
+        pass
     cols = 2
     width_size = 15
     height_size = 4
@@ -414,7 +379,7 @@ def draw_scatters(dfin, nums, verbose, chart_format, problem_type, dep=None, cla
         #### Keep it at the figure level###
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                                                plot_name, dep, mk_dir))
+                                                plot_name, mk_dir))
             image_count += 1
     else:
         ####### This is a Classification Problem #### You need to plot a strip plot ####
@@ -443,7 +408,7 @@ def draw_scatters(dfin, nums, verbose, chart_format, problem_type, dep=None, cla
             plt.show()
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                                                plot_name, dep, mk_dir))
+                                                plot_name, mk_dir))
             image_count += 1
     ####### End of Scatter Plots ######
     return imgdata_list
@@ -466,20 +431,14 @@ def draw_pair_scatters(dfin, nums, problem_type, verbose, chart_format, dep=None
     height_size = 4
     N = len(nums)
     if dfin.shape[0] >= 10000 or lowess is False:
-        x_est = None
         transparent = 0.7
-        bubble_size = 80
     elif lowess:
         print('Using Lowess Smoothing. This might take a few minutes for large data sets...')
-        x_est = None
         transparent = 0.7
-        bubble_size = 100
     else:
-        x_est = None
         transparent = 0.7
-        bubble_size = 100
     if verbose <= 1:
-        x_est = np.mean
+        pass
     if problem_type == 'Regression' or problem_type == 'Clustering':
         image_count = 0
         ### Second, plot a pair-wise scatter plot of Independent Variables against each other####
@@ -502,7 +461,7 @@ def draw_pair_scatters(dfin, nums, problem_type, verbose, chart_format, dep=None
         fig.tight_layout()
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                                                plot_name, dep, mk_dir))
+                                                plot_name, mk_dir))
             image_count += 1
         if verbose <= 1:
             plt.show()
@@ -516,9 +475,7 @@ def draw_pair_scatters(dfin, nums, problem_type, verbose, chart_format, dep=None
         image_count = 0
         # cmap = plt.get_cmap('gnuplot')
         # cmap = plt.get_cmap('Set1')
-        cmap = plt.get_cmap('Paired')
         combos = combinations(nums, 2)
-        combos_cycle = cycle(combos)
         noplots = int((N ** 2 - N) / 2)
         print('Total Number of Scatter Plots = %d' % (noplots + N))
         rows = int((noplots / cols) + 0.99)
@@ -526,7 +483,6 @@ def draw_pair_scatters(dfin, nums, problem_type, verbose, chart_format, dep=None
         ### Be very careful with the next line. we have used the plural "subplots" ##
         ## In this case, you have ax as an array and you have to use (row,col) to get each ax!
         target_vars = dft[dep].unique()
-        number = len(target_vars)
         # colors = [cmap(i) for i in np.linspace(0, 1, number)]
         for (var1, var2), plotc in zip(combos, range(1, noplots + 1)):
             for target_var, color_val, class_label in zip(target_vars, colors, classes):
@@ -534,7 +490,6 @@ def draw_pair_scatters(dfin, nums, problem_type, verbose, chart_format, dep=None
                 color_array = np.empty(0)
                 value = dft[dep] == target_var
                 dft['color'] = np.where(value is True, color_val, 'r')
-                color_array = np.hstack((color_array, dft[dft['color'] == color_val]['color'].values))
                 plt.subplot(rows, cols, plotc)
                 plt.scatter(x=dft.loc[dft[dep] == target_var][var1], y=dft.loc[dft[dep] == target_var][var2],
                             label=class_label, color=color_val, alpha=transparent)
@@ -545,7 +500,7 @@ def draw_pair_scatters(dfin, nums, problem_type, verbose, chart_format, dep=None
         # fig.tight_layout();
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                                                plot_name, dep, mk_dir))
+                                                plot_name, mk_dir))
             image_count += 1
         if verbose <= 1:
             plt.show()
@@ -561,8 +516,6 @@ def plot_fast_average_num_by_cat(dft, cats, num_vars, verbose=0, kind="bar"):
     chunksize = 20
     stringlimit = 20
     col = 2
-    width_size = 15
-    height_size = 4
     N = int(len(num_vars) * len(cats))
     colors = cycle('byrcmgkbyrcmgkbyrcmgkbyrcmgk')
     if N % 2 == 0:
@@ -614,7 +567,7 @@ def plot_fast_average_num_by_cat(dft, cats, num_vars, verbose=0, kind="bar"):
 
 
 ################# The barplots module below calls the plot_fast_average_num_by_cat module above ###
-def draw_barplots(dft, cats, conti, problem_type, verbose, chart_format, dep='', classes=None, mk_dir=None):
+def draw_barplots(dft, cats, conti, problem_type, verbose, chart_format, dep='', mk_dir=None):
     cats = cats[:]
     conti = conti[:]
     plot_name = 'Bar_Plots'
@@ -622,17 +575,12 @@ def draw_barplots(dft, cats, conti, problem_type, verbose, chart_format, dep='',
     #### Remove Floating Point Categorical Vars from this list since they Error when Bar Plots are drawn
     cats = [x for x in cats if dft[x].dtype != float]
     dft = dft[:]
-    N = len(cats)
     if len(cats) == 0 or len(conti) == 0:
         print('No categorical or numeric vars in data set. Hence no bar charts.')
         return None
     cmap = plt.get_cmap('jet')
     ### Not sure why the cmap doesn't work and gives an error in some cases #################
-    colors = cmap(np.linspace(0, 1, len(conti)))
-    colors = cycle('gkbyrcmgkbyrcmgkbyrcmgkbyr')
-    colormaps = ['plasma', 'viridis', 'inferno', 'magma']
     imgdata_list = list()
-    cat_limit = 10
     conti = list_difference(conti, dep)
     #### Make sure that you plot charts for the depVar as well by including it #######
     if problem_type == 'Regression':
@@ -642,13 +590,12 @@ def draw_barplots(dft, cats, conti, problem_type, verbose, chart_format, dep='',
     else:
         ### Since there is no dependent variable in clustering there is nothing to add dep to.
         pass
-    chunksize = 20
     ########## This is for Regression Problems only ######
     image_count = 0
     figx = plot_fast_average_num_by_cat(dft, cats, conti, verbose)
     if verbose == 2:
         imgdata_list.append(save_image_data(figx, chart_format,
-                                            plot_name, dep, mk_dir))
+                                            plot_name, mk_dir))
         image_count += 1
     return imgdata_list
 
@@ -656,7 +603,7 @@ def draw_barplots(dft, cats, conti, problem_type, verbose, chart_format, dep='',
 ############## End of Bar Plotting ##########################################
 ##### Draw a Heatmap using Pearson Correlation #########################################
 def draw_heatmap(dft, conti, verbose, chart_format, datevars: list, dep=None,
-                 modeltype='Regression', classes=None, mk_dir=None):
+                 modeltype='Regression', mk_dir=None):
     ### Test if this is a time series data set, then differene the continuous vars to find
     ###  if they have true correlation to Dependent Var. Otherwise, leave them as is
     plot_name = 'Heat_Maps'
@@ -686,7 +633,6 @@ def draw_heatmap(dft, conti, verbose, chart_format, datevars: list, dep=None,
             dft[dep] = dft[dep].factorize()[0]
         image_count = 0
         N = len(conti)
-        target_vars = dft[dep].unique()
         fig = plt.figure(figsize=(min(N * width_size, 20), min(N * height_size, 20)))
         if timeseries_flag:
             fig.suptitle('Time Series: Heatmap of all Differenced Continuous vars for target = %s' % dep, fontsize=15,
@@ -712,7 +658,7 @@ def draw_heatmap(dft, conti, verbose, chart_format, datevars: list, dep=None,
             plt.show()
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                                                plot_name, dep, mk_dir))
+                                                plot_name, mk_dir))
             image_count += 1
     else:
         ### This is for Regression and None Dep variable problems only ##
@@ -740,7 +686,7 @@ def draw_heatmap(dft, conti, verbose, chart_format, datevars: list, dep=None,
             plt.show()
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                                                plot_name, dep, mk_dir))
+                                                plot_name, mk_dir))
             image_count += 1
     return imgdata_list
     ############# End of Heat Maps ##############
@@ -768,7 +714,6 @@ def draw_distplot(dft, cat_bools, conti, verbose, chart_format, problem_type, de
 
     if dep is None or dep == '' or problem_type == 'Regression':
         image_count = 0
-        transparent = 0.7
         ######### This is for cases where there is No Target or Dependent Variable ########
         if problem_type == 'Regression':
             if isinstance(dep, list):
@@ -813,7 +758,7 @@ def draw_distplot(dft, cat_bools, conti, verbose, chart_format, problem_type, de
             ###### Save the plots to disk if verbose = 2 ############
             if verbose == 2:
                 imgdata_list.append(save_image_data(fig, chart_format,
-                                                    plot_name + '_Numeric', dep, mk_dir))
+                                                    plot_name + '_Numeric', mk_dir))
                 image_count += 1
         #####  Now draw each of the categorical variable distributions in each subplot ####
         if len(cats) > 0:
@@ -848,7 +793,7 @@ def draw_distplot(dft, cat_bools, conti, verbose, chart_format, problem_type, de
             ########## This is where you end the logic for distplots ################
             if verbose == 2:
                 imgdata_list.append(save_image_data(fig, chart_format,
-                                                    plot_name + '_Cats', dep, mk_dir))
+                                                    plot_name + '_Cats', mk_dir))
                 image_count += 1
             fig.suptitle('Histograms and Normalized distribitions of all variables', fontsize=12, y=1.01)
             if verbose <= 1:
@@ -861,10 +806,7 @@ def draw_distplot(dft, cat_bools, conti, verbose, chart_format, problem_type, de
         conti = conti + cats
         cols = 2
         image_count = 0
-        transparent = 0.7
         noplots = len(conti)
-        binsize = 30
-        k = 0
         rows = int((noplots / cols) + 0.99)
         ### Be very careful with the next line. we have used the plural "subplots" ##
         ## In this case, you have ax as an array and you have to use (row,col) to get each ax!
@@ -895,8 +837,6 @@ def draw_distplot(dft, cat_bools, conti, verbose, chart_format, problem_type, de
             ax1 = plt.gca()
 
             if dft[each_conti].dtype == object:
-                kwds = {"rotation": 45, "ha": "right"}
-                labels = dft[each_conti].value_counts()[:width_size].index.tolist()
                 conti_df = dft[[dep, each_conti]].groupby([dep, each_conti]).size().nlargest(width_size).reset_index(
                     name='Values')
                 pivot_df = conti_df.pivot(index=each_conti, columns=dep, values='Values')
@@ -910,8 +850,6 @@ def draw_distplot(dft, cat_bools, conti, verbose, chart_format, problem_type, de
                 # ax1.set_xticklabels(labels,**kwds);
                 ax1.set_title('Distribution of %s (top %d categories only)' % (each_conti, width_size))
             elif str(dft[each_conti].dtype) in ['category']:
-                kwds = {"rotation": 45, "ha": "right"}
-                labels = dft[each_conti].value_counts()[:width_size].index.tolist()
                 conti_df = dft[[dep, each_conti]].groupby([dep, each_conti]).size().nlargest(width_size).reset_index(
                     name='Values')
                 pivot_df = conti_df.pivot(index=each_conti, columns=dep, values='Values')
@@ -960,7 +898,7 @@ def draw_distplot(dft, cat_bools, conti, verbose, chart_format, problem_type, de
             plt.show()
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                                                plot_name + '_Numerics', dep, mk_dir))
+                                                plot_name + '_Numerics', mk_dir))
             image_count += 1
         fig.suptitle('Histograms (KDE plots) of all Continuous Variables', fontsize=12, y=1.01)
         ###### Now draw the distribution of the target variable in Classification only ####
@@ -982,7 +920,7 @@ def draw_distplot(dft, cat_bools, conti, verbose, chart_format, problem_type, de
             for p in ax1.patches:
                 ax1.annotate(str(round(p.get_height(), 2)),
                              (round(p.get_x() * 1.01, 2), round(p.get_height() * 1.01, 2)))
-            #### Do not change the next 2 lines even though they may appear redundant. Otherwise it will error!
+            #### Do not change the next 2 lines even though they may appear redundant. Otherwise, it will error!
             if not str(dft[dep].dtype) in ['category']:
                 if dft[dep].dtype != object:
                     ax1.set_xticks(dft[dep].unique().tolist())
@@ -993,7 +931,7 @@ def draw_distplot(dft, cat_bools, conti, verbose, chart_format, problem_type, de
             for p in ax2.patches:
                 ax2.annotate(str(round(p.get_height(), 2)),
                              (round(p.get_x() * 1.01, 2), round(p.get_height() * 1.01, 2)))
-            #### Do not change the next 2 lines even though they may appear redundant. Otherwise it will error!
+            #### Do not change the next 2 lines even though they may appear redundant. Otherwise, it will error!
             if not str(dft[dep].dtype) in ['category']:
                 if dft[dep].dtype != object:
                     ax2.set_xticks(dft[dep].unique().tolist())
@@ -1013,7 +951,7 @@ def draw_distplot(dft, cat_bools, conti, verbose, chart_format, problem_type, de
             plt.show()
         if verbose == 2:
             imgdata_list.append(save_image_data(fig, chart_format,
-                                                plot_name + '_target', dep, mk_dir))
+                                                plot_name + '_target', mk_dir))
             image_count += 1
     ####### End of Distplots ###########
     return imgdata_list
@@ -1070,23 +1008,18 @@ def draw_violinplot(df, dep, nums, verbose, chart_format, modeltype='Regression'
             if verbose == 2:
                 additional = '_' + str(plot_index) + '_'
                 imgdata_list.append(save_image_data(fig, chart_format,
-                                                    plot_name, dep, mk_dir, additional))
+                                                    plot_name, mk_dir, additional))
                 image_count += 1
     else:
         plot_name = "Box_Plots"
         ###### This is for Classification problems only ##########################
         image_count = 0
-        classes = df[dep].factorize()[1].tolist()
         ######################### Add Box plots here ##################################
         # Styling...
-        numb = len(nums)
-        target_vars = df[dep].unique()
-        target_len = df[dep].nunique()
         if len(othernums) >= 1:
             width_size = 15
             height_size = 7
             count = 0
-            data = pd.DataFrame(index=df.index)
             cols = 2
             noplots = len(nums)
             rows = int((noplots / cols) + 0.99)
@@ -1107,7 +1040,7 @@ def draw_violinplot(df, dep, nums, verbose, chart_format, modeltype='Regression'
                 plt.show()
             if verbose == 2:
                 imgdata_list.append(save_image_data(fig, chart_format,
-                                                    plot_name, dep, mk_dir))
+                                                    plot_name, mk_dir))
                 image_count += 1
         #########################################
     return imgdata_list
@@ -1126,13 +1059,11 @@ def draw_date_vars(dfx, dep, datevars, num_vars, verbose, chart_format, modeltyp
     imgdata_list = list()
     image_count = 0
     N = len(num_vars)
-    chunksize = 20
     if N < 1 or len(datevars) == 0:
         #### If there are no numeric variables, nothing to plot here ######
         return imgdata_list
     else:
-        width_size = 15
-        height_size = 5
+        pass
 
     if isinstance(df.index, pd.DatetimeIndex):
         pass
@@ -1158,14 +1089,14 @@ def draw_date_vars(dfx, dep, datevars, num_vars, verbose, chart_format, modeltyp
                         df[ts_column] = df[ts_column].map(lambda x: '0101' + str(x) if len(str(x)) == 4 else x)
                         df[ts_column] = pd.to_datetime(df[ts_column], format='%m%d%Y', errors='coerce')
                     else:
-                        print('%s could not be indexed. Could not draw date_vars.' % col)
+                        print(f'{ts_column} could not be indexed. Could not draw date_vars.')
                         return imgdata_list
             else:
                 df[ts_column] = pd.to_datetime(df[ts_column], infer_datetime_format=True, errors='coerce')
             ##### Now set the column to be the date - time index
             df.index = df.pop(ts_column)  #### This is where we set the date time column as the index ######
         except:
-            print('%s could not be indexed. Could not draw date_vars.' % col)
+            print(f'{ts_column} could not be indexed. Could not draw date_vars.')
             return imgdata_list
     ####### Draw the time series for Regression and DepVar
 
@@ -1184,7 +1115,6 @@ def draw_date_vars(dfx, dep, datevars, num_vars, verbose, chart_format, modeltyp
         kind = 'line'  #### you can change this to plot any kind of time series plot you want
         image_count = 0
         combos = combinations(num_vars, 2)
-        combs = copy.deepcopy(combos)
         noplots = int((N ** 2 - N) / 2)
         rows = int((noplots / cols) + 0.99)
         counter = 1
@@ -1204,19 +1134,15 @@ def draw_date_vars(dfx, dep, datevars, num_vars, verbose, chart_format, modeltyp
             fig = plot_fast_average_num_by_cat(dfx, datevars, num_vars, verbose, kind="line")
     else:
         ######## This is for Classification problems only ####
-        kind = 'line'  ### you can decide what kind of plots you want to show here ####
         image_count = 0
         target_vars = df[dep].factorize()[1].tolist()
         # classes = copy.deepcopy(classes)
         ##### Now separate out the drawing of time series data by the number of classes ###
-        colors = cycle('gkbyrcmgkbyrcmgkbyrcmgkbyr')
         classes = df[dep].unique()
         if type(classes[0]) == int or type(classes[0]) == float:
-            classes = [str(x) for x in classes]
+            pass
         cols = 2
-        count = 0
         combos = combinations(num_vars, 2)
-        combs = copy.deepcopy(combos)
         noplots = len(target_vars)
         rows = int((noplots / cols) + 0.99)
         fig = plt.figure(figsize=(width_size, rows * height_size))
@@ -1236,13 +1162,13 @@ def draw_date_vars(dfx, dep, datevars, num_vars, verbose, chart_format, modeltyp
         fig.suptitle('Time Series Plot by %s: Continuous Variables Pair' % ts_column, fontsize=15, y=1.01)
     if verbose == 2:
         imgdata_list.append(save_image_data(fig, chart_format,
-                                            plot_name, dep, mk_dir))
+                                            plot_name, mk_dir))
         image_count += 1
     return imgdata_list
 
 
 ############# End of Date vars plotting #########################
-def catscatter(data, colx, coly, ax, ratio=10, save=False, save_name='Default'):
+def catscatter(data, colx, coly, ax, ratio=10):
     """
     ####################################################################################
     # The catscatter idea was conceived by: Myr Barnés in 2020 
@@ -1262,9 +1188,8 @@ def catscatter(data, colx, coly, ax, ratio=10, save=False, save_name='Default'):
     cols = 'record_count'
     # define the color map
     color = ['red', 'green', 'grey']
-    font_size = 7
     font = 'Helvetica'
-    # Create a dict to encode the categeories into numbers (sorted)
+    # Create a dict to encode the categories into numbers (sorted)
     xticks = df[colx].sort_values().unique().tolist()
     yticks = df[coly].sort_values().unique().tolist()
 
@@ -1322,7 +1247,7 @@ def catscatter(data, colx, coly, ax, ratio=10, save=False, save_name='Default'):
 
 
 ############################################################################
-def draw_catscatterplots(dft, cats, problem_type, verbose,
+def draw_catscatterplots(dft, cats, verbose,
                          chart_format, mk_dir=None):
     """
     The function draws catscatter plots for pairs of categorical variables in a data frame. 
@@ -1332,7 +1257,6 @@ def draw_catscatterplots(dft, cats, problem_type, verbose,
     Args:
         dft (pandas.DataFrame): The data frame containing the categorical variables.
         cats (list): A list of column names of the categorical variables in dft.
-        problem_type (str): The type of problem to be solved, either 'classification' or 'regression'.
         verbose (int): The level of verbosity for displaying the plots. 0 means no plots, 1 means show plots, 2 means save plots as image files.
         chart_format (str): The format of the image files to be saved. Can be 'png', 'jpg', 'svg', etc.
         mk_dir (str, optional): The directory where the image files will be saved. Defaults to None.
@@ -1341,9 +1265,7 @@ def draw_catscatterplots(dft, cats, problem_type, verbose,
         list: A list of image data objects for each catscatter plot if verbose == 2, otherwise an empty list.
     """
     imgdata_list = list()
-    image_count = 0
-    N = len(cats)
-    chunksize = 20
+    cat_len = len(cats)
     if len(cats) == 0:
         #### If there are no categorical variables, nothing to plot here ######
         return imgdata_list
@@ -1356,7 +1278,7 @@ def draw_catscatterplots(dft, cats, problem_type, verbose,
     image_count = 0
     combos = combinations(cats, 2)
     combs = copy.deepcopy(combos)
-    noplots = int((N ** 2 - N) / 2)
+    noplots = int((cat_len ** 2 - cat_len) / 2)
     rows = int((noplots / cols) + 0.99)
     counter = 1
     fig = plt.figure(figsize=(width_size, rows * height_size))
@@ -1372,8 +1294,7 @@ def draw_catscatterplots(dft, cats, problem_type, verbose,
             plt.close('all')
     fig.suptitle('Catscatter plot of Pairs of Categorical Variables', fontsize=15, y=1.01)
     if verbose == 2:
-        imgdata_list.append(save_image_data(fig, chart_format,
-                                            plot_name, dep, mk_dir))
+        imgdata_list.append(save_image_data(fig, chart_format, plot_name, mk_dir))
         image_count += 1
     return imgdata_list
 
@@ -1624,8 +1545,7 @@ def find_remove_duplicates(values):
 
 
 #################################################################################
-def load_file_dataframe(dataname, sep=",", header=0, verbose=0, nrows=None, parse_dates=False):
-    start_time = time.time()
+def load_file_dataframe(dataname, sep=",", header=0, nrows=None, parse_dates=False):
     ###########################  This is where we load file or data frame ###############
     if isinstance(dataname, str):
         #### this means they have given file name as a string to load the file #####
@@ -1651,8 +1571,7 @@ def load_file_dataframe(dataname, sep=",", header=0, verbose=0, nrows=None, pars
         if codex_flag:
             for code in codex:
                 try:
-                    dfte = pd.read_csv(dataname, sep=sep, header=header, encoding=code, nrows=nrows,
-                                       skiprows=skip_function, parse_dates=parse_dates)
+                    pass
                 except:
                     print('    pandas %s encoder does not work for this file. Continuing...' % code)
                     continue
@@ -1693,8 +1612,6 @@ def classify_print_vars(filename, sep, max_rows_analyzed, max_cols_analyzed,
                         depVar='', dfte=None, header=0, verbose=0):
     corr_limit = 0.7  ### This limit represents correlation above this, vars will be removed
 
-    start_time = time.time()
-
     if filename:
         dataname = copy.deepcopy(filename)
         parse_dates = True
@@ -1702,8 +1619,7 @@ def classify_print_vars(filename, sep, max_rows_analyzed, max_cols_analyzed,
         dataname = copy.deepcopy(dfte)
         parse_dates = False
 
-    dfte = load_file_dataframe(dataname, sep=sep, header=header, verbose=verbose,
-                               nrows=max_rows_analyzed, parse_dates=parse_dates)
+    dfte = load_file_dataframe(dataname, sep=sep, header=header, nrows=max_rows_analyzed, parse_dates=parse_dates)
 
     orig_preds = [x for x in list(dfte) if x not in [depVar]]
     #################    CLASSIFY  COLUMNS   HERE    ######################
@@ -1713,7 +1629,7 @@ def classify_print_vars(filename, sep, max_rows_analyzed, max_cols_analyzed,
         dfte_small = copy.deepcopy(dfte)
     var_df = classify_columns(dfte_small[orig_preds], verbose)
     #####       Classify Columns   ################
-    IDcols = var_df['id_vars']
+    id_cols = var_df['id_vars']
     discrete_string_vars = var_df['nlp_vars'] + var_df['discrete_string_vars']
     cols_delete = var_df['cols_delete']
     bool_vars = var_df['string_bool_vars'] + var_df['num_bool_vars']
@@ -1724,21 +1640,20 @@ def classify_print_vars(filename, sep, max_rows_analyzed, max_cols_analyzed,
     if len(var_df['continuous_vars']) == 0 and len(int_vars) > 0:
         continuous_vars = var_df['int_vars']
         categorical_vars = list_difference(categorical_vars, int_vars)
-        int_vars = []
     # elif len(var_df['continuous_vars'])==0 and len(int_vars)==0:
     #    print('Cannot visualize this dataset since no numeric or integer vars in data...returning')
     #    return dataname
     else:
         continuous_vars = var_df['continuous_vars']
     #### from now you can use wordclouds on discrete_string_vars ######################
-    preds = [x for x in orig_preds if x not in IDcols + cols_delete]
-    if len(IDcols + cols_delete) == 0:
+    preds = [x for x in orig_preds if x not in id_cols + cols_delete]
+    if len(id_cols + cols_delete) == 0:
         print('        No variables removed since no ID or low-information variables found in data set')
     else:
         print('        %d variable(s) removed since they were ID or low-information variables'
-              % len(IDcols + cols_delete))
+              % len(id_cols + cols_delete))
         if verbose >= 1:
-            print('        List of variables removed: %s' % (IDcols + cols_delete))
+            print('        List of variables removed: %s' % (id_cols + cols_delete))
     #############    Sample data if too big and find problem type   #############################
     if dfte.shape[0] >= max_rows_analyzed:
         print('Since Number of Rows in data %d exceeds maximum, randomly sampling %d rows for EDA...' % (
@@ -1764,7 +1679,8 @@ def classify_print_vars(filename, sep, max_rows_analyzed, max_cols_analyzed,
             except:
                 print('Could not find given target var in data set. Please check input')
                 ### return the data frame as is ############
-                return dfte, depVar, IDcols, bool_vars, categorical_vars, continuous_vars, discrete_string_vars, date_vars, classes, problem_type, cols_list
+                return (dfte, depVar, id_cols, bool_vars, categorical_vars, continuous_vars, discrete_string_vars,
+                        date_vars, classes, problem_type, cols_list)
             cols_list = list_difference(list(dft), depVar)
             if dft[depVar].dtype == object:
                 classes = dft[depVar].unique().tolist()
@@ -1804,7 +1720,7 @@ def classify_print_vars(filename, sep, max_rows_analyzed, max_cols_analyzed,
             dft = dft[important_features + [depVar]]
             #### Time to  classify the important columns again. Set verbose to zero so you don't print it again ###
             var_df = classify_columns(dft[important_features], verbose=0)
-            IDcols = var_df['id_vars']
+            id_cols = var_df['id_vars']
             discrete_string_vars = var_df['nlp_vars'] + var_df['discrete_string_vars']
             cols_delete = var_df['cols_delete']
             bool_vars = var_df['string_bool_vars'] + var_df['num_bool_vars']
@@ -1813,18 +1729,17 @@ def classify_print_vars(filename, sep, max_rows_analyzed, max_cols_analyzed,
             if len(var_df['continuous_vars']) == 0 and len(int_vars) > 0:
                 continuous_vars = var_df['int_vars']
                 categorical_vars = list_difference(categorical_vars, int_vars)
-                int_vars = []
             else:
                 continuous_vars = var_df['continuous_vars']
             date_vars = var_df['date_vars']
-            preds = [x for x in important_features if x not in IDcols + cols_delete + discrete_string_vars]
-            if len(IDcols + cols_delete + discrete_string_vars) == 0:
+            preds = [x for x in important_features if x not in id_cols + cols_delete + discrete_string_vars]
+            if len(id_cols + cols_delete + discrete_string_vars) == 0:
                 print('    No variables removed since no ID or low-information variables found in data')
             else:
                 print('    %d variable(s) removed since they were ID or low-information variables'
-                      % len(IDcols + cols_delete + discrete_string_vars))
+                      % len(id_cols + cols_delete + discrete_string_vars))
             if verbose >= 1:
-                print('    List of variables removed: %s' % (IDcols + cols_delete + discrete_string_vars))
+                print('    List of variables removed: %s' % (id_cols + cols_delete + discrete_string_vars))
             dft = dft[preds + [depVar]]
         else:
             continuous_vars = continuous_vars[:max_cols_analyzed]
@@ -1865,12 +1780,12 @@ def classify_print_vars(filename, sep, max_rows_analyzed, max_cols_analyzed,
         print("   Date and time variables %s ")
         ppt.pprint('   %s' % date_vars)
         print("   ID variables %s ")
-        ppt.pprint('   %s' % IDcols)
+        ppt.pprint('   %s' % id_cols)
         print("   Target variable %s ")
         ppt.pprint('   %s' % depVar)
     elif verbose == 1 and len(cols_list) > 30:
         print('   Total columns > 30, too numerous to print.')
-    return dft, depVar, IDcols, bool_vars, categorical_vars, continuous_vars, discrete_string_vars, date_vars, classes, problem_type, cols_list
+    return dft, depVar, id_cols, bool_vars, categorical_vars, continuous_vars, discrete_string_vars, date_vars, classes, problem_type, cols_list
 
 
 ####################################################################
@@ -1928,7 +1843,6 @@ from sklearn.feature_selection import mutual_info_regression, mutual_info_classi
 from sklearn.feature_selection import SelectKBest
 ################################################################################
 from collections import defaultdict
-import time
 
 
 def return_dictionary_list(lst_of_tuples):
@@ -1952,9 +1866,9 @@ def remove_variables_using_fast_correlation(df, numvars, modeltype, target,
     but this can be changed. If two variables have absolute correlation higher than this, they
     will be marked, and using a process of elimination, one of them will get knocked out:
     To decide order of variables to keep, we use mutual information score to select. MIS returns
-    a ranked list of these correlated variables: when we select one, we knock out others
-    that it is correlated to. Then we select next var. This way we knock out correlated variables.
-    Finally we are left with uncorrelated variables that are also highly important (mutual score).
+    a ranked list of these correlated variables: when we select one, we knock out other variables
+    it is correlated to. Then we select next var. This way we remove correlated variables.
+    Finally, we are left with uncorrelated variables that are also highly important (mutual score).
     ##############  YOU MUST INCLUDE THE ABOVE MESSAGE IF YOU COPY THIS CODE IN YOUR LIBRARY #####
     """
     print('    Removing correlated variables from %d numerics using SULO method' % len(numvars))
@@ -1963,7 +1877,6 @@ def remove_variables_using_fast_correlation(df, numvars, modeltype, target,
     col_index = correlation_dataframe.columns.tolist()
     index_triupper = list(zip(np.triu_indices_from(a, k=1)[0], np.triu_indices_from(a, k=1)[1]))
     high_corr_index_list = [x for x in np.argwhere(abs(a[np.triu_indices(len(a), k=1)]) >= corr_limit)]
-    low_corr_index_list = [x for x in np.argwhere(abs(a[np.triu_indices(len(a), k=1)]) < corr_limit)]
     tuple_list = [y for y in [index_triupper[x[0]] for x in high_corr_index_list]]
     correlated_pair = [(col_index[local_tuple[0]], col_index[local_tuple[1]]) for local_tuple in tuple_list]
     corr_pair_dict = dict(return_dictionary_list(correlated_pair))
@@ -1980,9 +1893,8 @@ def remove_variables_using_fast_correlation(df, numvars, modeltype, target,
     #### You can make it a dictionary or a tuple of lists. We have chosen the latter here to keep order intact.
     corr_pair_count_dict = count_freq_in_list(flat_corr_pair_list)
     corr_list = [k for (k, v) in corr_pair_count_dict]
-    ###### This is for ordering the variables in the highest to lowest importance by target ###
+    ###### This is for ordering the variables from highest to lowest importance by target ###
     if len(corr_list) == 0:
-        final_list = list(correlation_dataframe)
         print('Selecting all (%d) variables since none of them are highly correlated...' % len(numvars))
         return numvars
     else:
@@ -2022,7 +1934,7 @@ def remove_variables_using_fast_correlation(df, numvars, modeltype, target,
 def count_freq_in_list(lst):
     """
     This counts the frequency of items in a list but MAINTAINS the order of appearance of items.
-    This order is very important when you are doing certain functions. Hence this function!
+    This order is very important when you are doing certain functions. Hence, this function!
     """
     temp = np.unique(lst)
     result = []
@@ -2041,7 +1953,6 @@ def find_corr_vars(correlation_dataframe, corr_limit=0.70):
     col_index = correlation_dataframe.columns.tolist()
     index_triupper = list(zip(np.triu_indices_from(a, k=1)[0], np.triu_indices_from(a, k=1)[1]))
     high_corr_index_list = [x for x in np.argwhere(abs(a[np.triu_indices(len(a), k=1)]) >= corr_limit)]
-    low_corr_index_list = [x for x in np.argwhere(abs(a[np.triu_indices(len(a), k=1)]) < corr_limit)]
     tuple_list = [y for y in [index_triupper[x[0]] for x in high_corr_index_list]]
     correlated_pair = [(col_index[tup[0]], col_index[tup[1]]) for tup in tuple_list]
     correlated_pair_dict = dict(correlated_pair)
@@ -2107,7 +2018,6 @@ def return_factorized_dict(ls):
 #################################################################################
 ################      Find top features using XGB     ###################
 #################################################################################
-from sklearn.model_selection import KFold
 from collections import OrderedDict
 ################################################################################
 ###########################################################################################
@@ -2191,7 +2101,7 @@ def find_top_features_xgb(train, preds, numvars, target, modeltype, corr_limit=0
     """
     This is a fast utility that uses XGB to find top features.
     It returns a list of important features.
-    Since it is XGB, you dont have to restrict the input to just numeric vars.
+    Since it is XGB, you don't have to restrict the input to just numeric vars.
     You can send in all kinds of vars and it will take care of transforming it. Sweet!
     """
     train = copy.deepcopy(train)
@@ -2199,37 +2109,34 @@ def find_top_features_xgb(train, preds, numvars, target, modeltype, corr_limit=0
     numvars = copy.deepcopy(numvars)
     ######################   I M P O R T A N T ##############################################
     ###### This top_num decides how many top_n features XGB selects in each iteration.
-    ####  There a total of 5 iterations. Hence 5x10 means maximum 50 features will be selected.
+    ####  There a total of 5 iterations. Hence, 5x10 means maximum 50 features will be selected.
     #####  If there are more than 50 variables, then maximum 25% of its variables will be selected
     if len(preds) <= 50:
         top_num = 10
     else:
         ### the maximum number of variables will 25% of preds which means we divide by 5 and get 5% here
-        ### The five iterations result in 5% being chosen in each iteration. Hence max 25% of variables!
+        ### The five iterations result in 5% being chosen in each iteration. Hence, max 25% of variables!
         top_num = int(len(preds) * 0.05)
     ######################   I M P O R T A N T ##############################################
     #### If there are more than 30 categorical variables in a data set, it is worth reducing features.
     ####  Otherwise. XGBoost is pretty good at finding the best features whether cat or numeric !
     n_splits = 5
     max_depth = 8
-    max_cats = 5
     ######################   I M P O R T A N T ##############################################
     subsample = 0.7
     col_sub_sample = 0.7
     train = copy.deepcopy(train)
-    start_time = time.time()
     test_size = 0.2
     seed = 1
     early_stopping = 5
     ####### All the default parameters are set up now #########
-    kf = KFold(n_splits=n_splits)
     rem_vars = left_subtract(preds, numvars)
     catvars = copy.deepcopy(rem_vars)
     ############   I  M P O R T A N T ! I M P O R T A N T ! ######################
     ##### Removing the Cat Vars selection using Linear Methods since they fail so often.
     ##### Linear methods such as Chi2 or Mutual Information Score are not great
     ####  for feature selection since they can't handle large data and provide
-    ####  misleading results for large data sets. Hence I am using XGBoost alone.
+    ####  misleading results for large data sets. Hence, I am using XGBoost alone.
     ####  Also, another method of using Spearman Correlation for CatVars with 100's
     ####  of variables is very slow. Also, is not very clear is effective: only 3-4 vars
     ####   are removed. Hence for now, I am not going to use Spearman method. Perhaps later.
