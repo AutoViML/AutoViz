@@ -1,4 +1,7 @@
-from autoviz.AutoViz_Utils import *
+from autoviz.AutoViz_Utils import classify_print_vars, find_remove_duplicates
+import numpy as np
+import pandas as pd
+import warnings
 
 warnings.filterwarnings("ignore")
 
@@ -135,7 +138,7 @@ def display_server(dmap):
 
 
 ##############################  This is the beginning of the new AutoViz_Holo ###################
-def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
+def AutoViz_Holo(filename, sep=',', depVar='', header=0, verbose=0,
                  lowess=False, chart_format='svg', max_rows_analyzed=150000,
                  max_cols_analyzed=30, save_plot_dir=None):
     """
@@ -182,11 +185,11 @@ def AutoViz_Holo(filename, sep=',', depVar='', dfte=None, header=0, verbose=0,
     ############   Start the clock here and classify variables in data set first ########
     start_time = time.time()
     try:
-        dfin, dep, IDcols, bool_vars, cats, nums, discrete_string_vars, date_vars, classes, problem_type, selected_cols = classify_print_vars(
-            filename, sep, max_rows_analyzed, max_cols_analyzed,
-            depVar, dfte, header, verbose)
-    except:
-        print('Not able to read or load file. Please check your inputs and try again...')
+        (dfin, dep, IDcols, bool_vars, cats, nums, discrete_string_vars, date_vars, classes, problem_type,
+         selected_cols) = classify_print_vars(filename, sep, max_rows_analyzed, max_cols_analyzed,
+                                              depVar, header, verbose)
+    except Exception as e:
+        print(f'Not able to read or load file. Please check your inputs and try again... {e}')
         return None
     #################   This is where the differentiated HoloViews code begins ####
     ls_objects = []

@@ -2,4 +2,6 @@ import unittest
 
 from ..AutoViz_Class import AutoViz_Class
 
-def
+class TestAutoVizClass:
+    def test_add_plots(self):
+        return True

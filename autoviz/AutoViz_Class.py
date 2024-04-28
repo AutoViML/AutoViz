@@ -205,7 +205,7 @@ class AutoViz_Class:
         else:
             getattr(self, plotname)["subheading"].append(X)
 
-    def AutoViz(self, filename, sep=',', dep_var='', dfte=None, header=0, verbose=1,
+    def AutoViz(self, filename: (str or pd.DataFrame), sep=',', dep_var='', dfte=None, header=0, verbose=1,
                 lowess=False, chart_format='svg', max_rows_analyzed=150000,
                 max_cols_analyzed=30, save_plot_dir=None):
         """
@@ -239,22 +239,25 @@ class AutoViz_Class:
         ####  it will simply save them.                                          #####
         ##############################################################################
         """
+        if dfte:  # temporary until we have a major release, then remove dfte variable.
+            filename = dfte
+
         if isinstance(dep_var, list):
             print('Since AutoViz cannot visualize multi-label targets, choosing first item in targets: %s' % dep_var[0])
             dep_var = dep_var[0]
 
         ####################################################################################
         if chart_format.lower() in ['bokeh', 'server', 'bokeh_server', 'bokeh-server', 'html']:
-            dft = AutoViz_Holo(filename, sep, dep_var, dfte, header, verbose,
+            dft = AutoViz_Holo(filename, sep, dep_var, header, verbose,
                                lowess, chart_format, max_rows_analyzed,
                                max_cols_analyzed, save_plot_dir)
         else:
-            dft = self.AutoViz_Main(filename, sep, dep_var, dfte, header, verbose,
+            dft = self.AutoViz_Main(filename, sep, dep_var, header, verbose,
                                     lowess, chart_format, max_rows_analyzed,
                                     max_cols_analyzed, save_plot_dir)
         return dft
 
-    def AutoViz_Main(self, filename, sep=',', dep_var='', dfte=None, header=0, verbose=0,
+    def AutoViz_Main(self, filename: str or pd.DataFrame, sep=',', dep_var='', header=0, verbose=0,
                      lowess=False, chart_format='svg', max_rows_analyzed=150000,
                      max_cols_analyzed=30, save_plot_dir=None):
         """
@@ -284,14 +287,10 @@ class AutoViz_Class:
         ############   Start the clock here and classify variables in data set first ########
         start_time = time.time()
 
-        try:
-            dft, dep_var, id_cols, bool_vars, cats, continuous_vars, discrete_string_vars, date_vars, classes, \
-                problem_type, selected_cols = classify_print_vars(filename,
-                                                                  sep, max_rows_analyzed, max_cols_analyzed,
-                                                                  dep_var, dfte, header, verbose)
-        except Exception as e:
-            print(f'Not able to read or load file. Please check your inputs and try again... {e}')
-            return None
+        (dft, dep_var, id_cols, bool_vars, cats, continuous_vars, discrete_string_vars, date_vars, classes,
+         problem_type, selected_cols) = classify_print_vars(filename, sep, max_rows_analyzed, max_cols_analyzed,
+                                                            dep_var, header, verbose)
+
         ###########  This is where perform data quality checks on data ################
         if verbose >= 1:
             print('To fix these data quality issues in the dataset, import FixDQ from autoviz...')

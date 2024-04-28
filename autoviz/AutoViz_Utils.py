@@ -44,7 +44,7 @@ import matplotlib.pyplot as plt
 import io
 import seaborn as sns
 
-sns.set(style="whitegrid", color_codes=True)
+# sns.set(style="whitegrid", color_codes=True)
 import re
 import pprint
 # matplotlib.style.use('seaborn')
@@ -1608,15 +1608,15 @@ def load_file_dataframe(dataname, sep=",", header=0, nrows=None, parse_dates=Fal
 
 
 ##########################################################################################
-def classify_print_vars(filename, sep, max_rows_analyzed, max_cols_analyzed,
-                        depVar='', dfte=None, header=0, verbose=0):
+def classify_print_vars(filename: str or pd.DataFrame, sep, max_rows_analyzed, max_cols_analyzed,
+                        depVar='', header=0, verbose=0):
     corr_limit = 0.7  ### This limit represents correlation above this, vars will be removed
 
-    if filename:
+    if isinstance(filename, str):
         dataname = copy.deepcopy(filename)
         parse_dates = True
-    else:
-        dataname = copy.deepcopy(dfte)
+    elif isinstance(filename, pd.DataFrame):
+        dataname = copy.deepcopy(filename)
         parse_dates = False
 
     dfte = load_file_dataframe(dataname, sep=sep, header=header, nrows=max_rows_analyzed, parse_dates=parse_dates)

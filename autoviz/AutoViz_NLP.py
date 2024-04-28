@@ -8,7 +8,7 @@ import string
 
 from collections import Counter
 
-from .AutoViz_Holo import save_image_data
+from .AutoViz_Utils import save_image_data
 
 pd.set_option('display.max_colwidth', 5000)
 
