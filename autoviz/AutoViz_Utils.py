@@ -218,6 +218,7 @@ def draw_pivot_tables(dft, problem_type, verbose, chart_format, depVar='', mk_di
 def draw_pivot_tables_old(dft, verbose, chart_format, depVar='', mk_dir=None):
     #### Finally I have fixed the bugs in pivot tables due to "category" dtypes in data ##############
     plot_name = 'Bar_Plots_Pivots'
+    cats = [i for i in dft.loc[:, dft.nunique() <= 15]]
     cats = copy.deepcopy(cats)
     cats = list(set(cats))
     dft = copy.deepcopy(dft)
@@ -226,8 +227,8 @@ def draw_pivot_tables_old(dft, verbose, chart_format, depVar='', mk_dir=None):
     # colormaps = ['summer', 'rainbow','viridis','inferno','magma','jet','plasma']
     # colormaps = ['Purples','Oranges','Reds','YlOrBr',
     #                'YlOrRd','OrRd','PuRd','RdPu','BuPu',]
-    N = len(cats)
-    if N == 0:
+    len_cats = len(cats)
+    if len_cats == 0:
         print('No categorical or boolean vars in data set. Hence no pivot plots...')
         return None
     #### You can set the number of subplots per row and the number of categories to display here cols = 2
@@ -236,17 +237,17 @@ def draw_pivot_tables_old(dft, verbose, chart_format, depVar='', mk_dir=None):
     height_size = 5
     stringlimit = 20
     combos = combinations(cats, 2)
-    N = len(cats)
+    len_cats = len(cats)
     sns.set_palette("Set1")
-    if N <= 1:
+    if len_cats <= 1:
         ### if there are not many categorical variables, there is nothing to plot
         return imgdata_list
-    if len(nums) == 0:
+    if len(cats) == 0:
         ### if there are no numeric variables, there is nothing to plot
         return imgdata_list
     if depVar is not None or not depVar == '' or not depVar == []:
         ###########  This works equally well for classification as well as Regression ###
-        noplots = int((N ** 2 - N) / 2)
+        noplots = int((len_cats ** 2 - len_cats) / 2)
         dicti = {}
         counter = 1
         cols = 2
@@ -1247,8 +1248,7 @@ def catscatter(data, colx, coly, ax, ratio=10):
 
 
 ############################################################################
-def draw_catscatterplots(dft, cats, verbose,
-                         chart_format, mk_dir=None):
+def draw_catscatterplots(dft, cats, verbose, chart_format, mk_dir=None):
     """
     The function draws catscatter plots for pairs of categorical variables in a data frame. 
     A catscatter plot is a type of scatter plot that shows the frequency of each combination 
@@ -1266,6 +1266,7 @@ def draw_catscatterplots(dft, cats, verbose,
     """
     imgdata_list = list()
     cat_len = len(cats)
+    plot_name = "catscatter plot"
     if len(cats) == 0:
         #### If there are no categorical variables, nothing to plot here ######
         return imgdata_list
@@ -1680,7 +1681,7 @@ def classify_print_vars(filename: str or pd.DataFrame, sep, max_rows_analyzed, m
                 print('Could not find given target var in data set. Please check input')
                 ### return the data frame as is ############
                 return (dfte, depVar, id_cols, bool_vars, categorical_vars, continuous_vars, discrete_string_vars,
-                        date_vars, classes, problem_type, cols_list)
+                        date_vars)
             cols_list = list_difference(list(dft), depVar)
             if dft[depVar].dtype == object:
                 classes = dft[depVar].unique().tolist()

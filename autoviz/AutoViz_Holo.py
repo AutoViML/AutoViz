@@ -1,3 +1,5 @@
+from holoviews.ipython import display
+
 from autoviz.AutoViz_Utils import classify_print_vars, find_remove_duplicates
 import numpy as np
 import pandas as pd
