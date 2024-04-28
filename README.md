@@ -34,24 +34,8 @@ With AutoViz, you can easily and quickly generate insightful visualizations for 
 The latest updates about `autoviz` library can be found in <a href="https://github.com/AutoViML/AutoViz/blob/master/updates.md">Updates page</a>.
 
 ## ImportantAnnouncement
-### Starting with version 0.1.807, an important update regarding Python Version Management
-<li>We're excited to announce we've made significant updates to our `setup.py` script to dynamically manage dependencies based on your Python version. This means that when you install AutoViz, the installation process will automatically select versions of dependencies such as HoloViews, Bokeh, and hvPlot that are best suited to your specific Python environment.
-
-For `Python versions below 3.10`, AutoViz will use versions of its dependencies known to be stable and compatible with older Python versions.
-
-For `Python 3.10`, the script has been configured to use updated dependencies that address specific fixes and enhancements relevant to this version.
-
-For `Python 3.11 and newer versions`, setup.py ensures compatibility by selecting library versions that support the latest Python features and fixes, including critical updates made in HoloViews for Python 3.11 support.</li>
-
-### What Does This Mean for You?
-<li><b>Easier Installation</b>: This approach allows AutoViz to leverage the latest advancements in our dependencies while maintaining robust support for older Python versions. The installation process is seamless—simply run pip install . in the AutoViz directory, and the script takes care of the rest, tailoring the installation to your environment.</li>
-
-<li>Tailored Usage: Choose the visualization backend that works best for your environment. AutoViz will handle the rest, importing necessary libraries as needed.</li>
-
-<li>Seamless Compatibility: Users on the latest Python versions (like 3.11 and 3.12) can now enjoy a hassle-free AutoViz experience.</li>
-
-### How to Update?
-Simply pull the latest version of AutoViz (0.1.801 and higher) from the pip repository. The modular dependency system will be automatically applied.
+### Starting with version 0.1.901, an important update 
+<li>We're excited to announce we've made significant updates to our `setup.py` script to leverage the latest versions in our dependencies while maintaining  support for older Python versions (you may want to check older versions). The installation process is seamless—simply run pip install . in the AutoViz directory, and the script takes care of the rest, tailoring the installation to your environment.</li>
 
 ### Feedback
 Your feedback is crucial! If you encounter any issues or have suggestions, please let us know through [GitHub Issues](https://github.com/AutoViML/AutoViz/issues)
