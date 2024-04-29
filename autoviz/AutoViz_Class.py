@@ -14,24 +14,17 @@
 # limitations under the License.
 #################################################################################################
 import os
-
 import pandas as pd
-
 ########################################
 import warnings
-
 from sklearn.exceptions import DataConversionWarning
-
 ####################################################################################
 import matplotlib
-
 import seaborn as sns
-
 import copy
 import time
 import traceback
 from pandas_dq import Fix_DQ, dq_report
-
 ##########################################################################################
 from autoviz.AutoViz_Holo import AutoViz_Holo
 from autoviz.AutoViz_Utils import draw_pivot_tables, draw_scatters
@@ -41,26 +34,16 @@ from autoviz.AutoViz_Utils import list_difference
 from autoviz.AutoViz_Utils import find_remove_duplicates, classify_print_vars
 from autoviz.AutoViz_Utils import left_subtract
 from autoviz.AutoViz_NLP import draw_word_clouds
-
-
+#######################################################################################
 sns.set(style="ticks", color_codes=True)
-
 matplotlib.use('agg')
-
-
 warnings.filterwarnings(action='ignore', category=DataConversionWarning)
-
-
 warnings.filterwarnings("ignore")
-
-
+#######################################################################################
 def warn(*args, **kwargs):
     pass
-
-
 warnings.warn = warn
-
-
+#######################################################################################
 class AutoViz_Class:
     """
         ##############################################################################
@@ -205,7 +188,7 @@ class AutoViz_Class:
         else:
             getattr(self, plotname)["subheading"].append(X)
 
-    def AutoViz(self, filename: (str or pd.DataFrame), sep=',', dep_var='', dfte=None, header=0, verbose=1,
+    def AutoViz(self, filename: (str or pd.DataFrame), sep=',', depVar='', dfte=None, header=0, verbose=1,
                 lowess=False, chart_format='svg', max_rows_analyzed=150000,
                 max_cols_analyzed=30, save_plot_dir=None):
         """
@@ -239,14 +222,15 @@ class AutoViz_Class:
         ####  it will simply save them.                                          #####
         ##############################################################################
         """
-        if dfte:  # temporary until we have a major release, then remove dfte variable.
-            filename = dfte
+        if isinstance(dfte, pd.DataFrame): ### if there is a dataframe, choose it
+            filename = dfte                
 
-        if isinstance(dep_var, list):
-            print('Since AutoViz cannot visualize multi-label targets, choosing first item in targets: %s' % dep_var[0])
-            dep_var = dep_var[0]
-
-        ####################################################################################
+        if isinstance(depVar, list):
+            print('Since AutoViz cannot visualize multi-label targets, choosing first item in targets: %s' % depVar[0])
+            dep_var = depVar[0]
+        else:
+            dep_var = copy.deepcopy(depVar)
+              ####################################################################################
         if chart_format.lower() in ['bokeh', 'server', 'bokeh_server', 'bokeh-server', 'html']:
             dft = AutoViz_Holo(filename, sep, dep_var, header, verbose,
                                lowess, chart_format, max_rows_analyzed,
