@@ -13,6 +13,6 @@ print("""%s v%s. Please call AutoViz in this sequence:
     AV = AutoViz_Class()
     %%matplotlib inline
     dfte = AV.AutoViz(filename, sep=',', depVar='', dfte=None, header=0, verbose=1, lowess=False,
-               chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30, save_plot_dir=None)""" %(
+               chart_format='svg',max_rows_analyzed=150000,max_cols_analyzed=30, save_plot_dir=None)""" % (
                module_type, version_number))
 ###########################################################################################
