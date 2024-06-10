@@ -41,7 +41,7 @@ install_requires = list_req + [
 
 setuptools.setup(
     name="autoviz",
-    version="0.1.904",
+    version="0.1.905",
     author="Ram Seshadri",
     description="Automatically Visualize any dataset, any size with a single line of code",
     long_description=long_description,

@@ -47,7 +47,7 @@ import seaborn as sns
 # sns.set(style="whitegrid", color_codes=True)
 import re
 import pprint
-# matplotlib.style.use('seaborn')
+matplotlib.style.use('fivethirtyeight')
 from itertools import cycle, combinations
 import sys
 from io import BytesIO
