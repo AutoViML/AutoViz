@@ -61,6 +61,7 @@ AutoViz is a powerful tool for generating insightful visualizations with minimal
 <li><b>Customization</b>: AutoViz provides several options for customizing the visualizations, such as changing the chart type, color palette, etc.</li>
 <li><b>Data Quality</b>: AutoViz now provides data quality assessment by default and helps you fix DQ issues with a single line of code using the FixDQ() function</li>
 </ol>
+
 ## Installation
 
 **Prerequisites**
@@ -258,4 +259,5 @@ Here are some additional tips and reminders to help you make the most of the lib
 - **By leveraging AutoViz's powerful and flexible features**, you can streamline your data visualization process and gain valuable insights more efficiently. Happy visualizing!
 
 ## DISCLAIMER
+
 This project is not an official Google project. It is not supported by Google, and Google specifically disclaims all warranties as to its quality, merchantability, or fitness for a particular purpose.
